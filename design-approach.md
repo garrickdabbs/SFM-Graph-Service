@@ -13,7 +13,7 @@ Each SFEntity represents any object in your system, whether it’s a company pol
 
 ```json
 {
-  "id": "entity_123",
+  "id": "bf7eade2-8aaf-402d-9efe-6356419ee05d",
   "name": "Data Privacy Policy",
   "type": "Policy",
   "properties": {
@@ -35,7 +35,7 @@ The matrix aspect of your system is driven by the way SFEntities are connected. 
 - **`id`**: A unique identifier for the relationship.  
 - **`sourceEntityId`**: The identifier of the originating SFEntity.  
 - **`targetEntityId`**: The identifier of the SFEntity that is being connected to.  
-- **`propertyName`**: A descriptor that explains the nature of the relationship (for example, "impacts", "complements", "oversees", etc.).  
+- **`description`**: A descriptor that explains the nature of the relationship (for example, "impacts", "complements", "oversees", etc.).  
 - **`value`**: A flexible field that could represent impact strength, compliance scores, or any other quantifiable data.  
 - **`metadata`**: An optional key–value store for any additional details relevant to the connection (e.g., date established, source of the link, conditions).
 
@@ -43,9 +43,9 @@ The matrix aspect of your system is driven by the way SFEntities are connected. 
 
 ```json
 {
-  "id": "rel_456",
-  "sourceEntityId": "entity_123",
-  "targetEntityId": "entity_789",
+  "id": "c26c0930-bcf7-4789-93ce-f089a3b8b1f2",
+  "sourceEntityId": "bf7eade2-8aaf-402d-9efe-6356419ee05d",
+  "targetEntityId": "19623d04-defc-472f-8a5b-1a299d0e09cb",
   "propertyName": "compliesWith",
   "value": 0.8,
   "metadata": {
