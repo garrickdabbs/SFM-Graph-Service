@@ -1,9 +1,5 @@
----
-Title: "Implementing the Social Fabric Matrix (SFM) Framework: Design Proposal for a Suite of Tools and Services"
-Author: Garrick Dabbs
-Date: 05/23/2025
----
 # Implementing the Social Fabric Matrix (SFM) Framework: Design Proposal for a Suite of Tools and Services
+Author: Garrick Dabbs Date: 05/23/2025
 
 # Table of Contents
 
