@@ -29,6 +29,7 @@ Dependencies:
 
 import networkx as nx
 import matplotlib.pyplot as plt
+import uuid
 from datetime import datetime
 
 # =============================================================================
