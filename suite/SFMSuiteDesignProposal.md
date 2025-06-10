@@ -1,3 +1,8 @@
+---
+Title: "Implementing the Social Fabric Matrix (SFM) Framework: Design Proposal for a Suite of Tools and Services"
+Author: Garrick Dabbs
+Date: 05/23/2025
+---
 # Implementing the Social Fabric Matrix (SFM) Framework: Design Proposal for a Suite of Tools and Services
 
 # Table of Contents
@@ -15,7 +20,7 @@
 
 
 ## Introduction ##
-The **Social Fabric Matrix (SFM)** is a holistic methodology for mapping complex social, economic, and institutional systems. It defines a network of system entities (such as cultural values, beliefs, technologies, institutions, etc.) and the relationships or flows (“deliveries”) between them [[1]](#1). By capturing these interconnections, SFM helps analysts identify feedback loops and understand how changes in one part of an organization or society can ripple through the whole system. However, building and analyzing an SFM by hand (traditionally using spreadsheets and written documentation) can be cumbersome. To address this, we propose a suite of software tools and services that implement the SFM framework for organizations. This suite will provide a detailed, extensible codebase with ready-to-use entities for **data modeling**, **relationship mapping**, **graph-based analysis**, **visualization**, and **simulation**. The following proposal outlines the design and features of this SFM software suite, with code examples and references to existing methodologies and libraries.
+The **Social Fabric Matrix (SFM)** is a holistic methodology for mapping complex social, economic, and institutional systems. It defines a network of system entities (such as cultural values, beliefs, technologies, institutions, etc.) and the relationships or flows (“deliveries”) between them [[1]](#1). By capturing these interconnections, SFM helps analysts identify feedback loops and understand how changes in one part of an organization or society can ripple through the whole system. However, building and analyzing an SFM by hand (traditionally using spreadsheets and written documentation) can be cumbersome. To address this, I propose a suite of software tools and services that implement the SFM framework for organizations. This suite will provide a detailed, extensible codebase with ready-to-use entities for **data modeling**, **relationship mapping**, **graph-based analysis**, **visualization**, and **simulation**. The following proposal outlines the design and features of this SFM software suite, with code examples and references to existing methodologies and libraries.
 
 ---
 
@@ -74,7 +79,7 @@ G.add_edge("Policy", "Districts", description="Funds allocated to schools")
 G.add_edge("Equal Opportunity", "Policy", description="Value criteria guiding policy")
 ```
 
-In the above example, we add three entities and then define two directed edges: one indicating the policy delivers funds to the school districts, and another indicating that a cultural value influences the policy. Each edge carries a textual description (`description`) to explain the nature of that delivery. In a full application, these operations would be done through a user-friendly interface, but having a programmatic API (like shown) is important for extensibility – it allows advanced users or other software services to modify the SFM content directly, or to script the creation of large matrices.
+In the above example, I add three entities and then define two directed edges: one indicating the policy delivers funds to the school districts, and another indicating that a cultural value influences the policy. Each edge carries a textual description (`description`) to explain the nature of that delivery. In a full application, these operations would be done through a user-friendly interface, but having a programmatic API (like shown) is important for extensibility – it allows advanced users or other software services to modify the SFM content directly, or to script the creation of large matrices.
 
 Additionally, the platform could integrate with version control or project management systems if organizations need to track changes to the model over time. Since policies and environments change, an **editable and expandable SFM** means users can update entities or add new ones as new research or real-world changes occur, without starting from scratch.
 
@@ -82,7 +87,7 @@ Additionally, the platform could integrate with version control or project manag
 
 ## Graph-Based Analysis and Insights
 
-Once the SFM is constructed (the network of relationships is in place), the next major feature is **analytical tools** to derive insights from the graph structure. The software suite will implement a variety of graph-based analysis methods to help users detect important patterns, measure influence, and explore the system’s properties. Since an SFM essentially forms a directed graph, we can leverage graph theory and network analysis algorithms heavily.
+Once the SFM is constructed (the network of relationships is in place), the next major feature is **analytical tools** to derive insights from the graph structure. The software suite will implement a variety of graph-based analysis methods to help users detect important patterns, measure influence, and explore the system’s properties. Since an SFM essentially forms a directed graph, I can leverage graph theory and network analysis algorithms heavily.
 
 Some key analysis capabilities include:
 
@@ -92,7 +97,7 @@ Some key analysis capabilities include:
 - **Influence and Centrality Metrics:** Calculate network metrics that show which entities are most influential or most affected. In-degree (number of inputs) and out-degree (outputs) counts for each node are a basic start – they tell which entities receive the most inputs and which provide the most outputs. More sophisticated metrics like **betweenness centrality** could identify entities that lie on many paths (acting as intermediaries or bottlenecks in the system). These metrics provide a quantitative hint of which parts of the social fabric are key leverage points. For example, if an institution has a high out-degree and high betweenness, it might be a critical hub through which many effects flow.
 - **Scenario and Sensitivity Analysis:** The graph structure can be used to simulate the impact of removing or changing a link, even before running a full dynamic simulation. By toggling certain deliveries on or off, or by assigning weights and computing aggregated influence, one can compare different configurations. The software can support side-by-side comparisons of two SFM variants (e.g. current policy network vs. proposed policy network) to show how the connectivity or feedback loops differ. Additionally, if the relationships have weighted values, the tool can generate a **sensitivity matrix** or use matrix algebra to assess how changes propagate. For instance, using linear algebra, one could compute if the system has potential runaway positive feedback: in matrix terms, this could involve checking if any eigenvalue of a weighted adjacency matrix exceeds 1 (indicating an amplifying loop). Such analysis, drawn from input-output techniques and graph theory, provides early warning of unstable dynamics.
 
-**Example – Finding Feedback Loops with Python:** Using NetworkX (Python library), we can easily find cycles in the directed graph:
+**Example – Finding Feedback Loops with Python:** Using NetworkX (Python library), I can easily find cycles in the directed graph:
 
 ```python
 # Assume G is the directed graph from earlier
@@ -103,7 +108,7 @@ for cycle in cycles:
 
 This snippet uses NetworkX’s `simple_cycles` function to get all feedback loops (cycles) in the SFM graph. The output might list something like: *“Feedback loop detected: Community Values -> School Board -> Community Values”* if, say, community values influence the school board’s decisions and the school board in turn shapes community values (a loop).
 
-For reachability, one approach is to compute the transitive closure of the graph. We could do this via repeated matrix multiplication or a traversal algorithm. For example, to get a reachability matrix using adjacency matrices:
+For reachability, one approach is to compute the transitive closure of the graph. I could do this via repeated matrix multiplication or a traversal algorithm. For example, to get a reachability matrix using adjacency matrices:
 
 ```python
 import numpy as np
@@ -145,7 +150,7 @@ net.from_nx(G)  # load the NetworkX graph into PyVis
 net.show("sfm_network.html")
 ```
 
-This code will produce an HTML file `sfm_network.html` containing an interactive graph: one can open it in a browser to explore the SFM graph with zooming, dragging, and hovering functionality. In the final web application, instead of writing to a file, we would integrate such a visualization directly into the app’s interface (using either PyVis in a Flask/Django app or directly using D3.js in a JavaScript front-end).
+This code will produce an HTML file `sfm_network.html` containing an interactive graph: one can open it in a browser to explore the SFM graph with zooming, dragging, and hovering functionality. In the final web application, instead of writing to a file, I would integrate such a visualization directly into the app’s interface (using either PyVis in a Flask/Django app or directly using D3.js in a JavaScript front-end).
 
 To customize appearance, the code could assign colors or shapes based on categories. For example, using PyVis one can do:
 
@@ -167,17 +172,17 @@ Finally, the interface should allow saving or exporting visuals (e.g., as an ima
 
 ## Simulation and Scenario Analysis
 
-Beyond static analysis, a powerful aspect of an SFM software suite is the ability to run **simulations**. While the SFM itself is a structural model (indicating what influences what), to see quantitative outcomes or time-dynamic behavior, we integrate it with simulation capabilities. This can range from system dynamics simulations (where we model stocks, flows, and feedback loops over time) to agent-based simulations for more granular behavior modeling. The goal is to let users experiment with *“what if” scenarios* in their SFM: for example, *“What if we increase funding in this area?”* or *“What if this regulatory connection is removed?”*, and observe potential consequences through the network.
+Beyond static analysis, a powerful aspect of an SFM software suite is the ability to run **simulations**. While the SFM itself is a structural model (indicating what influences what), to see quantitative outcomes or time-dynamic behavior, I integrate it with simulation capabilities. This can range from system dynamics simulations (where I model stocks, flows, and feedback loops over time) to agent-based simulations for more granular behavior modeling. The goal is to let users experiment with *“what if” scenarios* in their SFM: for example, *“What if I increase funding in this area?”* or *“What if this regulatory connection is removed?”*, and observe potential consequences through the network.
 
 Approaches to simulation in the SFM context include:
 
 - **System Dynamics Integration:** One method is to translate the SFM into a **system dynamics model**. Each delivery could correspond to a flow or influence in a system dynamics diagram. For instance, in the Nebraska education finance SFM, researchers used the iThink system dynamics software to turn the SFM into stock-flow diagrams that represent money or information flowing between education funding entities. Our software could incorporate a simple system dynamics engine or connect to existing ones. With tools like **PySD**, which converts Vensim models to Python code for simulation, one could define equations for how one component quantitatively affects another (e.g., a formula for how policy funding translates to student outcomes). The SFM structure guides the model equations, ensuring that no connection is overlooked. Running the simulation then shows how values change over time or under different inputs.
-- **Discrete-Time Propagation:** For a lighter approach, we can simulate step-by-step propagation on the network. For example, assign an initial value or shock to some nodes (say a 10% increase in a funding component) and then iteratively update other nodes based on the deliveries. If each edge has an “influence weight” (like elasticity or percent influence), we can propagate the changes through successive rounds until equilibrium or a time horizon is reached. This is essentially doing a simplified dynamic multiplier analysis on the graph. It’s useful for scenario testing when precise differential equations are not available. The code below demonstrates a simple propagation simulation:
+- **Discrete-Time Propagation:** For a lighter approach, I can simulate step-by-step propagation on the network. For example, assign an initial value or shock to some nodes (say a 10% increase in a funding component) and then iteratively update other nodes based on the deliveries. If each edge has an “influence weight” (like elasticity or percent influence), I can propagate the changes through successive rounds until equilibrium or a time horizon is reached. This is essentially doing a simplified dynamic multiplier analysis on the graph. It’s useful for scenario testing when precise differential equations are not available. The code below demonstrates a simple propagation simulation:
 
 ```python
 # Initial values for entities (for simulation purposes)
 values = {"Policy": 100, "Districts": 50, "Equal Opportunity": 1}
-# Assume we assign influence factors on edges (if weight is given, use it, else assume 1.0 for demonstration)
+# Assume I assign influence factors on edges (if weight is given, use it, else assume 1.0 for demonstration)
 influences = {(u, v): (data.get('weight', 1.0) * 0.1)   # example: 0.1 scaling
               for u, v, data in G.edges(data=True)}
 
