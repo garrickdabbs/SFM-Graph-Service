@@ -22,28 +22,43 @@ The **Social Fabric Matrix (SFM)** is a holistic methodology for mapping complex
 
 ## Data Modeling and Representation
 
-An SFM represents a system as a set of entities and the **deliveries** (direct influences or flows) between them. Each component belongs to a certain category (based on the SFM taxonomy) such as *cultural values, social beliefs, personal attitudes, natural environment, technology,* or *social institutions*. In software, a logical data model is needed to represent these entities, their categories, and their relationships. A straightforward representation is to treat the SFM as a **directed graph**: entities are nodes, and each delivery is a directed edge from a delivering node to a receiving node. This allows the system to be stored in a flexible structure that mirrors the real-world network of interdependencies.
+An SFM represents a system as a set of entities and the **deliveries** (direct influences or flows) between them. Each component belongs to a certain type (based on the SFM taxonomy) such as *cultural values, social beliefs, personal attitudes, natural environment, technology,* or *social institutions*. In software, a logical data model is needed to represent these entities, their categories, and their relationships. A straightforward representation is to treat the SFM as a **directed graph**: entities are nodes, and each delivery is a directed edge from a delivering node to a receiving node. This allows the system to be stored in a flexible structure that mirrors the real-world network of interdependencies.
 
-- **Entities (Nodes)** Each entity can be modeled as an object or record with attributes like an **ID**, a **name**, a **category** (e.g. “Social Belief” or “Institution”), and optional metadata or description. For example, a component might be *“State Education Funding Policy”* (category: Institution) or *“Public Value: Equal Opportunity”* (category: Cultural Value).
+- **Entities (Nodes)** Each entity can be modeled as an object or record with attributes like an **ID**, a **name**, a **type** (e.g. “Social Belief” or “Institution”), and optional metadata or description. For example, a component might be *“State Education Funding Policy”* (type: Institution) or *“Public Value: Equal Opportunity”* (type: Cultural Value).
 - **Relationships (Edges):** Each directed relationship indicates that one component **delivers** something to another (e.g. an institutional policy delivers resources to school districts, or a societal value delivers criteria influencing institutional rules). Edges can carry properties such as a **description of the delivery** (what is being delivered or influenced), a **type** or label, and potentially a numeric weight if quantifying the strength or amount of flow. Using a property-graph model (nodes with properties, edges with properties) is ideal, because it can capture rich information and easily adapt to new attributes or relationship types.
 
 - **Example – Defining Data Structures:** One could use an object-oriented approach or a schema in a database. For instance, using Python classes to represent the data model:
 ```python
-class SFMEntity:
-    def __init__(self, comp_id, name, category):
-        self.id = comp_id
+class SFEntity:
+    """
+    Represents an entity (policy, regulation, program, etc.) within the Social Fabric Matrix.
+    """
+    def __init__(self, id: uuid.UUID, name: str, type: str, properties: dict):
+        self.id = id
         self.name = name
-        self.category = category
-        self.details = {}  # additional metadata (e.g., description, indicators)
+        self.type = type
+        self.properties = properties
 
-class SFMRelationship:
-    def __init__(self, source_id, target_id, description="", weight=None):
-        self.source = source_id     # ID of delivering component
-        self.target = target_id     # ID of receiving component
-        self.description = description
-        self.weight = weight        # optional numeric weight for analysis
+    def __repr__(self):
+        return f"{self.name} ({self.type})"
+
+class Relationship:
+    """
+    Represents a directed relationship between two SFEntity objects.
+    """
+    def __init__(self, rel_id: uuid.UUID, sourceEntityId: uuid.UUID, targetEntityId: uuid.UUID, description: str,
+                 value: float, metadata: dict):
+        self.id = rel_id
+        self.sourceEntityId = sourceEntityId
+        self.targetEntityId = targetEntityId
+        self.description = description  # e.g., 'impacts', 'supports', etc.
+        self.value = value  # A weight or strength indicator between 0 and 1.
+        self.metadata = metadata
+
+    def __repr__(self):
+        return f"{self.sourceEntityId} --{self.description}:{self.value}--> {self.targetEntityId}"
 ```
-In a more data-driven approach, the SFM could be stored as JSON or in a **graph database**. A graph database (like Neo4j or similar) naturally stores nodes and edges, and excels at managing intricate     interconnections. For example, one could create nodes labeled with their category and connect them with relationships labeled “DELIVERS_TO”. This would allow writing queries to find particular patterns of interaction efficiently (thanks to optimized graph traversal). The adjacency structure can also be represented as a matrix for mathematical analysis – essentially an **adjacency matrix** where rows and columns correspond to the list of entities, and a cell contains a 1 (or a weight) if the row component delivers to the column component. The software should maintain this representation under the hood and update it as relationships are added or removed.
+In a more data-driven approach, the SFM could be stored as JSON or in a **graph database**. A graph database (like Neo4j or similar) naturally stores nodes and edges, and excels at managing intricate     interconnections. For example, one could create nodes labeled with their type and connect them with relationships labeled “DELIVERS_TO”. This would allow writing queries to find particular patterns of interaction efficiently (thanks to optimized graph traversal). The adjacency structure can also be represented as a matrix for mathematical analysis – essentially an **adjacency matrix** where rows and columns correspond to the list of entities, and a cell contains a 1 (or a weight) if the row component delivers to the column component. The software should maintain this representation under the hood and update it as relationships are added or removed.
 
 - **Data storage choices:** The codebase should be designed to be modular regarding data storage. For simplicity during development, an in-memory data model (lists of entities and edges, or a NetworkX graph) can be used. For larger projects or multi-user environments, a persistent storage like a graph database or a relational database with tables for entities and relationships can be integrated later. The key is that the data model abstraction (the classes or data structures and their API) remains consistent so that entities and relationships can be manipulated without needing to know the low-level storage details.
 
@@ -53,7 +68,7 @@ In a more data-driven approach, the SFM could be stored as JSON or in a **graph 
 
 Constructing the SFM involves identifying and mapping all relevant relationships among entities. The software suite will include tools to **intuitively create, edit, and import these relationships**. In earlier SFM projects, researchers often relied on manually editing Excel spreadsheets and separate documents to describe each connection. Our goal is to streamline this with interactive mapping and robust import/export features.
 
-- **Interactive Editor:** A graphical interface can allow users to add new entities and draw connections between them. For example, a user might drag a line from a *“Funding Policy”* node to a *“School Districts”* node to represent that policy delivering funding to districts. The interface can prompt for details (e.g. “describe what is delivered or influenced”) so that each edge in the matrix has documentation attached. This way, unlike having to cross-reference a separate narrative document, the explanation for each linkage is stored directly within the model. The editor should support groupings or color-coding by category, making it easier to navigate large models.
+- **Interactive Editor:** A graphical interface can allow users to add new entities and draw connections between them. For example, a user might drag a line from a *“Funding Policy”* node to a *“School Districts”* node to represent that policy delivering funding to districts. The interface can prompt for details (e.g. “describe what is delivered or influenced”) so that each edge in the matrix has documentation attached. This way, unlike having to cross-reference a separate narrative document, the explanation for each linkage is stored directly within the model. The editor should support groupings or color-coding by type, making it easier to navigate large models.
 - **Validation and Taxonomy Awareness:** Since SFM has an underlying taxonomy of component categories and typical flows among them, the tool can optionally guide the user by highlighting unusual linkages. For instance, if *“Personal Attitudes”* typically influence *“Social Institutions”* but a user links an institution delivering to a personal attitude, the software might flag it for review (depending on SFM conventions). However, flexibility is crucial; the tool should not hard-code restrictions but can provide recommendations.
 - **Data Import/Export:** To be useful in organizational settings, the suite should allow importing relationships from common formats. This includes reading an **Excel or CSV file** that lists triples (source, target, description) for deliveries, or a matrix format if one is prepared. Similarly, the tool can export the constructed SFM to formats like CSV, GraphML, or JSON for use in other applications. Maintaining compatibility with standard formats helps in integrating with other analysis tools or performing statistical analysis on the data.
 
@@ -66,9 +81,9 @@ import networkx as nx
 G = nx.DiGraph()
 
 # Add entities (node id, attributes)
-G.add_node("Policy", category="Institution", name="State Funding Policy")
-G.add_node("Districts", category="Institution", name="Public School Districts")
-G.add_node("Equal Opportunity", category="Cultural Value", name="Value: Equal Opportunity")
+G.add_node("Policy", type="Institution", name="State Funding Policy")
+G.add_node("Districts", type="Institution", name="Public School Districts")
+G.add_node("Equal Opportunity", type="Cultural Value", name="Value: Equal Opportunity")
 
 # Add relationships (edges with description)
 G.add_edge("Policy", "Districts", description="Funds allocated to schools")
@@ -151,16 +166,16 @@ This code will produce an HTML file `sfm_network.html` containing an interactive
 To customize appearance, the code could assign colors or shapes based on categories. For example, using PyVis one can do:
 
 ```python
-# Color nodes by category for clarity
+# Color nodes by type for clarity
 for node, data in G.nodes(data=True):
-    if data.get('category') == 'Institution':
+    if data.get('type') == 'Institution':
         net.get_node(node)['color'] = 'cornflowerblue'
-    elif data.get('category') == 'Cultural Value':
+    elif data.get('type') == 'Cultural Value':
         net.get_node(node)['color'] = 'gold'
 # (Other categories omitted for brevity)
 ```
 
-In a D3.js implementation, one would bind data similarly and set SVG styles for nodes and links according to category. The principle is to make the visualization **not only interactive but also semantically rich**, so the user can visually discern structure and get information on demand.
+In a D3.js implementation, one would bind data similarly and set SVG styles for nodes and links according to type. The principle is to make the visualization **not only interactive but also semantically rich**, so the user can visually discern structure and get information on demand.
 
 Finally, the interface should allow saving or exporting visuals (e.g., as an image or PDF) for reporting purposes. It may also be useful to allow users to annotate the visual (like drawing an emphasis or writing commentary on certain loops) which can be saved with the project.
 

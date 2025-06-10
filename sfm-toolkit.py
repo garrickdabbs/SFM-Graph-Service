@@ -59,7 +59,7 @@ class Relationship:
         self.id = rel_id
         self.sourceEntityId = sourceEntityId
         self.targetEntityId = targetEntityId
-        self.propertyName = propertyName  # e.g., 'impacts', 'supports', etc.
+        self.description = description  # e.g., 'impacts', 'supports', etc.
         self.value = value  # A weight or strength indicator between 0 and 1.
         self.metadata = metadata
 
@@ -90,7 +90,7 @@ def build_graph(entities: list, relationships: list) -> nx.DiGraph:
     
     # Add relationships as edges.
     for rel in relationships:
-        G.add_edge(rel.sourceEntityId, rel.targetEntityId, property_name=rel.property_name,
+        G.add_edge(rel.sourceEntityId, rel.targetEntityId, description=rel.description,
                    value=rel.value, metadata=rel.metadata)
     return G
 
@@ -120,7 +120,7 @@ def simulate_policy_change(G: nx.DiGraph, node_id: uuid.UUID, delta: float) -> N
 
     Args:
         G (nx.DiGraph): The social fabric graph.
-        node_id (str): Identifier of the node (policy) to simulate change for.
+        node_id (uuid.UUID): Identifier of the node (policy) to simulate change for.
         delta (float): The value to add/subtract from each outgoing relationship's weight.
     """
     for _, target, data in G.out_edges(node_id, data=True):
@@ -135,20 +135,22 @@ def simulate_policy_change(G: nx.DiGraph, node_id: uuid.UUID, delta: float) -> N
 # =============================================================================
 
 if __name__ == "__main__":
-    # Create sample entities: These represent a policy, regulation, and program, for example.
+    # Create sample entities: These represent an instituion, organization, policy, regulation, or program, for example.
     e1 = SFEntity(uuid.uuid4(), "Data Privacy Policy", "Policy", {"effective_date": "2023-01-01", "version": "1.0"})
     e2 = SFEntity(uuid.uuid4(), "Compliance Regulation", "Regulation", {"jurisdiction": "US"})
     e3 = SFEntity(uuid.uuid4(), "Employee Training Program", "Program", {"department": "HR"})
+    e4 = SFEntity(uuid.uuid4(), "Acme Mining Co.", "Corporation", {"sector": "Mining"})
 
     # Define sample relationships:
     # - e1 complies with e2.
     # - e3 supports e1.
-    r1 = Relationship(uuid.uuid4(), e1, e2, "compliesWith", 0.9, {"last_updated": "2023-05-01"})
-    r2 = Relationship(uuid.uuid4(), e3, e1, "supports", 0.8, {"last_updated": "2023-05-02"})
+    r1 = Relationship(uuid.uuid4(), e1.id, e2.id, "compliesWith", 0.9, {"last_updated": "2023-05-01"})
+    r2 = Relationship(uuid.uuid4(), e3.id, e1.id, "supports", 0.8, {"last_updated": "2023-05-02"})
+    r3 = Relationship(uuid.uuid4(), e2.id, e4.id, "regulates", 1, {"last_updated": "2024-05-06"})
 
     # Aggregate our data
-    entities = [e1, e2, e3]
-    relationships = [r1, r2]
+    entities = [e1, e2, e3, e4]
+    relationships = [r1, r2, r3]
 
     # Build our graph model.
     graph = build_graph(entities, relationships)
@@ -167,7 +169,7 @@ if __name__ == "__main__":
 
     # Example simulation: Adjust impact weight from node e1 by reducing by 0.2.
     print("\nSimulating policy change on node 'e1' with a delta of -0.2:")
-    simulate_policy_change(graph, "e1", -0.2)
+    simulate_policy_change(graph, e1.id, -0.2)
 
     # Re-visualize graph after simulation to see updated values.
     visualize_graph(graph)
