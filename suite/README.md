@@ -1,4 +1,4 @@
-# ***This directory is the sandbox for developing the [SFM Suite](./SFMSuiteOverviewAndSetup.md).*** #
+# ***This directory is the sandbox for developing the [SFM Suite](./SFMSuiteDesignProposal.md).*** #
 # Foundation of the experimental SFM system: data models, storage architecture, APIs, initial functionality, and install instructions.
 
 ### **1. Core Architecture Overview**
