@@ -39,10 +39,10 @@ class SFEntity:
     """
     Represents an entity (policy, regulation, program, etc.) within the Social Fabric Matrix.
     """
-    def __init__(self, entity_id: str, name: str, entity_type: str, properties: dict):
-        self.id = entity_id
+    def __init__(self, id: uuid.UUID, name: str, type: str, properties: dict):
+        self.id = id
         self.name = name
-        self.type = entity_type
+        self.type = type
         self.properties = properties
 
     def __repr__(self):
@@ -53,17 +53,17 @@ class Relationship:
     """
     Represents a directed relationship between two SFEntity objects.
     """
-    def __init__(self, rel_id: str, source: SFEntity, target: SFEntity, property_name: str,
+    def __init__(self, rel_id: uuid.UUID, sourceEntityId: uuid.UUID, targetEntityId: uuid.UUID, description: str,
                  value: float, metadata: dict):
         self.id = rel_id
-        self.source = source
-        self.target = target
-        self.property_name = property_name  # e.g., 'impacts', 'supports', etc.
+        self.sourceEntityId = sourceEntityId
+        self.targetEntityId = targetEntityId
+        self.propertyName = propertyName  # e.g., 'impacts', 'supports', etc.
         self.value = value  # A weight or strength indicator between 0 and 1.
         self.metadata = metadata
 
     def __repr__(self):
-        return f"{self.source.name} --{self.property_name}:{self.value}--> {self.target.name}"
+        return f"{self.sourceEntityId} --{self.description}:{self.value}--> {self.targetEntityId}"
 
 
 # =============================================================================
@@ -89,7 +89,7 @@ def build_graph(entities: list, relationships: list) -> nx.DiGraph:
     
     # Add relationships as edges.
     for rel in relationships:
-        G.add_edge(rel.source.id, rel.target.id, property_name=rel.property_name,
+        G.add_edge(rel.sourceEntityId, rel.targetEntityId, property_name=rel.property_name,
                    value=rel.value, metadata=rel.metadata)
     return G
 
@@ -112,7 +112,7 @@ def visualize_graph(G: nx.DiGraph) -> None:
 # Simulation & Analysis Tools
 # =============================================================================
 
-def simulate_policy_change(G: nx.DiGraph, node_id: str, delta: float) -> None:
+def simulate_policy_change(G: nx.DiGraph, node_id: uuid.UUID, delta: float) -> None:
     """
     Simulate a change in policy impact by adjusting the weight of all outgoing edges from a given node.
     This is a simple example where all relationship 'values' are modified by delta, ensuring the results remain within [0, 1].
@@ -135,15 +135,15 @@ def simulate_policy_change(G: nx.DiGraph, node_id: str, delta: float) -> None:
 
 if __name__ == "__main__":
     # Create sample entities: These represent a policy, regulation, and program, for example.
-    e1 = SFEntity("e1", "Data Privacy Policy", "Policy", {"effective_date": "2023-01-01", "version": "1.0"})
-    e2 = SFEntity("e2", "Compliance Regulation", "Regulation", {"jurisdiction": "US"})
-    e3 = SFEntity("e3", "Employee Training Program", "Program", {"department": "HR"})
+    e1 = SFEntity(uuid.uuid4(), "Data Privacy Policy", "Policy", {"effective_date": "2023-01-01", "version": "1.0"})
+    e2 = SFEntity(uuid.uuid4(), "Compliance Regulation", "Regulation", {"jurisdiction": "US"})
+    e3 = SFEntity(uuid.uuid4(), "Employee Training Program", "Program", {"department": "HR"})
 
     # Define sample relationships:
     # - e1 complies with e2.
     # - e3 supports e1.
-    r1 = Relationship("r1", e1, e2, "compliesWith", 0.9, {"last_updated": "2023-05-01"})
-    r2 = Relationship("r2", e3, e1, "supports", 0.8, {"last_updated": "2023-05-02"})
+    r1 = Relationship(uuid.uuid4(), e1, e2, "compliesWith", 0.9, {"last_updated": "2023-05-01"})
+    r2 = Relationship(uuid.uuid4(), e3, e1, "supports", 0.8, {"last_updated": "2023-05-02"})
 
     # Aggregate our data
     entities = [e1, e2, e3]
