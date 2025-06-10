@@ -122,7 +122,7 @@ Collaboration Tools: Build multi-user environments that allow departmental colla
 Architecture: Consider a microservices approach where different modules (data ingestion, simulation, visualization) are decoupled for flexibility and independent scaling.
 Security & Compliance: Ensure that the solution follows data security guidelines (e.g., GDPR, HIPAA) if handling sensitive institutional data.
 
-### **5. TODO**
+### ***TODO**
 - **Database Integration**: Store entities/relationships in **Neo4j**.
 - **Graph Analysis**: Implement reachability & feedback loop detection.
 - **UI & Dashboard**: Build **React/D3.js** front-end for visualization.
