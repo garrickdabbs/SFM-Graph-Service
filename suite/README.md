@@ -6,7 +6,7 @@
 
 Install the dependencies
 ```bash
-pip install fastapi uvicorn networkx neo4j matplotlib pyvis
+pip install fastapi uvicorn networkx neo4j matplotlib pyvis neo4j
 ```
 
 Run the service (from the top level directory):
@@ -40,7 +40,6 @@ Architecture: Consider a microservices approach where different modules (data in
 Security & Compliance: Ensure that the solution follows data security guidelines (e.g., GDPR, HIPAA) if handling sensitive institutional data.
 
 ### ***TODO**
-- **Database Integration**: Store entities/relationships in **Neo4j**.
 - **Graph Analysis**: Implement reachability & feedback loop detection.
 - **UI & Dashboard**: Build **React/D3.js** front-end for visualization.
 - **Simulation Framework**: Add policy impact modeling.
