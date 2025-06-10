@@ -4,7 +4,7 @@ from typing import Optional, Dict
 class SFMEntity(BaseModel):
     id: str
     name: str
-    category: str
+    type: str
     properties: Optional[Dict] = {}
 
 class SFMRelationship(BaseModel):
