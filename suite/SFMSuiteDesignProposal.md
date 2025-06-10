@@ -1,5 +1,3 @@
-## ***This directory is the sandbox for developing the [SFM Suite](./SFMSuiteOverviewAndSetup.md).*** ##
-
 # Implementing the Social Fabric Matrix (SFM) Framework: Design Proposal for a Suite of Tools and Services
 
 # Table of Contents
