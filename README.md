@@ -2,7 +2,7 @@
 SFM Toolkit: A Prototype for Implementing the [Social Fabric Matrix Framework](./sfm-overview.md). 
 
 # Overview
-This was supposed to be for my grad school project, but ended up as a precursor to the [SFM Suite](./suite/README.md) I am experimenting with. The code example, [sfm-toolkit.py](./sfm-toolkit.py) demonstrates:
+This was intended to be used for a grad school project, but ended up as a precursor to the [SFM Suite](./suite/README.md) I am experimenting with. The code example, [sfm-toolkit.py](./sfm-toolkit.py) demonstrates:
 
 - Defining the core data entities: An SFEntity (to represent policies, regulations, etc.) and a Relationship (to connect these entities).
 
