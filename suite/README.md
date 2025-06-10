@@ -98,7 +98,7 @@ uvicorn api:app --reload
 ```
 
 ---
-## Technical Roadmap:
+## Technical Roadmap
 Document future enhancements, such as AI-driven impact analysis, integration with enterprise data sources, and iterative improvements to the simulation engine.
 
 ### Extending the Prototype
