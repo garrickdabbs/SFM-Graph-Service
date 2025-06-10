@@ -20,10 +20,9 @@ The included pytyon file is a starting point designed to demonstrate three core 
 
 - Simulation of Policy Changes: The simulate_policy_change() function provides a placeholder to adjust relationship weights. You can enhance this function with more sophisticated algorithms that reflect real-world impacts, ROI analysis, or predictive modeling.
 
-Further Documentation
-Setup Instructions:
-
 # SFM Toolkit Prototype
+
+### Setup Instructions
 
 **Requirements**
 - Python 3.8+
