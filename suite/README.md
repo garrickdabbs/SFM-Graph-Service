@@ -92,9 +92,9 @@ def visualize():
     return {"message": "Graph visualization rendered"}
 ```
 
-Run the service:
+Run the service (assumes you are running from the top level directory):
 ```bash
-uvicorn api:app --reload
+uvicorn suite.api:app --reload
 ```
 
 ---
