@@ -1,6 +1,6 @@
 ### **1. SFEntity: The Core Node**
 
-Each SFEntity represents any object in your system—whether it’s a company policy, a regulatory requirement, a technology component, or even an abstract cultural norm. By keeping this definition broad, you ensure that every element within an organization’s ecosystem can be uniformly managed.
+Each SFEntity represents any object in your system, whether it’s a company policy, a regulatory requirement, a technology component, or even an abstract cultural norm. By keeping this definition broad, you ensure that every element within an organization’s ecosystem can be uniformly managed.
 
 #### **Essential Attributes**
 
