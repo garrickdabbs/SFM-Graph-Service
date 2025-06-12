@@ -221,6 +221,21 @@ To facilitate easy deployment and scaling of the SFM software, the entire system
 
 - **Docker Images and Repository:** We will likely maintain a repository (such as on Docker Hub or GitHub Container Registry) for the SFM service images. This might include a base image for the backend that others can extend if customizing. Documentation will be provided on how to configure the environment (for instance, setting environment variables for Neo4j credentials, volume mounts for persistent database storage so data isn't lost when container restarts, etc.). Users can either use the defaults or adjust the docker-compose.yml to suit their needs.
 
+Here’s a new section outlining DevContainer support for your **Social Fabric Matrix (SFM) Software Service Manifest**. This will help define how development environments can be standardized and easily set up across different machines.
+
+---
+
+### DevContainer Support for SFM software
+
+To streamline development and ensure consistent environments, the **SFM Toolkit** supports **DevContainers**, allowing developers to spin up fully configured workspaces inside Docker-based environments. This feature enables seamless onboarding, minimizes setup time, and ensures that dependencies are properly managed.
+
+#### Key Features:
+- **Pre-configured Environment**: A `devcontainer.json` file provides automated setup with essential tools, including Python, Neo4j, and relevant dependencies.
+- **Consistent Development Setup**: All team members work within the same standardized container, eliminating compatibility issues.
+- **Graph Database Integration**: The DevContainer includes setup for Neo4j, ensuring that local development mirrors production environments.
+- **Pre-installed Dependencies**: Dependencies are automatically installed, reducing setup errors and ensuring smooth development.
+- **Cross-platform Compatibility**: Works uniformly across Windows, macOS, and Linux environments.
+
 In summary, containerized deployment ensures that the **installation and execution of the complex SFM stack is straightforward and reliable**. Using Docker and a multi-container setup, we encapsulate the Neo4j database, backend logic, and frontend UI, making the system portable and scalable. This approach aligns with modern best practices for deploying microservice-based applications, where Compose or Kubernetes can manage multi-container applications with ease. The result is that deploying the advanced SFM service is as easy as running a single command, and it will run the same anywhere.
 
 ## Extensibility and Modularity
