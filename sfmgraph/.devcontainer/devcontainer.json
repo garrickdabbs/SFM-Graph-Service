@@ -1,5 +1,5 @@
 {
-    "name": "SFM Toolkit Development",
+    "name": "SFM Graph Service Development",
     "dockerComposeFile": "../docker-compose.yml",
     "service": "sfm",
     "workspaceFolder": "/app",

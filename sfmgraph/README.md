@@ -11,7 +11,7 @@ pip install fastapi uvicorn networkx neo4j matplotlib pyvis neo4j
 
 Run the service (from the top level directory):
 ```bash
-uvicorn suite.api:app --reload
+uvicorn sfmgraph.api:app --reload
 ```
 
 ---
