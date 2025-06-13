@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+networkx
+neo4j
+matplotlib
+pyvis

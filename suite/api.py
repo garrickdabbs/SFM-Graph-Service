@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from .models import SFMEntity, SFMRelationship
-from .graphservice import SFMGraph
-from .db import SFMDatabase
+from models import SFMEntity, SFMRelationship
+from graphservice import SFMGraph
+from db import SFMDatabase
 
 app = FastAPI()
 sfm_graph = SFMGraph()
