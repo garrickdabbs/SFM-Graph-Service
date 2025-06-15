@@ -2,7 +2,7 @@
 Social Fabric Matrix Graph Service: A Prototype for Implementing the [Social Fabric Matrix Framework](./sfm-overview.md). 
 
 # Overview
-This was intended to be used for a grad school project, but ended up as a precursor to the [SFM Graph Service](./SMFGraph/README.md) I am experimenting with. The code example, [sfm-prototype.py](./sfm-prototype.py) demonstrates:
+This was intended to be used for a grad school project, but ended up as a precursor to the [SFM Graph Service](./sfmraph/README.md) I am experimenting with. The code example, [sfm-prototype.py](./sfm-prototype.py) demonstrates:
 
 - Defining the core data entities: An SFEntity (to represent policies, regulations, etc.) and a Relationship (to connect these entities).
 
