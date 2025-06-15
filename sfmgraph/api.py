@@ -19,7 +19,7 @@ def get_db():
 def add_entity(entity: SFMEntity, db: SFMDatabase = Depends(get_db)):
     try:
         db.create_entity(entity.entity_id, entity.name, entity.type, entity.properties)
-        sfm_graph.add_entity(entity)  # Also add to in-memory graph
+        
         return {"message": "Entity added", "id": str(entity.entity_id)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
