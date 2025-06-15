@@ -40,9 +40,21 @@ class TestSFMEntity(unittest.TestCase):
             type="Test Type",
             properties={}
         )
-        
         self.assertEqual(entity.properties, {})
+    
+    def test_entity_validation(self):
+        """Test that invalid inputs raise validation errors."""
+        with self.assertRaises(ValueError):
+            # Missing required fields should fail validation
+            SFMEntity(name="Test", type="Policy") # type: ignore for testing purposes
 
+    def test_serialization(self):
+        """Test model serialization to dict/JSON."""
+        entity = SFMEntity(entity_id=uuid.uuid4(), name="Test", type="Policy", properties={})
+        entity_dict = entity.model_dump()  # For Pydantic v2
+        self.assertIsInstance(entity_dict, dict)
+        self.assertEqual(entity_dict["name"], "Test")
+    
 
 class TestSFMRelationship(unittest.TestCase):
     def test_relationship_creation(self):

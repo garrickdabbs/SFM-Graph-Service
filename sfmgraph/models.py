@@ -27,3 +27,4 @@ class SFMRelationship(BaseModel):
 
     def __repr__(self):
         return f"{self.sourceEntityId} --{self.description}:{self.value}--> {self.targetEntityId}"
+
