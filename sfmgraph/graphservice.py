@@ -1,6 +1,6 @@
 import networkx as nx
 import uuid
-from models import SFMEntity, SFMRelationship
+from .models import SFMEntity, SFMRelationship
 from typing import List, Optional, Dict, Any, Tuple, Union
 
 class SFMGraph:

@@ -1,6 +1,6 @@
 import unittest
 import uuid
-from models import SFMEntity, SFMRelationship
+from .models import SFMEntity, SFMRelationship
 
 
 class TestSFMEntity(unittest.TestCase):

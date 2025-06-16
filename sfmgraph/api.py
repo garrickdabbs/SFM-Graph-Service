@@ -6,9 +6,9 @@ import os
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 from uuid import UUID
-from models import SFMEntity, SFMRelationship
-from graphservice import SFMGraph
-from db import SFMDatabase
+from .models import SFMEntity, SFMRelationship
+from .graphservice import SFMGraph
+from .db import SFMDatabase
 
 app = FastAPI()
 
