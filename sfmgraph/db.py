@@ -1,6 +1,7 @@
 import os
 from neo4j import GraphDatabase
 from neo4j.exceptions import ServiceUnavailable, AuthError
+import uuid
 
 class SFMDatabase:
     def __init__(self):
@@ -42,15 +43,25 @@ class SFMDatabase:
         with self.driver.session() as session:
             session.run(query, entity_id=str(entity_id), name=name, type=type, properties=properties)
 
-    def create_relationship(self, source_id, target_id, description, weight=None):
-        """Create or update a relationship in the database."""
+    def create_relationship(self, source_id, target_id, description, weight=None, rel_id=None):
+        """Create or update a relationship in the database.
+        
+        Args:
+            source_id: UUID of source entity
+            target_id: UUID of target entity
+            description: Description of relationship
+            weight: Optional weight/value of relationship
+            rel_id: Optional UUID for the relationship (generated if not provided)
+        """
         if not self.driver:
             raise RuntimeError("Database connection not established. Call connect() first.")
             
+        rel_id = str(rel_id or uuid.uuid4())
+        
         query = """
         MATCH (a:SFMEntity {id: $source_id}), (b:SFMEntity {id: $target_id})
-        MERGE (a)-[r:DELIVERS_TO {description: $description}]->(b)
-        SET r.weight = $weight
+        MERGE (a)-[r:DELIVERS_TO {id: $rel_id}]->(b)
+        SET r.description = $description, r.weight = $weight
         RETURN r
         """
         with self.driver.session() as session:
@@ -58,7 +69,8 @@ class SFMDatabase:
                        source_id=str(source_id), 
                        target_id=str(target_id), 
                        description=description, 
-                       weight=weight)
+                       weight=weight,
+                       rel_id=rel_id)
     
     def get_all_entities(self):
         """Retrieve all entities from the database."""
