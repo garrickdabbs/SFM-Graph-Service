@@ -147,5 +147,17 @@ Below is a simplified diagram showing how the core components might relate:
 +--------------+
 ```
 
----
+### How the pieces map to Hayden’s SFM language
+1. Nodes/Entities  
+   • **Actor** ≈ decision-making entity (household, firm, agency).  
+   • **Institution** covers three nested layers (formal rules, organizations, informal norms).  
+   • **Resource** is a stock (land, labor, capital, knowledge).  
+   • **Process** is the techno-economic activity that transforms inputs into outputs.  
+   • **Flow** is the quantified linkage used to populate the actual matrix cells (money, material, influence, etc.).
 
+2. Dimensional Attachments  
+   TimeSlice, SpatialUnit, and Scenario can be optionally attached to either Flows or Relationships, letting you slice the full matrix by period, region, or policy counterfactual without duplicating the core topology.
+
+3. RelationshipKind enumerates the canonical edge semantics Hayden lists in his writing: governance, usage, production, exchange, spatial anchoring, and temporal anchoring.
+
+Feel free to adapt the naming conventions, add attributes (e.g., `price`, `currency`, ESG tags), or plug these dataclasses directly into a Neo4j Object-Graph Mapper (OGM) like `neomodel`.

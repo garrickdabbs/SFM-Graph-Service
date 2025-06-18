@@ -2,7 +2,7 @@
     "python.testing.unittestArgs": [
         "-v",
         "-s",
-        "./sfmgraph",
+        "./tests",
         "-p",
         "*_test.py"
     ],
