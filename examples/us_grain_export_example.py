@@ -1,3 +1,11 @@
+import sys
+import os
+from pathlib import Path
+
+# Add the workspace root to Python path
+workspace_root = Path(__file__).parent.parent
+sys.path.insert(0, str(workspace_root))
+
 from core.sfm_models import (
     Actor, Institution, Resource, Policy, Flow, Relationship, Indicator, SFMGraph
 )
@@ -5,7 +13,7 @@ from core.enums import RelationshipKind, ResourceType, FlowNature
 from core.sfm_query import SFMQueryFactory, NetworkXSFMQueryEngine
 from db.sfm_dao import NetworkXSFMRepository
 
-def create_us_grain_market_graph(repo: NetworkXSFMRepository,graph: SFMGraph):
+def create_us_grain_market_graph(repo: NetworkXSFMRepository, graph: SFMGraph):
 
     # Create actors
     usda = Actor(label="USDA", sector="Government")

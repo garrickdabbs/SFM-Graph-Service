@@ -1,163 +1,355 @@
 # Social Fabric Matrix Graph Service
-Social Fabric Matrix Graph Service: A Prototype for Implementing the [Social Fabric Matrix Framework](docs/sfm-overview.md). 
 
-# Overview
-This was intended to be used for a grad school project, but ended up as a precursor to the [SFM Graph Service](docs/README_SFM_GRAPH.md) I am experimenting with. The code example, [sfm-prototype.py](./sfm-prototype.py) demonstrates:
+An experimental Python framework for implementing F. Gregory Hayden's Social Fabric Matrix (SFM) methodology, providing tools for modeling, analyzing, and querying complex socio-economic systems through graph-based data structures.
 
-- Defining the core data entities: An SFEntity (to represent policies, regulations, etc.) and a Relationship (to connect these entities).
+## Overview
 
-- Building a graph model: Using NetworkX to store and analyze the interconnected relationships.
+The Social Fabric Matrix Graph Service is an experimental software implementation of the Social Fabric Matrix framework, designed to model and analyze complex interdependencies within socio-economic systems. This framework aspires to enable researchers, policy analysts, and decision-makers to:
 
-- Visualization: Rendering a simple diagram with matplotlib to illustrate the matrix of relationships.
+- **Model Complex Systems**: Represent actors, institutions, resources, processes, and their relationships in a unified graph structure
+- **Analyze Policy Impacts**: Trace the effects of policy changes through interconnected networks
+- **Forecast System Changes**: Use network analysis to predict outcomes of interventions
+- **Query Complex Relationships**: Perform sophisticated analytical queries on system topology
 
-- A starting point for simulations: A placeholder function to simulate policy impact changes. 
+What started as a graduate school project prototype has evolved into a experimental framework that attempts to implement Hayden's SFM methodology while providing modern software engineering practices and extensible architecture.
 
-The included pytyon file is a starting point designed to demonstrate three core capabilities of the SFM framework:
+## Key Features
 
-- Mapping Entities and Relationships: By defining abstract classes for SFEntity and Relationship, you can represent any component of an organization’s policy or institutional ecosystem. Relationships are captured as directed edges with associated properties (like "compliesWith" or "supports") and weights that quantify influence.
+### 📊 **experimental Data Model**
+- **Actors**: Government agencies, corporations, organizations, individuals
+- **Institutions**: Formal rules, organizations, informal norms (following Hayden's three-layer institutional framework)
+- **Resources**: Natural resources, produced goods, financial capital, knowledge
+- **Processes**: Transformation activities that convert inputs to outputs
+- **Flows**: Quantified linkages between system components
+- **Policies**: Formal interventions with measurable impacts
+- **Relationships**: Typed connections with weights and dimensional metadata
 
-- Graph-Based Analysis & Visualization: Using NetworkX, the system builds a directed graph where nodes represent entities and edges represent quantified relationships. Visualization (via matplotlib) aids in understanding the network structure visually.
+### 🔍 **Advanced Query Engine**
+- **Network Analysis**: Centrality measures, path finding, community detection
+- **Policy Impact Analysis**: Trace policy effects through relationship networks
+- **Flow Analysis**: Track resource flows and identify bottlenecks
+- **Structural Analysis**: Identify key nodes, bridges, and vulnerable components
+- **Scenario Comparison**: Compare different policy or market scenarios
 
-- Simulation of Policy Changes: The simulate_policy_change() function provides a placeholder to adjust relationship weights. You can enhance this function with more sophisticated algorithms that reflect real-world impacts, ROI analysis, or predictive modeling.
+### 🗄️ **Flexible Storage Layer**
+- **Abstract Repository Pattern**: Extensible to multiple storage backends
+- **Default NetworkX Implementation**: In-memory graph storage for rapid prototyping
+- **Type-Safe Operations**: Strongly-typed repositories for different entity types
+- **CRUD Operations**: Full create, read, update, delete functionality
 
-# SFM Toolkit Prototype
+### 📈 **Real-World Applications**
+- **Commodity Market Analysis**: Forecast price changes based on policy and market conditions
+- **Policy Impact Assessment**: Analyze ripple effects of regulatory changes
+- **Supply Chain Resilience**: Identify vulnerabilities and dependencies
+- **Economic Development Planning**: Model regional development scenarios
 
-### Setup Instructions
+## Installation
 
-**Requirements**
+### Requirements
 - Python 3.8+
-- networkx
-- matplotlib
+- NetworkX
+- NumPy (for advanced calculations)
 
-**Installation**
+### Setup
 ```bash
-pip install networkx matplotlib
+# Clone the repository
+git clone https://github.com/your-repo/SFM-Graph-Service.git
+cd SFM-Graph-Service
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install the package in development mode
+pip install -e .
 ```
-Running the Prototype:
+
+## Quick Start
+
+### Basic Usage
+```python
+from core.sfm_models import SFMGraph, Actor, Institution, Relationship
+from core.enums import RelationshipKind
+from db.sfm_dao import SFMRepositoryFactory
+from core.sfm_query import SFMQueryFactory
+
+# Create a repository
+repo = SFMRepositoryFactory.create_repository("networkx")
+
+# Create entities
+usda = Actor(label="USDA", sector="Government")
+farmers = Actor(label="Farmers Association", sector="Agriculture") 
+market = Institution(label="Commodity Market")
+
+# Add to repository
+repo.create_node(usda)
+repo.create_node(farmers)
+repo.create_node(market)
+
+# Create relationships
+regulation = Relationship(
+    source_id=usda.id,
+    target_id=farmers.id,
+    kind=RelationshipKind.REGULATES,
+    weight=0.8
+)
+repo.create_relationship(regulation)
+
+# Load into SFM graph
+sfm_graph = repo.load_graph()
+
+# Create query engine for analysis
+query_engine = SFMQueryFactory.create_query_engine(sfm_graph, "networkx")
+
+# Analyze network
+central_actors = query_engine.get_most_central_nodes(Actor, "betweenness", 5)
+policy_impact = query_engine.analyze_policy_impact(usda.id, impact_radius=3)
 ```
-python sfm-prototype.py
+
+### Advanced Example: Grain Market Analysis
+```python
+from examples.us_grain_export_example import create_us_grain_market_graph
+
+# Create experimental grain market model
+repo = SFMRepositoryFactory.create_repository("networkx")
+sfm_graph = SFMGraph(
+    name="US Grain Market Analysis",
+    description="experimental model for grain price forecasting"
+)
+
+# Build complex graph with entities and relationships
+us_grain_graph = create_us_grain_market_graph(repo, sfm_graph)
+
+# Perform sophisticated analysis
+query_engine = SFMQueryFactory.create_query_engine(us_grain_graph, "networkx")
+
+# Find system vulnerabilities
+vulnerabilities = query_engine.system_vulnerability_analysis()
+
+# Trace resource flows
+grain_flows = query_engine.trace_resource_flows(ResourceType.PRODUCED)
+
+# Analyze policy impacts
+for policy_id, policy in us_grain_graph.policies.items():
+    impact = query_engine.analyze_policy_impact(policy_id, impact_radius=2)
+    print(f"{policy.label}: affects {impact.get('total_affected_nodes', 0)} nodes")
 ```
-# Design Approach
 
-### **1. SFEntity: The Core Node**
+### Running the Examples
+```bash
+# From workspace root
+python examples/us_grain_export_example.py
 
-Each SFEntity represents any object in your system, whether it’s an instituion, company policy, a regulatory requirement, a technology component, or even an abstract cultural norm. By keeping this definition broad, you ensure that every element within an organization’s ecosystem can be uniformly managed.
+# Or using module syntax
+python -m examples.us_grain_export_example
 
-#### **Essential Attributes**
-
-- **`id`**: A unique identifier (e.g., UUID or auto-incrementing primary key) for unambiguous referencing.  
-- **`name`**: A human-readable label for identification or display purposes.  
-- **`type`**: A descriptor (which could be defined as an enum or string) that categorizes the object (e.g., Policy, Regulation, Program, Technology, etc.).  
-- **`properties`**: A flexible key–value store (dictionary/json) to include additional metadata that may be specific to the object. This allows each SFEntity to carry any number of custom attributes without needing schema changes.
-
-*Example (in pseudo-code/JSON schema):*
-
-```json
-{
-  "id": "bf7eade2-8aaf-402d-9efe-6356419ee05d",
-  "name": "Data Privacy Policy",
-  "type": "Policy",
-  "properties": {
-    "effectiveDate": "2023-01-01",
-    "version": "1.0",
-    "department": "Legal"
-  }
-}
+# For running from subfolders, examples include path resolution
+python examples/us_grain_export_example.py  # Works from any directory
 ```
+
+## Architecture
+
+### Core Components
+
+```
+SFM-Graph-Service/
+├── core/
+│   ├── sfm_models.py      # Data model classes (Node, Actor, Institution, etc.)
+│   ├── sfm_query.py       # Query engine abstractions and NetworkX implementation
+│   └── enums.py           # Enumeration definitions (RelationshipKind, ResourceType, etc.)
+├── db/
+│   └── sfm_dao.py         # Data access layer (Repository pattern, CRUD operations)
+├── examples/
+│   ├── us_grain_export_example.py  # Experimental grain market model
+│   └── us_grain_market_forecast.py # Market forecasting example
+├── tests/
+│   ├── sfm_models_test.py      # Unit tests for data models
+│   ├── sfm_dao_test.py         # Unit tests for data access layer
+│   └── sfm_query_test.py       # Unit tests for query engine
+├── docs/
+│   ├── sfm-overview.md         # Theoretical framework overview
+│   └── README_SFM_GRAPH.md     # Technical documentation
+└── run_query_tests.py          # Test runner for query engine
+```
+
+### Design Principles
+
+1. **Separation of Concerns**: Clear boundaries between data models, storage, and analysis
+2. **Extensibility**: Abstract interfaces allow new storage backends and analysis methods
+3. **Type Safety**: Strong typing ensures data integrity and developer experience
+4. **Performance**: Optimized for both small prototypes and large-scale analysis
+5. **Hayden Compliance**: Faithful implementation of SFM theoretical framework
+
+## Data Model
+
+### Entity Hierarchy
+The framework models Hayden's core SFM components:
+
+- **Node Types**: Base classes for all system entities
+  - `Actor`: Decision-making entities (agencies, firms, individuals)
+  - `Institution`: Rule systems at three levels (formal, organizational, informal)
+  - `Resource`: Stocks and assets (natural, produced, financial, knowledge)
+  - `Process`: Transformation activities
+  - `Flow`: Quantified system linkages
+  - `Policy`: Specific institutional interventions
+  - `Indicator`: Measurable system performance metrics
+
+- **Relationship Types**: Semantic connections between entities
+  - Governance relationships (REGULATES, AUTHORIZES, ENFORCES)
+  - Economic relationships (FUNDS, TRADES, PRODUCES)
+  - Information relationships (INFORMS, INFLUENCES, COMMUNICATES)
+  - Process relationships (TRANSFORMS, EXTRACTS, DISTRIBUTES)
+
+### Dimensional Entities
+- **TimeSlice**: Temporal context for analysis periods
+- **SpatialUnit**: Geographic boundaries and scales
+- **Scenario**: Policy counterfactuals and alternative futures
+
+## Analysis Capabilities
+
+### Network Metrics
+- **Centrality Analysis**: Identify key system nodes using betweenness, closeness, degree, and eigenvector centrality
+- **Path Analysis**: Find shortest paths and alternative routes between entities
+- **Community Detection**: Discover system clusters and subsystems
+- **Structural Analysis**: Locate bridges, bottlenecks, and vulnerabilities
+
+### Policy Analysis
+- **Impact Propagation**: Trace policy effects through network paths
+- **Scenario Modeling**: Compare baseline vs. intervention outcomes
+- **Target Identification**: Find entities affected by policy changes
+- **Effectiveness Measurement**: Quantify policy reach and influence
+
+### Flow Analysis
+- **Resource Tracing**: Follow materials, money, and information flows
+- **Bottleneck Detection**: Identify system constraints and chokepoints
+- **Efficiency Calculation**: Measure flow effectiveness and losses
+- **Dependency Mapping**: Understand supply chain relationships
+
+## Testing
+
+The framework includes test coverage:
+
+```bash
+# Run all tests
+python -m unittest discover tests -v
+
+# Run specific test modules
+python -m unittest tests.sfm_models_test -v
+python -m unittest tests.sfm_dao_test -v
+python -m unittest tests.sfm_query_test -v
+
+# Run query engine specific tests
+python run_query_tests.py
+```
+
+### Test Categories
+- **Unit Tests**: Individual component functionality
+- **Integration Tests**: Component interaction verification
+- **Performance Tests**: Scalability and efficiency validation
+- **Edge Case Tests**: Error handling and boundary conditions
+
+## Examples
+
+### US Grain Market Forecast
+The [`examples/us_grain_export_example.py`](examples/us_grain_export_example.py) demonstrates:
+- Experimental model of US grain commodity markets
+- Policy impact analysis for agricultural regulations
+- Global market condition modeling
+- Advanced query operations for system analysis
+
+**Key Features:**
+- Multiple actor types (USDA, farmers, traders)
+- Institution modeling (government, trade organizations)
+- Resource flows (grain, land, financial)
+- Policy interventions (subsidies, tariffs)
+- Analytical queries (centrality, impact analysis, flow tracing)
+
+## Theoretical Foundation
+
+This implementation is based on F. Gregory Hayden's Social Fabric Matrix methodology, which provides:
+
+- **Systems Perspective**: Understanding complex interdependencies
+- **Institutional Analysis**: Three-layer institutional framework
+- **Policy Integration**: Connecting formal policies to informal practices
+- **Quantitative Assessment**: Measuring relationship strengths and impacts
+- **Dynamic Modeling**: Capturing system evolution over time
+
+### SFM Core Concepts Implemented
+
+1. **Matrix Structure**: Entities as rows/columns, relationships as cell values
+2. **Hierarchical Institution Types**: Formal rules, organizations, informal norms
+3. **Flow Quantification**: Measurable transfers between system components
+4. **Dimensional Analysis**: Temporal, spatial, and scenario slicing
+5. **Policy Evaluation**: Systematic assessment of intervention effects
+
+## Development
+
+### Adding New Storage Backends
+
+1. Implement the `SFMRepository` abstract class
+2. Add factory method to `SFMRepositoryFactory`
+3. Create corresponding tests
+4. Update documentation
+
+Example for Neo4j backend:
+```python
+class Neo4jSFMRepository(SFMRepository):
+    def __init__(self, connection_string):
+        # Implementation details
+        pass
+    
+    def create_node(self, node: Node) -> Node:
+        # Neo4j-specific implementation
+        pass
+```
+
+### Adding New Analysis Methods
+
+1. Extend the `SFMQueryEngine` abstract class
+2. Implement in `NetworkXSFMQueryEngine`
+3. Add comprehensive tests
+4. Document usage patterns
+
+## Contributing
+
+### Development Setup
+```bash
+# Install in development mode
+pip install -e .
+
+# Run tests before committing
+python -m unittest discover tests -v
+```
+
+### Guidelines
+- Follow existing code structure and naming conventions
+- Add tests for new functionality
+- Update documentation for API changes
+- Ensure compatibility with existing examples
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Roadmap
+
+### Near Term
+- [ ] Neo4j storage backend implementation
+- [ ] Enhanced visualization capabilities
+- [ ] Additional analysis algorithms
+- [ ] Performance optimizations
+
+### Medium Term
+- [ ] Machine learning integration for predictive modeling
+- [ ] Real-time data integration capabilities
+- [ ] Web-based interface for graph construction
+- [ ] Advanced scenario modeling tools
+
+### Long Term
+- [ ] Cloud deployment options
+- [ ] Industry-specific templates
+- [ ] Integration with existing policy analysis tools
+- [ ] Academic research collaboration features
 
 ---
 
-### **2. Relationship: Defining Connections**
-
-The matrix aspect of your system is driven by the way SFEntities are connected. A **Relationship** links one entity to another through a defined property, and it can have additional metadata (such as weights, types, or directional indicators) to quantify or qualify the connection.
-
-#### **Essential Attributes**
-
-- **`id`**: A unique identifier for the relationship.  
-- **`sourceEntityId`**: The identifier of the originating SFEntity.  
-- **`targetEntityId`**: The identifier of the SFEntity that is being connected to.  
-- **`description`**: A descriptor that explains the nature of the relationship (for example, "impacts", "complements", "oversees", etc.).  
-- **`value`**: A flexible field that could represent impact strength, compliance scores, or any other quantifiable data.  
-- **`metadata`**: An optional key–value store for any additional details relevant to the connection (e.g., date established, source of the link, conditions).
-
-*Example (in pseudo-code/JSON schema):*
-
-```json
-{
-  "id": "c26c0930-bcf7-4789-93ce-f089a3b8b1f2",
-  "sourceEntityId": "bf7eade2-8aaf-402d-9efe-6356419ee05d",
-  "targetEntityId": "19623d04-defc-472f-8a5b-1a299d0e09cb",
-  "propertyName": "compliesWith",
-  "value": 0.8,
-  "metadata": {
-    "lastUpdated": "2025-06-01"
-  }
-}
-```
-
----
-
-### **3. Representing the Matrix**
-
-When it comes time to analyze the relationships as a matrix, envision each SFEntity as a row and a column in a conceptual table. The cell at the intersection between two entities is derived by examining one or more Relationship objects that meet your criteria (for example, matching the **`propertyName`** “influences” and aggregating their **`value`**). By structuring data this way, you can:
-
-- **Pivot the Data**: Generate views that filter on different relationship properties, allowing dynamic matrix creation.  
-- **Aggregate Metrics**: For multiple relationships between the same pair of entities, apply aggregation functions (like mean, max, or custom algorithms) to compute a representative value for the matrix cell.  
-- **Handle Complexity**: Since each SFEntity and each Relationship can contain additional metadata, you can adapt the analysis to any level of complexity required by the organizational context.
-
----
-
-### **4. Implementation Considerations**
-
-- **Graph Databases**: Given the inherent node–edge (entity–relationship) model, graph databases (like [Neo4j](https://neo4j.com)) are a natural fit. They allow you to query connections efficiently, no matter how many objects or levels of relationships you have.
-  
-- **NoSQL Document Stores**: If you prefer schema flexibility and want to handle highly variable attributes per entity, document stores (like MongoDB) can also work—provided you carefully design your queries to interpret relationships.
-  
-- **Relational Databases**: If the environment requires strict schema control and ACID compliance, a relational approach with a self-referencing table for entities and a join table for relationships can be implemented. However, you may need to write custom SQL to mimic the flexibility of a graph model.
-
-- **Extensibility**: By using a flexible `properties` field on SFEntity and metadata on Relationship, you ensure that the system can evolve without heavy migration work when new types or relationship properties emerge over time.
-
----
-
-### **5. Conceptual Diagram**
-
-Below is a simplified diagram showing how the core components might relate:
-
-```
- [SFEntity]
-+--------------+
-| id           |
-| name         |
-| type         |
-| properties   |
-+--------------+
-       │
-       │ 1-to-many
-       │
-       ▼
-+--------------+
-| Relationship |
-+--------------+
-| id           |
-| sourceEntityId ------> [SFEntity]
-| targetEntityId ------> [SFEntity]
-| propertyName |
-| value        |
-| metadata     |
-+--------------+
-```
-
-### How the pieces map to Hayden’s SFM language
-1. Nodes/Entities  
-   • **Actor** ≈ decision-making entity (household, firm, agency).  
-   • **Institution** covers three nested layers (formal rules, organizations, informal norms).  
-   • **Resource** is a stock (land, labor, capital, knowledge).  
-   • **Process** is the techno-economic activity that transforms inputs into outputs.  
-   • **Flow** is the quantified linkage used to populate the actual matrix cells (money, material, influence, etc.).
-
-2. Dimensional Attachments  
-   TimeSlice, SpatialUnit, and Scenario can be optionally attached to either Flows or Relationships, letting you slice the full matrix by period, region, or policy counterfactual without duplicating the core topology.
-
-3. RelationshipKind enumerates the canonical edge semantics Hayden lists in his writing: governance, usage, production, exchange, spatial anchoring, and temporal anchoring.
-
-Feel free to adapt the naming conventions, add attributes (e.g., `price`, `currency`, ESG tags), or plug these dataclasses directly into a Neo4j Object-Graph Mapper (OGM) like `neomodel`.
+*The Social Fabric Matrix Graph Service provides a robust foundation for understanding and analyzing complex socio-economic systems through the lens of F. Gregory Hayden's groundbreaking methodological framework.*
