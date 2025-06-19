@@ -352,4 +352,4 @@ This project is licensed under the GNU GENERAL PUBLIC LICENSE - see the [LICENSE
 
 ---
 
-*The Social Fabric Matrix Graph Service provides a robust foundation for understanding and analyzing complex socio-economic systems through the lens of F. Gregory Hayden's groundbreaking methodological framework.*
+*The Social Fabric Matrix Graph Service provides a robust foundation for understanding and analyzing complex socio-economic systems through the lens of F. Gregory Hayden's methodological framework.*
