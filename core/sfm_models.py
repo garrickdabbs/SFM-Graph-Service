@@ -110,7 +110,7 @@ class FeedbackLoop(Node):
     strength: Optional[float] = None  # Measure of loop strength/impact
     type: Optional[str] = None  # e.g. "positive", "negative", "neutral"
     
-    # If you need to override the Node __init__ method
+    # override the Node __init__ method
     # def __init__(self, id: uuid.UUID = None, name: str = "", description: str = None, 
     #              relationships: List[uuid.UUID] = None, **kwargs):
     #     super().__init__(id=id, name=name, description=description, **kwargs)
@@ -263,3 +263,35 @@ class SFMGraph:
             self.analytical_contexts,
         ]:
             yield from collection.values()
+            
+    def __len__(self) -> int:
+        """Return the total number of nodes in the graph."""
+        return (
+            len(self.actors) +
+            len(self.institutions) +
+            len(self.resources) +
+            len(self.processes) +
+            len(self.flows) +
+            len(self.belief_systems) +
+            len(self.technology_systems) +
+            len(self.indicators) +
+            len(self.policies) +
+            len(self.feedback_loops) +
+            len(self.system_properties) +
+            len(self.analytical_contexts)
+        )
+    def clear(self):
+        """Clear all nodes and relationships from the graph."""
+        self.actors.clear()
+        self.institutions.clear()
+        self.resources.clear()
+        self.processes.clear()
+        self.flows.clear()
+        self.belief_systems.clear()
+        self.technology_systems.clear()
+        self.indicators.clear()
+        self.policies.clear()
+        self.feedback_loops.clear()
+        self.system_properties.clear()
+        self.analytical_contexts.clear()
+        self.relationships.clear()

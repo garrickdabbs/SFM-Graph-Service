@@ -243,6 +243,7 @@ class RelationshipKind(Enum):
     REINFORCES = auto()            # Positive feedback relationship
     UNDERMINES = auto()            # Negative feedback relationship
     AFFECTS = auto()               # Base Feedback relationship
+    ENACTS = auto()                # Creates or modifies laws, policies, or regulations
 
     
     # Resource Flow Relationships
