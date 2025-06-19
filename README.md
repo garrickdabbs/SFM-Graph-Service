@@ -15,7 +15,7 @@ What started as a graduate school project prototype has evolved into a experimen
 
 ## Key Features
 
-### 📊 **experimental Data Model**
+### 📊 **Experimental Data Model**
 - **Actors**: Government agencies, corporations, organizations, individuals
 - **Institutions**: Formal rules, organizations, informal norms (following Hayden's three-layer institutional framework)
 - **Resources**: Natural resources, produced goods, financial capital, knowledge
