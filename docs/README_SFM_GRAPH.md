@@ -1,4 +1,4 @@
-# ***This directory is the sandbox for developing the [SFM Suite](./SFMSuiteDesignProposal.md).*** #
+# ***This directory is the sandbox for developing the [SFM Graph Service](docs/SFMSuiteDesignProposal.md).*** #
 # Foundation of the experimental SFM system.
 
 
