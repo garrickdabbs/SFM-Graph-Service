@@ -8,57 +8,12 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, Optional, Any
 from datetime import datetime
+from core.enums import (
+    InstitutionLayer, RelationshipKind, ResourceType, FlowNature,ValueCategory)
 
 
 # ───────────────────────────────────────────────
-# 1. ENUMERATIONS  (shared controlled vocabularies)
-# ───────────────────────────────────────────────
-
-class ValueCategory(Enum):
-    ECONOMIC = auto()        # Market-priced goods, services, financial returns
-    SOCIAL = auto()          # Distributional equity, social cohesion, well-being
-    ENVIRONMENTAL = auto()   # Resource stocks, ecological integrity
-    CULTURAL = auto()        # Norms, beliefs, heritage
-    INSTITUTIONAL = auto()   # Governance quality, rule consistency
-    TECHNOLOGICAL = auto()   # Knowledge base, production techniques
-
-
-class InstitutionLayer(Enum):
-    FORMAL_RULE = auto()     # Constitutions, statutes, property law
-    ORGANIZATION = auto()    # Firms, ministries, NGOs, unions
-    INFORMAL_NORM = auto()   # Customs, habits, social expectations
-
-
-class ResourceType(Enum):
-    NATURAL = auto()         # Land, water, raw minerals
-    PRODUCED = auto()        # Machinery, infrastructures
-    HUMAN = auto()           # Labor, human capital, skills
-    INFORMATION = auto()     # Data, R&D findings, patents
-
-
-class FlowNature(Enum):
-    INPUT = auto()           # Resource or value entering a process
-    OUTPUT = auto()          # Product, waste, or value leaving a process
-    TRANSFER = auto()        # Exchange between actors without transformation
-
-
-class RelationshipKind(Enum):
-    GOVERNS = auto()         # Institution/actor exerts authority or sets rules
-    USES = auto()            # Actor/process employs a resource or technology
-    PRODUCES = auto()        # Process generates an output flow
-    EXCHANGES_WITH = auto()  # Actor-to-actor transfer
-    LOCATED_IN = auto()      # Spatial anchoring
-    OCCURS_DURING = auto()   # Temporal anchoring
-    ENABLES = auto()         # Necessary condition relationship
-    INHIBITS = auto()        # Limiting or constraining relationship
-    PRECEDES = auto()        # Sequential ordering relationship
-    REINFORCES = auto()      # Positive feedback relationship
-    UNDERMINES = auto()      # Negative feedback relationship
-    AFFECTS = auto()         # Base Feedback relationship
-
-
-# ───────────────────────────────────────────────
-# 2. DIMENSIONAL “META” ENTITIES
+# DIMENSIONAL “META” ENTITIES
 # ───────────────────────────────────────────────
 
 @dataclass(frozen=True)
@@ -81,8 +36,8 @@ class Scenario:
 
 
 # ───────────────────────────────────────────────
-# 3. CORE NODES (ACTORS, PROCESSES, RESOURCES…)
-#    All inherit from a minimal “Node” base
+# CORE NODES (ACTORS, PROCESSES, RESOURCES…)
+# All inherit from a minimal “Node” base
 # ───────────────────────────────────────────────
 
 @dataclass
@@ -200,8 +155,8 @@ class SystemProperty(Node):
 
 
 # ───────────────────────────────────────────────
-# 4. EXPLICIT RELATIONSHIP OBJECT
-#    (Keeps multiplicity, weight, and dimension tags)
+# EXPLICIT RELATIONSHIP OBJECT
+# (Keeps multiplicity, weight, and dimension tags)
 # ───────────────────────────────────────────────
 
 @dataclass
@@ -211,7 +166,7 @@ class Relationship:
     target_id: uuid.UUID
     kind: RelationshipKind
     weight: Optional[float] = 0.0         # e.g. $-value, mass, influence score
-    time: Optional[TimeSlice] = None
+    time: Optional[TimeSlice] = None  # Temporal context of the relationship
     space: Optional[SpatialUnit] = None
     scenario: Optional[Scenario] = None
     meta: Dict[str, str] = field(default_factory=dict)
@@ -220,7 +175,7 @@ class Relationship:
     variability: Optional[float] = None  # Standard deviation or range
 
 # ───────────────────────────────────────────────
-# 5. BOUNDRY/DOMAIN “GRAPH” AGGREGATE
+# BOUNDRY/DOMAIN “GRAPH” AGGREGATE
 # ───────────────────────────────────────────────
 
 @dataclass
