@@ -13,6 +13,9 @@ Contains enumeration definitions that provide controlled vocabularies for catego
 ### `sfm_query.py`
 Provides the query engine abstraction and NetworkX implementation for analyzing SFM graphs. This enables complex network analysis and policy impact assessment.
 
+### `sfm_service.py`
+Provides a unified facade service that simplifies interaction with the SFM framework. This is the recommended entry point for most users, offering high-level operations without requiring direct manipulation of repositories or query engines.
+
 ## Core Data Model
 
 The SFM framework models socio-economic systems as networks of interconnected entities. Here are the main components:
@@ -90,6 +93,48 @@ graph = SFMGraph(name="Simple Market Model")
 graph.add_node(government)
 graph.add_node(grain)
 graph.add_relationship(regulation)
+```
+
+## Quick Start with SFM Service
+
+The `SFMService` class provides the easiest way to work with SFM graphs:
+
+```python
+from core.sfm_service import SFMService
+
+# Create service instance
+service = SFMService()
+
+# Create entities
+usda = service.create_actor(
+    name="USDA", 
+    description="US Department of Agriculture",
+    sector="government"
+)
+
+farm_bill = service.create_policy(
+    name="Farm Bill 2023",
+    description="Agricultural support legislation",
+    authority="US Congress"
+)
+
+wheat = service.create_resource(
+    name="Winter Wheat",
+    description="Primary grain crop",
+    rtype=ResourceType.BIOLOGICAL,
+    unit="bushels"
+)
+
+# Create relationships
+service.connect(usda.id, farm_bill.id, "IMPLEMENTS")
+service.connect(farm_bill.id, wheat.id, "REGULATES")
+
+# Analyze the network
+stats = service.get_statistics()
+central_actors = service.find_most_influential_actors()
+path = service.find_shortest_path(usda.id, wheat.id)
+
+print(f"Graph has {stats['total_nodes']} nodes and {stats['total_relationships']} relationships")
 ```
 
 ## Entity Relationship Diagram

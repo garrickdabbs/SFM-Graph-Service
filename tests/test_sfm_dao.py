@@ -1,22 +1,30 @@
+"""
+Tests for the  SFM DAO layer.
+This module contains unit tests for the SFM DAO layer
+"""
+
 import unittest
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
-
 import networkx as nx
 
-from core.sfm_models import (
-    Node, Actor, Institution, Resource, Process, Flow, Relationship,
-    BeliefSystem, Policy, TechnologySystem, Indicator, FeedbackLoop,
-    SFMGraph, RelationshipKind
-)
-from core.enums import ResourceType
+from core.sfm_models import *
+from core.sfm_enums import *
 from db.sfm_dao import (
-    SFMRepository, NetworkXSFMRepository, TypedSFMRepository,
-    ActorRepository, InstitutionRepository, PolicyRepository, 
-    ResourceRepository, RelationshipRepository, SFMRepositoryFactory
+    SFMRepository, NetworkXSFMRepository, SFMRepositoryFactory, TypedSFMRepository,
+    ActorRepository, InstitutionRepository, PolicyRepository,
+    ResourceRepository, ProcessRepository, FlowRepository,
+    BeliefSystemRepository, TechnologySystemRepository,
+    IndicatorRepository, FeedbackLoopRepository,
+    SystemPropertyRepository, AnalyticalContextRepository,
+    RelationshipRepository
 )
 
+
+# ==============================================================================
+# BASIC REPOSITORY UNIT TESTS 
+# ==============================================================================
 
 class TestNetworkXSFMRepositoryUnit(unittest.TestCase):
     """Unit tests for NetworkXSFMRepository."""
@@ -289,7 +297,7 @@ class TestTypedSFMRepositoryUnit(unittest.TestCase):
         
         # Test wrong type
         with self.assertRaises(TypeError):
-            self.actor_repo.create(self.institution) #type: ignore[expected-type] this is testing a type error
+            self.actor_repo.create(self.institution) #type: ignore[arg-type] this is testing a type error
 
     def test_read(self):
         # Add nodes
@@ -317,7 +325,7 @@ class TestTypedSFMRepositoryUnit(unittest.TestCase):
         
         # Test wrong type
         with self.assertRaises(TypeError):
-            self.actor_repo.update(self.institution) #type: ignore[expected-type] this is testing a type error
+            self.actor_repo.update(self.institution) #type: ignore[arg-type] this is testing a type error
 
     def test_delete(self):
         self.actor_repo.create(self.actor)
@@ -540,7 +548,7 @@ class TestSFMRepositoryIntegration(unittest.TestCase):
         node = self.actor_repo.read(self.actor.id)
         self.assertIsNotNone(node)
 
-    def test_graph_save_load(self):
+    def test_graph_save_load_basic(self):
         # Create complex data structure
         actor1 = Actor(label="Actor 1")
         actor2 = Actor(label="Actor 2")
@@ -595,7 +603,7 @@ class TestSFMRepositoryIntegration(unittest.TestCase):
         # Trying to update an institution as an actor should fail
         inst = Institution(label="Test Institution")
         with self.assertRaises(TypeError):
-            self.actor_repo.update(inst) #type: ignore[expected-type] this is testing a type error
+            self.actor_repo.update(inst) #type: ignore[arg-type] this is testing a type error
 
 
 class TestMultipleStorageTypes(unittest.TestCase):
@@ -634,6 +642,336 @@ class TestMultipleStorageTypes(unittest.TestCase):
         self.assertEqual(len(self.base_repo2.list_nodes(Actor)), 0)
         self.assertEqual(len(self.base_repo2.list_nodes(Institution)), 1)
 
+class TestNetworkXSFMRepository(unittest.TestCase):
+    """Test the  NetworkX repository implementation."""
+    
+    def setUp(self):
+        self.repo = NetworkXSFMRepository()
+        
+        # Create sample temporal and spatial contexts
+        self.time_slice = TimeSlice(label="Q1-2024")
+        self.spatial_unit = SpatialUnit(code="US-CA", name="California")
+        
+        # Create sample nodes
+        self.actor = Actor(label="Test Actor", sector="Government")
+        self.flow = Flow(
+            label="Test Flow",
+            time=self.time_slice,
+            space=self.spatial_unit
+        )
+        
+        # Add nodes to repo
+        self.repo.create_node(self.actor)
+        self.repo.create_node(self.flow)
+        
+        # Create relationship with temporal/spatial context
+        self.relationship = Relationship(
+            source_id=self.actor.id,
+            target_id=self.flow.id,
+            kind=RelationshipKind.INFLUENCES,
+            time=self.time_slice,
+            space=self.spatial_unit
+        )
+        self.repo.create_relationship(self.relationship)
+    
+    def test_temporal_node_queries(self):
+        """Test finding nodes by time slice."""
+        # Should find the flow node
+        temporal_nodes = self.repo.find_nodes_by_time(self.time_slice)
+        self.assertEqual(len(temporal_nodes), 1)
+        self.assertEqual(temporal_nodes[0].id, self.flow.id)
+        
+        # Should find specific node type
+        temporal_flows = self.repo.find_nodes_by_time(self.time_slice, Flow)
+        self.assertEqual(len(temporal_flows), 1)
+        self.assertIsInstance(temporal_flows[0], Flow)
+        
+        # Should find no actors with this time slice
+        temporal_actors = self.repo.find_nodes_by_time(self.time_slice, Actor)
+        self.assertEqual(len(temporal_actors), 0)
+    
+    def test_spatial_node_queries(self):
+        """Test finding nodes by spatial unit."""
+        # Should find the flow node
+        spatial_nodes = self.repo.find_nodes_by_space(self.spatial_unit)
+        self.assertEqual(len(spatial_nodes), 1)
+        self.assertEqual(spatial_nodes[0].id, self.flow.id)
+        
+        # Should find specific node type
+        spatial_flows = self.repo.find_nodes_by_space(self.spatial_unit, Flow)
+        self.assertEqual(len(spatial_flows), 1)
+        self.assertIsInstance(spatial_flows[0], Flow)
+    
+    def test_temporal_relationship_queries(self):
+        """Test finding relationships by time slice."""
+        temporal_rels = self.repo.find_relationships_by_time(self.time_slice)
+        self.assertEqual(len(temporal_rels), 1)
+        self.assertEqual(temporal_rels[0].id, self.relationship.id)
+    
+    def test_spatial_relationship_queries(self):
+        """Test finding relationships by spatial unit."""
+        spatial_rels = self.repo.find_relationships_by_space(self.spatial_unit)
+        self.assertEqual(len(spatial_rels), 1)
+        self.assertEqual(spatial_rels[0].id, self.relationship.id)
+
+
+class TestTypedRepositories(unittest.TestCase):
+    """Test functionality in typed repositories."""
+    
+    def setUp(self):
+        self.repos = SFMRepositoryFactory.create_all_repositories()
+        
+        # Create test data
+        self.actor = Actor(
+            label="Test Actor",
+            sector="Government",
+            legal_form="Federal Agency"
+        )
+        self.policy = Policy(
+            label="Test Policy",
+            authority="EPA",
+            enforcement=0.85,
+            target_sectors=["Energy", "Environment"]
+        )
+        self.indicator = Indicator(
+            label="Test Indicator",
+            value_category=ValueCategory.ECONOMIC,
+            current_value=100.0,
+            target_value=120.0
+        )
+        
+        # Add to repositories
+        self.repos['actor'].create(self.actor)
+        self.repos['policy'].create(self.policy)
+        self.repos['indicator'].create(self.indicator)
+    
+    def test_policy_repository_enhancements(self):
+        """Test policy repository methods."""
+        policy_repo = self.repos['policy']
+        
+        # Test find by authority
+        epa_policies = policy_repo.find_by_authority("EPA")
+        self.assertEqual(len(epa_policies), 1)
+        self.assertEqual(epa_policies[0].label, "Test Policy")
+        
+        # Test find by target sector
+        energy_policies = policy_repo.find_by_target_sector("Energy")
+        self.assertEqual(len(energy_policies), 1)
+        
+        # Test find by enforcement level
+        high_enforcement = policy_repo.find_by_enforcement_level(0.8)
+        self.assertEqual(len(high_enforcement), 1)
+        
+        medium_enforcement = policy_repo.find_by_enforcement_level(0.9)
+        self.assertEqual(len(medium_enforcement), 0)
+    
+    def test_indicator_repository_enhancements(self):
+        """Test indicator repository methods."""
+        indicator_repo = self.repos['indicator']
+        
+        # Test find by value category
+        economic_indicators = indicator_repo.find_by_value_category(ValueCategory.ECONOMIC)
+        self.assertEqual(len(economic_indicators), 1)
+        
+        # Test find by value range
+        value_range_indicators = indicator_repo.find_by_current_value_range(90.0, 110.0)
+        self.assertEqual(len(value_range_indicators), 1)
+        
+        # Test target comparisons
+        below_target = indicator_repo.find_below_target()
+        self.assertEqual(len(below_target), 1)
+        
+        above_target = indicator_repo.find_above_target()
+        self.assertEqual(len(above_target), 0)
+    
+    def test_relationship_repository_enhancements(self):
+        """Test relationship repository methods."""
+        rel_repo = self.repos['relationship']
+        
+        # Create test relationship
+        relationship = Relationship(
+            source_id=self.actor.id,
+            target_id=self.policy.id,
+            kind=RelationshipKind.IMPLEMENTS,
+            weight=0.8,
+            certainty=0.9
+        )
+        rel_repo.create(relationship)
+        
+        # Test weight range queries
+        weight_range_rels = rel_repo.find_by_weight_range(0.7, 0.9)
+        self.assertEqual(len(weight_range_rels), 1)
+        
+        # Test certainty range queries
+        high_certainty_rels = rel_repo.find_by_certainty_range(0.85, 1.0)
+        self.assertEqual(len(high_certainty_rels), 1)
+
+
+class TestCompleteRepositoryCoverage(unittest.TestCase):
+    """Test that all node types have corresponding repositories."""
+    
+    def test_all_repositories_available(self):
+        """Test that all repository types can be created."""
+        repos = SFMRepositoryFactory.create_all_repositories()
+        
+        expected_repos = [
+            'base', 'actor', 'institution', 'policy', 'resource',
+            'process', 'flow', 'belief_system', 'technology_system',
+            'indicator', 'feedback_loop', 'system_property',
+            'analytical_context', 'relationship'
+        ]
+        
+        for repo_name in expected_repos:
+            self.assertIn(repo_name, repos, f"Missing repository: {repo_name}")
+            self.assertIsNotNone(repos[repo_name], f"Repository {repo_name} is None")
+    
+    def test_all_node_types_supported(self):
+        """Test that all node types can be created and stored."""
+        repos = SFMRepositoryFactory.create_all_repositories()
+        base_repo = repos['base']
+        
+        # Create instances of all node types
+        nodes = [
+            Actor(label="Test Actor"),
+            Institution(label="Test Institution"),
+            Policy(label="Test Policy"),
+            Resource(label="Test Resource"),
+            Process(label="Test Process"),
+            Flow(label="Test Flow"),
+            BeliefSystem(label="Test Belief System"),
+            TechnologySystem(label="Test Technology System"),
+            Indicator(label="Test Indicator"),
+            FeedbackLoop(label="Test Feedback Loop"),
+            SystemProperty(label="Test System Property"),
+            AnalyticalContext(label="Test Analytical Context"),
+        ]
+        
+        # Create all nodes
+        for node in nodes:
+            created_node = base_repo.create_node(node)
+            self.assertEqual(created_node.id, node.id)
+        
+        # Verify all nodes can be retrieved
+        for node in nodes:
+            retrieved_node = base_repo.read_node(node.id)
+            self.assertIsNotNone(retrieved_node)
+            self.assertEqual(retrieved_node.label, node.label)
+        
+        # Verify total count
+        all_nodes = base_repo.list_nodes()
+        self.assertEqual(len(all_nodes), len(nodes))
+
+
+class TestFactoryMethods(unittest.TestCase):
+    """Test the factory methods."""
+    
+    def test_individual_repository_creation(self):
+        """Test that individual repositories can be created."""
+        # Test each repository type
+        actor_repo = SFMRepositoryFactory.create_actor_repository()
+        self.assertIsInstance(actor_repo, ActorRepository)
+        
+        policy_repo = SFMRepositoryFactory.create_policy_repository()
+        self.assertIsInstance(policy_repo, PolicyRepository)
+        
+        indicator_repo = SFMRepositoryFactory.create_indicator_repository()
+        self.assertIsInstance(indicator_repo, IndicatorRepository)
+        
+        # Test new repository types
+        belief_repo = SFMRepositoryFactory.create_belief_system_repository()
+        self.assertIsInstance(belief_repo, BeliefSystemRepository)
+        
+        tech_repo = SFMRepositoryFactory.create_technology_system_repository()
+        self.assertIsInstance(tech_repo, TechnologySystemRepository)
+        
+        feedback_repo = SFMRepositoryFactory.create_feedback_loop_repository()
+        self.assertIsInstance(feedback_repo, FeedbackLoopRepository)
+    
+    def test_create_all_repositories(self):
+        """Test the create_all_repositories method."""
+        repos = SFMRepositoryFactory.create_all_repositories()
+        
+        # Should be a dictionary
+        self.assertIsInstance(repos, dict)
+        
+        # Should have all expected keys
+        expected_keys = [
+            'base', 'actor', 'institution', 'policy', 'resource',
+            'process', 'flow', 'belief_system', 'technology_system',
+            'indicator', 'feedback_loop', 'system_property',
+            'analytical_context', 'relationship'
+        ]
+        
+        for key in expected_keys:
+            self.assertIn(key, repos)
+        
+        # All repositories should share the same base repository
+        base_repo = repos['base']
+        for key, repo in repos.items():
+            if key != 'base' and hasattr(repo, 'base_repo'):
+                self.assertEqual(repo.base_repo, base_repo)
+
+
+class TestDataConsistency(unittest.TestCase):
+    """Test data consistency across different repository types."""
+    
+    def setUp(self):
+        self.repos = SFMRepositoryFactory.create_all_repositories()
+    
+    def test_cross_repository_consistency(self):
+        """Test that data is consistent across different repository interfaces."""
+        # Create an actor through actor repository
+        actor = Actor(label="Cross-Repo Actor", sector="Test")
+        actor_repo = self.repos['actor']
+        created_actor = actor_repo.create(actor)
+        
+        # Should be accessible through base repository
+        base_repo = self.repos['base']
+        retrieved_actor = base_repo.read_node(actor.id)
+        
+        self.assertIsNotNone(retrieved_actor)
+        self.assertEqual(retrieved_actor.label, "Cross-Repo Actor")
+        self.assertIsInstance(retrieved_actor, Actor)
+        
+        # Should appear in base repository node listings
+        all_actors = base_repo.list_nodes(Actor)
+        self.assertIn(created_actor, all_actors)
+    
+    def test_graph_save_load_consistency(self):
+        """Test that graph save/load maintains data integrity."""
+        base_repo = self.repos['base']
+        
+        # Create various node types
+        actor = Actor(label="Save Test Actor")
+        policy = Policy(label="Save Test Policy")
+        
+        base_repo.create_node(actor)
+        base_repo.create_node(policy)
+        
+        # Create relationship
+        relationship = Relationship(
+            source_id=actor.id,
+            target_id=policy.id,
+            kind=RelationshipKind.IMPLEMENTS
+        )
+        base_repo.create_relationship(relationship)
+        
+        # Load graph
+        graph = base_repo.load_graph()
+        
+        # Verify integrity
+        self.assertEqual(len(graph.actors), 1)
+        self.assertEqual(len(graph.policies), 1)
+        self.assertEqual(len(graph.relationships), 1)
+        
+        # Clear and reload
+        base_repo.clear()
+        self.assertEqual(len(base_repo.list_nodes()), 0)
+        
+        base_repo.save_graph(graph)
+        reloaded_nodes = base_repo.list_nodes()
+        self.assertEqual(len(reloaded_nodes), 2)
+
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)

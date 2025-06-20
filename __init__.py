@@ -4,6 +4,6 @@
 __version__ = "1.0.0"
 
 # Import key modules for convenience
-from core import sfm_models, enums, sfm_query
+from core import sfm_enums, sfm_models, sfm_query
 from db import sfm_dao
-from tests import sfm_dao_test, sfm_models_test, sfm_query_test
+from tests import test_sfm_dao, test_sfm_models, test_sfm_models_ext, test_sfm_query

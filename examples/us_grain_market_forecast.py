@@ -1,7 +1,7 @@
 from core.sfm_models import (
     Actor, Institution, Resource, Policy, Flow, Relationship, Indicator, SFMGraph
 )
-from core.enums import RelationshipKind, ResourceType, FlowNature
+from core.sfm_enums import RelationshipKind, ResourceType, FlowNature
 from core.sfm_query import SFMQueryFactory, NetworkXSFMQueryEngine
 from db.sfm_dao import NetworkXSFMRepository
 

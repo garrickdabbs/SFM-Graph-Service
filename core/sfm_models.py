@@ -8,30 +8,39 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, Optional, Any
 from datetime import datetime
-from core.enums import (
-    InstitutionLayer, RelationshipKind, ResourceType, FlowNature,ValueCategory)
+from core.sfm_enums import (
+    InstitutionLayer,
+    RelationshipKind,
+    ResourceType,
+    FlowNature,
+    ValueCategory,
+)
 
 
 # ───────────────────────────────────────────────
 # DIMENSIONAL “META” ENTITIES
 # ───────────────────────────────────────────────
 
+
 @dataclass(frozen=True)
 class TimeSlice:
     """Discrete period for snapshot-style SFM accounting (e.g., fiscal year, quarter)."""
-    label: str                    # e.g. "FY2025" or "Q1-2030"
+
+    label: str  # e.g. "FY2025" or "Q1-2030"
 
 
 @dataclass(frozen=True)
 class SpatialUnit:
     """Hierarchical spatial identifier (nation, state, metro, census tract, etc.)."""
-    code: str                     # e.g. "US-WA-SEATTLE"
-    name: str                     # human-friendly display
+
+    code: str  # e.g. "US-WA-SEATTLE"
+    name: str  # human-friendly display
 
 
 @dataclass(frozen=True)
 class Scenario:
     """Counterfactual or policy-design scenario name (baseline, carbon tax, UBI...)."""
+
     label: str
 
 
@@ -40,14 +49,16 @@ class Scenario:
 # All inherit from a minimal “Node” base
 # ───────────────────────────────────────────────
 
+
 @dataclass
 class Node:
     """Generic graph node with a UUID primary key and free-form metadata."""
+
     label: str
     description: Optional[str] = None
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     meta: Dict[str, str] = field(default_factory=dict)
-    
+
     def __iter__(self):
         """Iterator that yields (attribute_name, attribute_value) pairs."""
         for attr_name, attr_value in self.__dict__.items():
@@ -57,37 +68,62 @@ class Node:
 @dataclass
 class Actor(Node):
     """Individuals, firms, agencies, communities."""
-    legal_form: Optional[str] = None       # e.g. "Corporation", "Household"
-    sector: Optional[str] = None           # NAICS or custom taxonomy
+
+    legal_form: Optional[str] = None  # e.g. "Corporation", "Household"
+    sector: Optional[str] = None  # NAICS or custom taxonomy
+
+    # Additional SFM-relevant fields
+    power_resources: Dict[str, float] = field(default_factory=dict)
+    decision_making_capacity: Optional[float] = None
+    institutional_affiliations: List[uuid.UUID] = field(default_factory=list)
+    cognitive_frameworks: List[uuid.UUID] = field(default_factory=list)
+    behavioral_patterns: List[uuid.UUID] = field(default_factory=list)
 
 
 @dataclass
 class Institution(Node):
     """Rules-in-use, organizations, or informal norms (Hayden’s three layers)."""
+
     layer: Optional[InstitutionLayer] = None
+
+    # Additional fields for Hayden's framework
+    formal_rules: List[str] = field(default_factory=list)
+    informal_norms: List[str] = field(default_factory=list)
+    enforcement_mechanisms: List[str] = field(default_factory=list)
+    legitimacy_basis: Optional[str] = None
+    change_resistance: Optional[float] = None
+    path_dependencies: List[uuid.UUID] = field(default_factory=list)
+
 
 @dataclass
 class Policy(Institution):
     """Specific policy intervention or regulatory framework."""
-    authority: Optional[str] = None    # Implementing body
+
+    authority: Optional[str] = None  # Implementing body
     enforcement: Optional[float] = 0.0  # Strength of enforcement (0-1)
     target_sectors: List[str] = field(default_factory=list)
-    
+
+
 @dataclass
 class Resource(Node):
     """Stock or asset available for use or transformation."""
+
     rtype: ResourceType = ResourceType.NATURAL
-    unit: Optional[str] = None             # e.g. "tonnes", "person-hours"
+    unit: Optional[str] = None  # e.g. "tonnes", "person-hours"
+
 
 @dataclass
 class Process(Node):
     """Transformation activity that converts inputs to outputs (production, consumption, disposal)."""
-    technology: Optional[str] = None       # e.g. "EAF-Steel-2024"
+
+    technology: Optional[str] = None  # e.g. "EAF-Steel-2024"
     responsible_actor_id: Optional[str] = None  # Actor that controls the process
+
 
 @dataclass
 class Flow(Node):
     """Edge-like node representing an actual quantified transfer of resources or value."""
+
     nature: FlowNature = FlowNature.TRANSFER
     quantity: Optional[float] = None
     unit: Optional[str] = None
@@ -95,45 +131,70 @@ class Flow(Node):
     space: Optional[SpatialUnit] = None
     scenario: Optional[Scenario] = None
 
+    # Additional SFM-specific fields
+    flow_type: str = ""  # material, energy, information, financial, social
+    source_process_id: Optional[uuid.UUID] = None
+    target_process_id: Optional[uuid.UUID] = None
+    transformation_coefficient: Optional[float] = None
+    loss_factor: Optional[float] = None  # inefficiencies, waste
+
+    # Hayden's value theory integration
+    ceremonial_component: Optional[float] = None
+    instrumental_component: Optional[float] = None
+
+
 @dataclass
 class BeliefSystem(Node):
     """Cultural myths, ideology or worldview that guides decision-making."""
+
     strength: Optional[float] = None  # Cultural embeddedness (0-1)
-    domain: Optional[str] = None      # Area of society where belief operates
+    domain: Optional[str] = None  # Area of society where belief operates
+
 
 @dataclass
 class FeedbackLoop(Node):
     """Represents a feedback loop in the Social Fabric Matrix."""
+
     relationships: List[uuid.UUID] = field(default_factory=list)
     description: Optional[str] = None
     polarity: Optional[str] = None  # "reinforcing" or "balancing"
     strength: Optional[float] = None  # Measure of loop strength/impact
     type: Optional[str] = None  # e.g. "positive", "negative", "neutral"
-    
+
     # override the Node __init__ method
-    # def __init__(self, id: uuid.UUID = None, name: str = "", description: str = None, 
+    # def __init__(self, id: uuid.UUID = None, name: str = "", description: str = None,
     #              relationships: List[uuid.UUID] = None, **kwargs):
     #     super().__init__(id=id, name=name, description=description, **kwargs)
     #     self.relationships = relationships or []
 
+
 @dataclass
 class TechnologySystem(Node):
     """Coherent system of techniques, tools and knowledge."""
+
     maturity: Optional[float] = None  # Technology readiness level
-    compatibility: Dict[str, float] = field(default_factory=dict)  # Fit with other systems
+    compatibility: Dict[str, float] = field(
+        default_factory=dict
+    )  # Fit with other systems
+
 
 @dataclass
 class Indicator(Node):
     """Measurable proxy for system performance."""
-    value_category: Optional[ValueCategory] = None  # Non-default field moved to the beginning
-    measurement_unit: Optional[str] = None             # Non-default field moved to the beginning  
+
+    value_category: Optional[ValueCategory] = (
+        None  # Non-default field moved to the beginning
+    )
+    measurement_unit: Optional[str] = None  # Non-default field moved to the beginning
     current_value: Optional[float] = None
     target_value: Optional[float] = None
     threshold_values: Dict[str, float] = field(default_factory=dict)
 
+
 @dataclass
 class AnalyticalContext(Node):
     """Contains metadata about analysis parameters and configuration."""
+
     methods_used: List[str] = field(default_factory=list)
     assumptions: Dict[str, str] = field(default_factory=dict)
     data_sources: Dict[str, str] = field(default_factory=dict)
@@ -142,16 +203,110 @@ class AnalyticalContext(Node):
     modified_at: Optional[datetime] = None
     parameters: Dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class SystemProperty(Node):
     """Represents a system-level property or metric of the SFM."""
+
     property_type: str = ""
     value: Any = None
     unit: Optional[str] = None
     timestamp: datetime = field(default_factory=datetime.now)
-    affected_nodes: List[uuid.UUID] = field(default_factory=list)  # Nodes that this property applies to
-    contributing_relationships: List[uuid.UUID] = field(default_factory=list)  # Relationships that contribute to this property
+    affected_nodes: List[uuid.UUID] = field(
+        default_factory=list
+    )  # Nodes that this property applies to
+    contributing_relationships: List[uuid.UUID] = field(
+        default_factory=list
+    )  # Relationships that contribute to this property
     # id, name, and description are inherited from Node
+
+
+@dataclass
+class ValueSystem(Node):
+    """Hierarchical value structure that guides institutional behavior."""
+
+    parent_values: List[uuid.UUID] = field(default_factory=list)
+    priority_weight: Optional[float] = None
+    cultural_domain: Optional[str] = None
+    legitimacy_source: Optional[str] = None  # tradition, charisma, legal-rational
+
+
+@dataclass
+class CeremonialBehavior(Node):
+    """Hayden's ceremonial behaviors that resist change."""
+
+    rigidity_level: Optional[float] = None
+    tradition_strength: Optional[float] = None
+    resistance_to_change: Optional[float] = None
+
+
+@dataclass
+class InstrumentalBehavior(Node):
+    """Problem-solving, adaptive behaviors."""
+
+    efficiency_measure: Optional[float] = None
+    adaptability_score: Optional[float] = None
+    innovation_potential: Optional[float] = None
+
+
+@dataclass
+class PolicyInstrument(Node):
+    """Specific tools used to implement policies."""
+
+    instrument_type: str = ""  # regulatory, economic, voluntary, information
+    target_behavior: Optional[str] = None
+    compliance_mechanism: Optional[str] = None
+    effectiveness_measure: Optional[float] = None
+
+
+@dataclass
+class GovernanceStructure(Institution):
+    """Formal and informal governance arrangements."""
+
+    decision_making_process: Optional[str] = None
+    power_distribution: Dict[str, float] = field(default_factory=dict)
+    accountability_mechanisms: List[str] = field(default_factory=list)
+
+
+@dataclass
+class ValueFlow(Flow):
+    """Tracks value creation, capture, and distribution."""
+
+    value_created: Optional[float] = None
+    value_captured: Optional[float] = None
+    beneficiary_actors: List[uuid.UUID] = field(default_factory=list)
+    distributional_impact: Dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class ChangeProcess(Node):
+    """Models institutional and technological change over time."""
+
+    change_type: str = ""  # evolutionary, revolutionary, cyclical
+    change_agents: List[uuid.UUID] = field(default_factory=list)
+    resistance_factors: List[uuid.UUID] = field(default_factory=list)
+    change_trajectory: List[TimeSlice] = field(default_factory=list)
+    success_probability: Optional[float] = None
+
+
+@dataclass
+class CognitiveFramework(Node):
+    """Mental models and worldviews that shape perception."""
+
+    framing_effects: Dict[str, str] = field(default_factory=dict)
+    cognitive_biases: List[str] = field(default_factory=list)
+    information_filters: List[str] = field(default_factory=list)
+    learning_capacity: Optional[float] = None
+
+
+@dataclass
+class BehavioralPattern(Node):
+    """Recurring patterns of behavior in the social fabric."""
+
+    pattern_type: str = ""  # habitual, strategic, adaptive, resistant
+    frequency: Optional[float] = None
+    predictability: Optional[float] = None
+    context_dependency: List[str] = field(default_factory=list)
 
 
 # ───────────────────────────────────────────────
@@ -159,13 +314,15 @@ class SystemProperty(Node):
 # (Keeps multiplicity, weight, and dimension tags)
 # ───────────────────────────────────────────────
 
+
 @dataclass
 class Relationship:
     """Typed edge connecting two nodes in the SFM graph."""
+
     source_id: uuid.UUID
     target_id: uuid.UUID
     kind: RelationshipKind
-    weight: Optional[float] = 0.0         # e.g. $-value, mass, influence score
+    weight: Optional[float] = 0.0  # e.g. $-value, mass, influence score
     time: Optional[TimeSlice] = None  # Temporal context of the relationship
     space: Optional[SpatialUnit] = None
     scenario: Optional[Scenario] = None
@@ -174,17 +331,20 @@ class Relationship:
     certainty: Optional[float] = 1.0  # Confidence level (0-1)
     variability: Optional[float] = None  # Standard deviation or range
 
+
 # ───────────────────────────────────────────────
 # BOUNDRY/DOMAIN “GRAPH” AGGREGATE
 # ───────────────────────────────────────────────
 
+
 @dataclass
 class SFMGraph:
     """A complete Social Fabric Matrix representation."""
+
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     name: str = ""
     description: Optional[str] = None
-    
+
     # Core SFM components
     actors: Dict[uuid.UUID, Actor] = field(default_factory=dict)
     institutions: Dict[uuid.UUID, Institution] = field(default_factory=dict)
@@ -192,7 +352,6 @@ class SFMGraph:
     processes: Dict[uuid.UUID, Process] = field(default_factory=dict)
     flows: Dict[uuid.UUID, Flow] = field(default_factory=dict)
     relationships: Dict[uuid.UUID, Relationship] = field(default_factory=dict)
-    
     # Optional specialized components
     belief_systems: Dict[uuid.UUID, BeliefSystem] = field(default_factory=dict)
     technology_systems: Dict[uuid.UUID, TechnologySystem] = field(default_factory=dict)
@@ -200,19 +359,53 @@ class SFMGraph:
     policies: Dict[uuid.UUID, Policy] = field(default_factory=dict)
     feedback_loops: Dict[uuid.UUID, FeedbackLoop] = field(default_factory=dict)
     system_properties: Dict[uuid.UUID, SystemProperty] = field(default_factory=dict)
-    analytical_contexts: Dict[uuid.UUID, AnalyticalContext] = field(default_factory=dict)
-    
+    analytical_contexts: Dict[uuid.UUID, AnalyticalContext] = field(
+        default_factory=dict
+    )
+    policy_instruments: Dict[uuid.UUID, PolicyInstrument] = field(default_factory=dict)
+    governance_structures: Dict[uuid.UUID, GovernanceStructure] = field(
+        default_factory=dict
+    )
+
+    # Hayden's enhanced SFM components
+    value_systems: Dict[uuid.UUID, ValueSystem] = field(default_factory=dict)
+    ceremonial_behaviors: Dict[uuid.UUID, CeremonialBehavior] = field(
+        default_factory=dict
+    )
+    instrumental_behaviors: Dict[uuid.UUID, InstrumentalBehavior] = field(
+        default_factory=dict
+    )
+    change_processes: Dict[uuid.UUID, ChangeProcess] = field(default_factory=dict)
+    cognitive_frameworks: Dict[uuid.UUID, CognitiveFramework] = field(
+        default_factory=dict
+    )
+    behavioral_patterns: Dict[uuid.UUID, BehavioralPattern] = field(
+        default_factory=dict
+    )
+    value_flows: Dict[uuid.UUID, ValueFlow] = field(default_factory=dict)
+
     def add_node(self, node: Node) -> Node:
         """Add a node to the appropriate collection based on its type."""
-        if isinstance(node, Actor):
-            self.actors[node.id] = node
-        elif isinstance(node, Institution) and not isinstance(node, Policy): # Policy is a subclass of Institution
+        # Handle most specific types first to avoid inheritance conflicts
+        if isinstance(node, ValueFlow):
+            self.value_flows[node.id] = node
+        elif isinstance(node, GovernanceStructure):
+            self.governance_structures[node.id] = node
+        elif isinstance(node, Policy):
+            self.policies[node.id] = node
+        elif isinstance(
+            node, Institution
+        ):  # Check Institution after Policy since Policy inherits from Institution
             self.institutions[node.id] = node
+        elif isinstance(node, Actor):
+            self.actors[node.id] = node
         elif isinstance(node, Resource):
             self.resources[node.id] = node
         elif isinstance(node, Process):
             self.processes[node.id] = node
-        elif isinstance(node, Flow):
+        elif isinstance(
+            node, Flow
+        ):  # Check Flow after ValueFlow since ValueFlow inherits from Flow
             self.flows[node.id] = node
         elif isinstance(node, BeliefSystem):
             self.belief_systems[node.id] = node
@@ -220,28 +413,40 @@ class SFMGraph:
             self.technology_systems[node.id] = node
         elif isinstance(node, Indicator):
             self.indicators[node.id] = node
-        elif isinstance(node, Policy):
-            self.policies[node.id] = node
         elif isinstance(node, FeedbackLoop):
             self.feedback_loops[node.id] = node
         elif isinstance(node, SystemProperty):
             self.system_properties[node.id] = node
         elif isinstance(node, AnalyticalContext):
             self.analytical_contexts[node.id] = node
+        elif isinstance(node, ValueSystem):
+            self.value_systems[node.id] = node
+        elif isinstance(node, CeremonialBehavior):
+            self.ceremonial_behaviors[node.id] = node
+        elif isinstance(node, InstrumentalBehavior):
+            self.instrumental_behaviors[node.id] = node
+        elif isinstance(node, PolicyInstrument):
+            self.policy_instruments[node.id] = node
+        elif isinstance(node, ChangeProcess):
+            self.change_processes[node.id] = node
+        elif isinstance(node, CognitiveFramework):
+            self.cognitive_frameworks[node.id] = node
+        elif isinstance(node, BehavioralPattern):
+            self.behavioral_patterns[node.id] = node
         else:
             raise TypeError(f"Unsupported node type: {type(node)}")
-        
+
         return node
-    
+
     def add_relationship(self, relationship: Relationship) -> Relationship:
         """Add a relationship to the SFM graph."""
         if not isinstance(relationship, Relationship):
             raise TypeError(f"Expected Relationship but got {type(relationship)}")
-        
+
         # Ensure the relationship has an ID
         if relationship.id is None:
             relationship.id = uuid.uuid4()
-        
+
         # Store the relationship
         self.relationships[relationship.id] = relationship
         return relationship
@@ -261,25 +466,44 @@ class SFMGraph:
             self.feedback_loops,
             self.system_properties,
             self.analytical_contexts,
+            self.policy_instruments,
+            self.governance_structures,
+            self.value_systems,
+            self.ceremonial_behaviors,
+            self.instrumental_behaviors,
+            self.change_processes,
+            self.cognitive_frameworks,
+            self.behavioral_patterns,
+            self.value_flows,
         ]:
             yield from collection.values()
-            
+
     def __len__(self) -> int:
         """Return the total number of nodes in the graph."""
         return (
-            len(self.actors) +
-            len(self.institutions) +
-            len(self.resources) +
-            len(self.processes) +
-            len(self.flows) +
-            len(self.belief_systems) +
-            len(self.technology_systems) +
-            len(self.indicators) +
-            len(self.policies) +
-            len(self.feedback_loops) +
-            len(self.system_properties) +
-            len(self.analytical_contexts)
+            len(self.actors)
+            + len(self.institutions)
+            + len(self.resources)
+            + len(self.processes)
+            + len(self.flows)
+            + len(self.belief_systems)
+            + len(self.technology_systems)
+            + len(self.indicators)
+            + len(self.policies)
+            + len(self.feedback_loops)
+            + len(self.system_properties)
+            + len(self.analytical_contexts)
+            + len(self.policy_instruments)
+            + len(self.governance_structures)
+            + len(self.value_systems)
+            + len(self.ceremonial_behaviors)
+            + len(self.instrumental_behaviors)
+            + len(self.change_processes)
+            + len(self.cognitive_frameworks)
+            + len(self.behavioral_patterns)
+            + len(self.value_flows)
         )
+
     def clear(self):
         """Clear all nodes and relationships from the graph."""
         self.actors.clear()
@@ -294,4 +518,13 @@ class SFMGraph:
         self.feedback_loops.clear()
         self.system_properties.clear()
         self.analytical_contexts.clear()
+        self.policy_instruments.clear()
+        self.governance_structures.clear()
+        self.value_systems.clear()
+        self.ceremonial_behaviors.clear()
+        self.instrumental_behaviors.clear()
+        self.change_processes.clear()
+        self.cognitive_frameworks.clear()
+        self.behavioral_patterns.clear()
+        self.value_flows.clear()
         self.relationships.clear()
