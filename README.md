@@ -1,6 +1,6 @@
 # Social Fabric Matrix Graph Service
 
-An experimental Python framework for implementing F. Gregory Hayden's Social Fabric Matrix (SFM) methodology, providing tools for modeling, analyzing, and querying complex socio-economic systems through graph-based data structures.
+An ***experimental*** Python framework for implementing F. Gregory Hayden's Social Fabric Matrix (SFM) methodology, providing tools for modeling, analyzing, and querying complex socio-economic systems through graph-based data structures.
 
 ## Overview
 
