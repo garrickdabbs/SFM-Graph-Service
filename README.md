@@ -11,7 +11,7 @@ The Social Fabric Matrix Graph Service is an experimental software implementatio
 - **Forecast System Changes**: Use network analysis to predict outcomes of interventions
 - **Query Complex Relationships**: Perform sophisticated analytical queries on system topology
 
-What started as a graduate school project prototype has evolved into a experimental framework that attempts to implement Hayden's SFM methodology while providing modern software engineering practices and extensible architecture.
+What started as a graduate school project prototype has evolved into a experimental framework that attempts to implement Hayden's SFM methodology using modern software engineering practices and extensible architecture.
 
 ## Key Features
 
