@@ -1194,7 +1194,6 @@ class SFMBusinessLogicTestCase(unittest.TestCase):
         governance = GovernanceStructure(
             label="Federal Environmental Governance",
             layer=InstitutionLayer.ORGANIZATION,
-            decision_making_process="hierarchical",
             power_distribution={
                 "executive": 0.5,
                 "legislative": 0.3,
