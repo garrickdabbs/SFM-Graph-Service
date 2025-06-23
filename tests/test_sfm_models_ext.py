@@ -355,9 +355,13 @@ class CoreNodeTestCase(unittest.TestCase):
             meta={"key1": "value1", "key2": "value2"}
         )
         
-        # Test iterator returns all attributes
+        # Test iterator returns all attributes (including enhanced fields)
         node_dict = dict(node)
-        expected_keys = {"label", "description", "id", "meta"}
+        expected_keys = {
+            "label", "description", "id", "meta",
+            "version", "created_at", "modified_at", "certainty", 
+            "data_quality", "previous_version_id"
+        }
         
         self.assertEqual(
             set(node_dict.keys()), expected_keys,

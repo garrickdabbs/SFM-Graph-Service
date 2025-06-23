@@ -58,6 +58,13 @@ class Node:
     description: Optional[str] = None
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     meta: Dict[str, str] = field(default_factory=dict)
+    # Versioning and data quality fields
+    version: int = 1
+    created_at: datetime = field(default_factory=datetime.now)
+    modified_at: Optional[datetime] = None
+    certainty: Optional[float] = 1.0  # Confidence level (0-1)
+    data_quality: Optional[str] = None  # Description of data quality
+    previous_version_id: Optional[uuid.UUID] = None
 
     def __iter__(self):
         """Iterator that yields (attribute_name, attribute_value) pairs."""
@@ -141,6 +148,7 @@ class Flow(Node):
     # Hayden's value theory integration
     ceremonial_component: Optional[float] = None
     instrumental_component: Optional[float] = None
+    temporal_dynamics: Optional[TemporalDynamics] = None  # Change over time
 
 
 @dataclass
@@ -189,6 +197,7 @@ class Indicator(Node):
     current_value: Optional[float] = None
     target_value: Optional[float] = None
     threshold_values: Dict[str, float] = field(default_factory=dict)
+    temporal_dynamics: Optional[TemporalDynamics] = None  # Track changes over time
 
 
 @dataclass
@@ -202,6 +211,7 @@ class AnalyticalContext(Node):
     created_at: datetime = field(default_factory=datetime.now)
     modified_at: Optional[datetime] = None
     parameters: Dict[str, Any] = field(default_factory=dict)
+    validation_rules: List[ValidationRule] = field(default_factory=list)
 
 
 @dataclass
@@ -287,6 +297,7 @@ class ChangeProcess(Node):
     resistance_factors: List[uuid.UUID] = field(default_factory=list)
     change_trajectory: List[TimeSlice] = field(default_factory=list)
     success_probability: Optional[float] = None
+    temporal_dynamics: Optional[TemporalDynamics] = None  # Detailed change over time
 
 
 @dataclass
@@ -310,6 +321,45 @@ class BehavioralPattern(Node):
 
 
 # ───────────────────────────────────────────────
+# BASE CLASSES AND MIXINS
+# ───────────────────────────────────────────────
+
+
+@dataclass
+class TemporalDynamics:
+    """Models change over time for any value."""
+
+    start_time: TimeSlice
+    end_time: Optional[TimeSlice] = None
+    function_type: str = "linear"  # linear, exponential, logistic, etc.
+    parameters: Dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class ValidationRule:
+    """Defines a validation rule for data integrity."""
+
+    rule_type: str  # e.g., "range", "sum", "required", "unique"
+    target_field: str
+    parameters: Dict[str, Any] = field(default_factory=dict)
+    error_message: str = ""
+
+
+@dataclass
+class ModelMetadata:
+    """Documentation about the model itself."""
+
+    version: str
+    authors: List[str] = field(default_factory=list)
+    creation_date: datetime = field(default_factory=datetime.now)
+    last_modified: Optional[datetime] = None
+    citation: Optional[str] = None
+    license: str = "MIT"
+    description: str = ""
+    change_log: List[str] = field(default_factory=list)
+
+
+# ───────────────────────────────────────────────
 # EXPLICIT RELATIONSHIP OBJECT
 # (Keeps multiplicity, weight, and dimension tags)
 # ───────────────────────────────────────────────
@@ -330,6 +380,13 @@ class Relationship:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     certainty: Optional[float] = 1.0  # Confidence level (0-1)
     variability: Optional[float] = None  # Standard deviation or range
+    # Versioning and data quality fields
+    version: int = 1
+    created_at: datetime = field(default_factory=datetime.now)
+    modified_at: Optional[datetime] = None
+    data_quality: Optional[str] = None  # Description of data quality
+    previous_version_id: Optional[uuid.UUID] = None
+    temporal_dynamics: Optional[TemporalDynamics] = None  # Change over time
 
 
 # ───────────────────────────────────────────────
@@ -383,6 +440,17 @@ class SFMGraph:
         default_factory=dict
     )
     value_flows: Dict[uuid.UUID, ValueFlow] = field(default_factory=dict)
+    network_metrics: Dict[uuid.UUID, NetworkMetrics] = field(default_factory=dict)
+
+    # Model metadata
+    version: int = 1
+    created_at: datetime = field(default_factory=datetime.now)
+    modified_at: Optional[datetime] = None
+    data_quality: Optional[str] = None  # Description of data quality
+    previous_version_id: Optional[uuid.UUID] = None
+    model_metadata: Optional[ModelMetadata] = None
+    validation_rules: List[ValidationRule] = field(default_factory=list)
+    network_metrics: Dict[uuid.UUID, NetworkMetrics] = field(default_factory=dict)
 
     def add_node(self, node: Node) -> Node:
         """Add a node to the appropriate collection based on its type."""
@@ -433,6 +501,8 @@ class SFMGraph:
             self.cognitive_frameworks[node.id] = node
         elif isinstance(node, BehavioralPattern):
             self.behavioral_patterns[node.id] = node
+        elif isinstance(node, NetworkMetrics):
+            self.network_metrics[node.id] = node
         else:
             raise TypeError(f"Unsupported node type: {type(node)}")
 
@@ -475,6 +545,7 @@ class SFMGraph:
             self.cognitive_frameworks,
             self.behavioral_patterns,
             self.value_flows,
+            self.network_metrics,
         ]:
             yield from collection.values()
 
@@ -502,6 +573,7 @@ class SFMGraph:
             + len(self.cognitive_frameworks)
             + len(self.behavioral_patterns)
             + len(self.value_flows)
+            + len(self.network_metrics)
         )
 
     def clear(self):
@@ -527,4 +599,16 @@ class SFMGraph:
         self.cognitive_frameworks.clear()
         self.behavioral_patterns.clear()
         self.value_flows.clear()
+        self.network_metrics.clear()
         self.relationships.clear()
+        self.network_metrics.clear()
+
+
+@dataclass
+class NetworkMetrics(Node):
+    """Captures network analysis metrics for nodes or subgraphs."""
+
+    centrality_measures: Dict[str, float] = field(default_factory=dict)
+    clustering_coefficient: Optional[float] = None
+    path_lengths: Dict[uuid.UUID, float] = field(default_factory=dict)
+    community_assignment: Optional[str] = None

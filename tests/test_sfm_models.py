@@ -35,6 +35,10 @@ from core.sfm_models import (
     ChangeProcess,
     CognitiveFramework,
     BehavioralPattern,
+    TemporalDynamics,
+    ValidationRule,
+    ModelMetadata,
+    NetworkMetrics,
 )
 from core.sfm_enums import (
     ValueCategory,
@@ -2259,3 +2263,434 @@ class TestSFMBusinessLogic(unittest.TestCase):
                            RelationshipKind.AFFECTS, RelationshipKind.INFLUENCES]
         ]
         self.assertEqual(len(policy_relationships), 5)  # ENACTS, IMPLEMENTS, AFFECTS, INFLUENCES, INFLUENCES (PRODUCES not included)
+
+
+class TestNewClasses(unittest.TestCase):
+    """Test suite for new classes added to the SFM data model"""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        # Create time slices for temporal dynamics
+        start_time = TimeSlice(label="start_period_2024_H1")
+        end_time = TimeSlice(label="end_period_2024_H2")
+        
+        self.temporal_dynamics = TemporalDynamics(
+            start_time=start_time,
+            end_time=end_time,
+            function_type="linear",
+            parameters={"rate": 0.5, "offset": 0.1}
+        )
+        
+        self.validation_rule = ValidationRule(
+            rule_type="range",
+            target_field="data_quality",
+            parameters={"min_value": 0.5, "max_value": 1.0},
+            error_message="Data quality must be between 0.5 and 1.0"
+        )
+        
+        self.model_metadata = ModelMetadata(
+            version="1.0.0",
+            authors=["test_user"],
+            creation_date=datetime.now(),
+            last_modified=datetime.now(),
+            description="Testing SFM model",
+            change_log=["Initial version"]
+        )
+        
+        self.network_metrics = NetworkMetrics(
+            label="Test Network Metrics",
+            centrality_measures={
+                "betweenness": 0.5,
+                "closeness": 0.7,
+                "degree": 3.0
+            },
+            clustering_coefficient=0.4,
+            path_lengths={uuid.uuid4(): 2.5},
+            community_assignment="cluster_1"
+        )
+
+    def test_temporal_dynamics_creation(self):
+        """Test creation of TemporalDynamics objects."""
+        self.assertIsNotNone(self.temporal_dynamics.start_time)
+        self.assertIsNotNone(self.temporal_dynamics.end_time)
+        self.assertEqual(self.temporal_dynamics.function_type, "linear")
+        self.assertEqual(self.temporal_dynamics.parameters["rate"], 0.5)
+        self.assertEqual(self.temporal_dynamics.parameters["offset"], 0.1)
+
+    def test_temporal_dynamics_required_fields(self):
+        """Test that TemporalDynamics requires certain fields."""
+        # Test with minimal required fields
+        start_time = TimeSlice(label="minimal_start")
+        minimal = TemporalDynamics(start_time=start_time)
+        self.assertEqual(minimal.start_time.label, "minimal_start")
+        self.assertIsNone(minimal.end_time)
+        self.assertEqual(minimal.function_type, "linear")
+
+    def test_validation_rule_creation(self):
+        """Test creation of ValidationRule objects."""
+        self.assertEqual(self.validation_rule.rule_type, "range")
+        self.assertEqual(self.validation_rule.target_field, "data_quality")
+        self.assertEqual(self.validation_rule.parameters["min_value"], 0.5)
+        self.assertEqual(self.validation_rule.parameters["max_value"], 1.0)
+        self.assertEqual(self.validation_rule.error_message, "Data quality must be between 0.5 and 1.0")
+
+    def test_validation_rule_required_fields(self):
+        """Test that ValidationRule requires certain fields."""
+        # Test with minimal required fields
+        minimal = ValidationRule(
+            rule_type="required",
+            target_field="label"
+        )
+        self.assertEqual(minimal.rule_type, "required")
+        self.assertEqual(minimal.target_field, "label")
+        self.assertEqual(minimal.error_message, "")
+
+    def test_model_metadata_creation(self):
+        """Test creation of ModelMetadata objects."""
+        self.assertEqual(self.model_metadata.version, "1.0.0")
+        self.assertIn("test_user", self.model_metadata.authors)
+        self.assertIsInstance(self.model_metadata.creation_date, datetime)
+        self.assertIsInstance(self.model_metadata.last_modified, datetime)
+        self.assertEqual(self.model_metadata.description, "Testing SFM model")
+        self.assertIn("Initial version", self.model_metadata.change_log)
+
+    def test_model_metadata_required_fields(self):
+        """Test that ModelMetadata requires certain fields."""
+        # Test with minimal required fields
+        minimal = ModelMetadata(version="0.1.0")
+        self.assertEqual(minimal.version, "0.1.0")
+        self.assertEqual(len(minimal.authors), 0)
+        self.assertEqual(minimal.description, "")
+
+    def test_network_metrics_creation(self):
+        """Test creation of NetworkMetrics objects."""
+        self.assertEqual(self.network_metrics.label, "Test Network Metrics")
+        self.assertEqual(self.network_metrics.centrality_measures["betweenness"], 0.5)
+        self.assertEqual(self.network_metrics.centrality_measures["closeness"], 0.7)
+        self.assertEqual(self.network_metrics.centrality_measures["degree"], 3.0)
+        self.assertEqual(self.network_metrics.clustering_coefficient, 0.4)
+        self.assertEqual(self.network_metrics.community_assignment, "cluster_1")
+
+    def test_network_metrics_required_fields(self):
+        """Test that NetworkMetrics requires certain fields."""
+        # Test with minimal required fields
+        minimal = NetworkMetrics(label="Minimal Metrics")
+        self.assertEqual(minimal.label, "Minimal Metrics")
+        self.assertEqual(len(minimal.centrality_measures), 0)
+        self.assertIsNone(minimal.clustering_coefficient)
+
+
+class TestEnhancedNodeFields(unittest.TestCase):
+    """Test suite for enhanced Node class with new fields"""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        # Create a node with enhanced fields
+        self.enhanced_node = Actor(
+            label="Enhanced Actor",
+            version=2,
+            certainty=0.8,
+            data_quality="high",
+            previous_version_id=uuid.uuid4()
+        )
+
+    def test_node_version_field(self):
+        """Test version field in Node."""
+        self.assertEqual(self.enhanced_node.version, 2)
+        
+        # Test default version
+        default_node = Actor(label="Default Actor")
+        self.assertEqual(default_node.version, 1)
+
+    def test_node_certainty_field(self):
+        """Test certainty field in Node."""
+        self.assertEqual(self.enhanced_node.certainty, 0.8)
+        
+        # Test default certainty
+        default_node = Actor(label="Default Actor")
+        self.assertEqual(default_node.certainty, 1.0)
+
+    def test_node_data_quality_field(self):
+        """Test data_quality field in Node."""
+        self.assertEqual(self.enhanced_node.data_quality, "high")
+        
+        # Test default data quality
+        default_node = Actor(label="Default Actor")
+        self.assertIsNone(default_node.data_quality)
+
+    def test_node_previous_version_id_field(self):
+        """Test previous_version_id field in Node."""
+        self.assertIsNotNone(self.enhanced_node.previous_version_id)
+        
+        # Test default previous version id
+        default_node = Actor(label="Default Actor")
+        self.assertIsNone(default_node.previous_version_id)
+
+    def test_node_timestamps(self):
+        """Test timestamp fields in Node."""
+        self.assertIsInstance(self.enhanced_node.created_at, datetime)
+        self.assertIsNone(self.enhanced_node.modified_at)
+
+    def test_node_certainty_validation(self):
+        """Test that certainty is within valid range."""
+        # Valid certainty values
+        valid_node = Actor(label="Valid", certainty=0.5)
+        self.assertEqual(valid_node.certainty, 0.5)
+        
+        # Edge cases
+        edge_node_low = Actor(label="Edge Low", certainty=0.0)
+        self.assertEqual(edge_node_low.certainty, 0.0)
+        
+        edge_node_high = Actor(label="Edge High", certainty=1.0)
+        self.assertEqual(edge_node_high.certainty, 1.0)
+
+    def test_node_data_quality_string(self):
+        """Test that data_quality accepts string values."""
+        # Valid data quality values
+        valid_node = Actor(label="Valid", data_quality="medium")
+        self.assertEqual(valid_node.data_quality, "medium")
+        
+        # Various quality descriptions
+        low_quality = Actor(label="Low Quality", data_quality="low - incomplete data")
+        self.assertEqual(low_quality.data_quality, "low - incomplete data")
+
+
+class TestEnhancedRelationshipFields(unittest.TestCase):
+    """Test suite for enhanced Relationship class with new fields"""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        start_time = TimeSlice(label="test_start")
+        self.temporal_dynamics = TemporalDynamics(
+            start_time=start_time,
+            function_type="exponential",
+            parameters={"growth_rate": 0.3}
+        )
+        
+        # Create nodes for relationships
+        self.source_node = Actor(label="Source Actor")
+        self.target_node = Actor(label="Target Actor")
+        
+        # Create enhanced relationship
+        self.enhanced_relationship = Relationship(
+            source_id=self.source_node.id,
+            target_id=self.target_node.id,
+            kind=RelationshipKind.GOVERNS,
+            version=2,
+            certainty=0.7,
+            data_quality="good",
+            previous_version_id=uuid.uuid4(),
+            temporal_dynamics=self.temporal_dynamics
+        )
+
+    def test_relationship_version_field(self):
+        """Test version field in Relationship."""
+        self.assertEqual(self.enhanced_relationship.version, 2)
+        
+        # Test default version
+        default_rel = Relationship(
+            source_id=self.source_node.id,
+            target_id=self.target_node.id,
+            kind=RelationshipKind.USES
+        )
+        self.assertEqual(default_rel.version, 1)
+
+    def test_relationship_certainty_field(self):
+        """Test certainty field in Relationship."""
+        self.assertEqual(self.enhanced_relationship.certainty, 0.7)
+        
+        # Test default certainty
+        default_rel = Relationship(
+            source_id=self.source_node.id,
+            target_id=self.target_node.id,
+            kind=RelationshipKind.USES
+        )
+        self.assertEqual(default_rel.certainty, 1.0)
+
+    def test_relationship_data_quality_field(self):
+        """Test data_quality field in Relationship."""
+        self.assertEqual(self.enhanced_relationship.data_quality, "good")
+        
+        # Test default data quality
+        default_rel = Relationship(
+            source_id=self.source_node.id,
+            target_id=self.target_node.id,
+            kind=RelationshipKind.USES
+        )
+        self.assertIsNone(default_rel.data_quality)
+
+    def test_relationship_previous_version_id_field(self):
+        """Test previous_version_id field in Relationship."""
+        self.assertIsNotNone(self.enhanced_relationship.previous_version_id)
+        
+        # Test default previous version id
+        default_rel = Relationship(
+            source_id=self.source_node.id,
+            target_id=self.target_node.id,
+            kind=RelationshipKind.USES
+        )
+        self.assertIsNone(default_rel.previous_version_id)
+
+    def test_relationship_temporal_dynamics_field(self):
+        """Test temporal_dynamics field in Relationship."""
+        self.assertIsNotNone(self.enhanced_relationship.temporal_dynamics)
+        self.assertEqual(self.enhanced_relationship.temporal_dynamics.function_type, "exponential") #type: ignore check in previous step for none
+        self.assertEqual(self.enhanced_relationship.temporal_dynamics.parameters["growth_rate"], 0.3) #type: ignore check in previous step for none
+        
+        # Test default temporal dynamics
+        default_rel = Relationship(
+            source_id=self.source_node.id,
+            target_id=self.target_node.id,
+            kind=RelationshipKind.USES
+        )
+        self.assertIsNone(default_rel.temporal_dynamics)
+
+
+class TestEnhancedSFMGraph(unittest.TestCase):
+    """Test suite for enhanced SFMGraph class with new fields"""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.model_metadata = ModelMetadata(
+            version="2.0.0",
+            authors=["test_enhanced"]
+        )
+        
+        self.validation_rule = ValidationRule(
+            rule_type="required",
+            target_field="label"
+        )
+        
+        # Create enhanced graph
+        self.enhanced_graph = SFMGraph(
+            model_metadata=self.model_metadata,
+            validation_rules=[self.validation_rule]
+        )
+
+    def test_sfm_graph_model_metadata_field(self):
+        """Test model_metadata field in SFMGraph."""
+        self.assertIsNotNone(self.enhanced_graph.model_metadata)
+        self.assertEqual(self.enhanced_graph.model_metadata.version, "2.0.0") #type: ignore check in previous step for none
+        self.assertIn("test_enhanced", self.enhanced_graph.model_metadata.authors) #type: ignore check in previous step for none
+        
+        # Test default model metadata
+        default_graph = SFMGraph()
+        self.assertIsNone(default_graph.model_metadata)
+
+    def test_sfm_graph_validation_rules_field(self):
+        """Test validation_rules field in SFMGraph."""
+        self.assertIsNotNone(self.enhanced_graph.validation_rules)
+        self.assertEqual(len(self.enhanced_graph.validation_rules), 1)
+        self.assertEqual(self.enhanced_graph.validation_rules[0].rule_type, "required")
+        self.assertEqual(self.enhanced_graph.validation_rules[0].target_field, "label")
+        
+        # Test default validation rules
+        default_graph = SFMGraph()
+        self.assertEqual(len(default_graph.validation_rules), 0)
+
+    def test_sfm_graph_network_metrics_collection(self):
+        """Test network_metrics collection in SFMGraph."""
+        self.assertIsInstance(self.enhanced_graph.network_metrics, dict)
+        self.assertEqual(len(self.enhanced_graph.network_metrics), 0)
+        
+        # Add a network metrics node
+        metrics = NetworkMetrics(label="Test Metrics")
+        self.enhanced_graph.add_node(metrics)
+        
+        self.assertEqual(len(self.enhanced_graph.network_metrics), 1)
+        self.assertIn(metrics.id, self.enhanced_graph.network_metrics)
+
+    def test_sfm_graph_versioning_fields(self):
+        """Test versioning fields in SFMGraph."""
+        self.assertEqual(self.enhanced_graph.version, 1)
+        self.assertIsInstance(self.enhanced_graph.created_at, datetime)
+        self.assertIsNone(self.enhanced_graph.modified_at)
+        self.assertIsNone(self.enhanced_graph.data_quality)
+        self.assertIsNone(self.enhanced_graph.previous_version_id)
+
+
+class TestTemporalDynamicsIntegration(unittest.TestCase):
+    """Test suite for integration of temporal dynamics with other classes"""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        start_time = TimeSlice(label="integration_start")
+        self.temporal_dynamics = TemporalDynamics(
+            start_time=start_time,
+            function_type="logistic",
+            parameters={"rate": 0.4, "capacity": 100.0}
+        )
+
+    def test_flow_with_temporal_dynamics(self):
+        """Test Flow class with temporal_dynamics field."""
+        flow = Flow(
+            label="Dynamic Flow",
+            nature=FlowNature.TRANSFER,
+            temporal_dynamics=self.temporal_dynamics
+        )
+        
+        self.assertIsNotNone(flow.temporal_dynamics)
+        self.assertEqual(flow.temporal_dynamics.function_type, "logistic")  #type: ignore check in previous step for none
+        self.assertEqual(flow.temporal_dynamics.parameters["rate"], 0.4) #type: ignore check in previous step for none
+
+    def test_indicator_with_temporal_dynamics(self):
+        """Test Indicator class with temporal_dynamics field."""
+        indicator = Indicator(
+            label="Dynamic Indicator",
+            temporal_dynamics=self.temporal_dynamics
+        )
+        
+        self.assertIsNotNone(indicator.temporal_dynamics)
+        self.assertEqual(indicator.temporal_dynamics.parameters["capacity"], 100.0)     #type: ignore check in previous step for none
+
+    def test_relationship_with_temporal_dynamics(self):
+        """Test Relationship class with temporal_dynamics field."""
+        source_node = Actor(label="Source")
+        target_node = Actor(label="Target")
+        
+        relationship = Relationship(
+            source_id=source_node.id,
+            target_id=target_node.id,
+            kind=RelationshipKind.AFFECTS,
+            temporal_dynamics=self.temporal_dynamics
+        )
+        
+        self.assertIsNotNone(relationship.temporal_dynamics)
+        self.assertEqual(relationship.temporal_dynamics.start_time.label, "integration_start") #type: ignore check in previous step for none
+        self.assertEqual(relationship.temporal_dynamics.function_type, "logistic") #type: ignore check in previous step for none
+
+
+class TestValidationRulesIntegration(unittest.TestCase):
+    """Test suite for integration of validation rules with other classes"""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.validation_rule1 = ValidationRule(
+            rule_type="range",
+            target_field="data_quality",
+            parameters={"min_value": 0.7},
+            error_message="Data quality must be >= 0.7"
+        )
+        
+        self.validation_rule2 = ValidationRule(
+            rule_type="required",
+            target_field="label",
+            error_message="Label is required"
+        )
+
+    def test_analytical_context_with_validation_rules(self):
+        """Test AnalyticalContext class with validation_rules field."""
+        context = AnalyticalContext(label="Validated Context")
+        context.validation_rules = [self.validation_rule1, self.validation_rule2]
+        
+        self.assertEqual(len(context.validation_rules), 2)
+        self.assertEqual(context.validation_rules[0].rule_type, "range")
+        self.assertEqual(context.validation_rules[1].rule_type, "required")
+
+    def test_sfm_graph_with_validation_rules(self):
+        """Test SFMGraph class with validation_rules field."""
+        graph = SFMGraph(validation_rules=[self.validation_rule1])
+        
+        self.assertEqual(len(graph.validation_rules), 1)
+        self.assertEqual(graph.validation_rules[0].target_field, "data_quality")
+        self.assertEqual(graph.validation_rules[0].error_message, "Data quality must be >= 0.7")
