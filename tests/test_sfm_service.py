@@ -52,6 +52,14 @@ from core.sfm_models import (
 from core.sfm_enums import ResourceType
 from db.sfm_dao import SFMRepositoryFactory
 
+# Import centralized mock infrastructure
+from tests.mocks import (
+    MockRepositoryFactory,
+    MockStorageBackend,
+    create_mock_graph,
+    create_sample_nodes
+)
+
 
 class TestDataTransferObjects(unittest.TestCase):
     """Test data transfer objects (DTOs) and request/response models."""

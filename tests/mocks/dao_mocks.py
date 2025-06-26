@@ -81,14 +81,14 @@ class MockRepositoryFactory:
         
         # Configure CRUD operations
         mock_repo.create_node.side_effect = cls._mock_create_node
-        mock_repo.get_node.side_effect = cls._mock_get_node
+        mock_repo.read_node.side_effect = cls._mock_get_node
         mock_repo.update_node.side_effect = cls._mock_update_node
         mock_repo.delete_node.return_value = True
         mock_repo.list_nodes.return_value = cls._get_sample_nodes()
         
         # Configure relationship operations
         mock_repo.create_relationship.side_effect = cls._mock_create_relationship
-        mock_repo.get_relationship.side_effect = cls._mock_get_relationship
+        mock_repo.read_relationship.side_effect = cls._mock_get_relationship
         mock_repo.update_relationship.side_effect = cls._mock_update_relationship
         mock_repo.delete_relationship.return_value = True
         mock_repo.list_relationships.return_value = cls._get_sample_relationships()
