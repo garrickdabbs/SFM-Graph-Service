@@ -74,9 +74,10 @@ class SFMAPIDemo:
         if response.status_code == 201:
             actor = response.json()
             entity_ids["usda"] = actor["id"]
-            print(f"✅ Created actor: {actor['name']} (ID: {actor['id'][:8]}...)")
+            print(f"✅ Created actor: {actor['label']} (ID: {actor['id'][:8]}...)")
         else:
             print(f"❌ Failed to create actor: {response.status_code}")
+            print(f"   Response: {response.text}")
         
         # Create a policy
         print("Creating Farm Bill policy...")
@@ -93,9 +94,10 @@ class SFMAPIDemo:
         if response.status_code == 201:
             policy = response.json()
             entity_ids["farm_bill"] = policy["id"]
-            print(f"✅ Created policy: {policy['name']} (ID: {policy['id'][:8]}...)")
+            print(f"✅ Created policy: {policy['label']} (ID: {policy['id'][:8]}...)")
         else:
             print(f"❌ Failed to create policy: {response.status_code}")
+            print(f"   Response: {response.text}")
         
         # Create a resource
         print("Creating corn resource...")
@@ -111,9 +113,10 @@ class SFMAPIDemo:
         if response.status_code == 201:
             resource = response.json()
             entity_ids["corn"] = resource["id"]
-            print(f"✅ Created resource: {resource['name']} (ID: {resource['id'][:8]}...)")
+            print(f"✅ Created resource: {resource['label']} (ID: {resource['id'][:8]}...)")
         else:
             print(f"❌ Failed to create resource: {response.status_code}")
+            print(f"   Response: {response.text}")
         
         # Create an institution
         print("Creating Farm Credit System institution...")
@@ -127,9 +130,10 @@ class SFMAPIDemo:
         if response.status_code == 201:
             institution = response.json()
             entity_ids["farm_credit"] = institution["id"]
-            print(f"✅ Created institution: {institution['name']} (ID: {institution['id'][:8]}...)")
+            print(f"✅ Created institution: {institution['label']} (ID: {institution['id'][:8]}...)")
         else:
             print(f"❌ Failed to create institution: {response.status_code}")
+            print(f"   Response: {response.text}")
         
         return entity_ids
     
@@ -193,7 +197,7 @@ class SFMAPIDemo:
             stats = response.json()
             print(f"✅ Total nodes: {stats['total_nodes']}")
             print(f"✅ Total relationships: {stats['total_relationships']}")
-            print(f"✅ Entity breakdown: {stats.get('entity_breakdown', {})}")
+            print(f"✅ Node types: {stats.get('node_types', {})}")
         else:
             print(f"❌ Failed to get statistics: {response.status_code}")
         
@@ -215,10 +219,16 @@ class SFMAPIDemo:
         if response.status_code == 200:
             centrality = response.json()
             print(f"✅ Centrality analysis completed")
-            print(f"   Analysis type: {centrality.get('centrality_type', 'unknown')}")
-            nodes = centrality.get('top_nodes', [])
-            if nodes:
-                print(f"   Top central node: {nodes[0].get('name', 'unknown')} (score: {nodes[0].get('score', 0):.3f})")
+            print(f"   Analysis type: {centrality.get('analysis_type', 'unknown')}")
+            nodes = centrality.get('most_central_nodes', [])
+            if nodes and len(nodes) > 0:
+                # most_central_nodes is a list of [node_id, score] pairs
+                top_node = nodes[0]
+                node_id = top_node[0] if isinstance(top_node, list) else str(top_node)
+                score = top_node[1] if isinstance(top_node, list) and len(top_node) > 1 else 0
+                print(f"   Top central node ID: {node_id[:8]}... (score: {score:.3f})")
+            else:
+                print(f"   No central nodes found")
         else:
             print(f"❌ Failed to perform centrality analysis: {response.status_code}")
         
@@ -230,10 +240,17 @@ class SFMAPIDemo:
             if response.status_code == 200:
                 impact = response.json()
                 print(f"✅ Policy impact analysis completed")
-                print(f"   Affected nodes: {impact.get('affected_nodes_count', 0)}")
+                print(f"   Affected nodes: {impact.get('total_affected_nodes', 0)}")
                 print(f"   Impact radius: {impact.get('impact_radius', 0)}")
+                print(f"   Affected actors: {len(impact.get('affected_actors', []))}")
+                print(f"   Affected institutions: {len(impact.get('affected_institutions', []))}")
+                print(f"   Affected resources: {len(impact.get('affected_resources', []))}")
+            elif response.status_code == 404:
+                print(f"⚠️ Policy impact analysis: Policy not found in graph structure")
+                print(f"   This may occur if the policy hasn't been fully synchronized")
             else:
                 print(f"❌ Failed to analyze policy impact: {response.status_code}")
+                print(f"   Response: {response.text}")
     
     def demo_list_operations(self):
         """Demonstrate listing operations."""
@@ -246,7 +263,7 @@ class SFMAPIDemo:
             nodes = response.json()
             print(f"✅ Found {len(nodes)} nodes:")
             for node in nodes[:3]:  # Show first 3
-                print(f"   - {node.get('name', 'Unknown')} ({node.get('type', 'Unknown')})")
+                print(f"   - {node.get('label', 'Unknown')} ({node.get('node_type', 'Unknown')})")
             if len(nodes) > 3:
                 print(f"   ... and {len(nodes) - 3} more")
         else:
@@ -291,6 +308,18 @@ class SFMAPIDemo:
         else:
             print(f"❌ Failed to get API info: {response.status_code}")
     
+    def clear_data(self):
+        """Clear any existing data before running the demo."""
+        print("🧹 Clearing existing data...")
+        try:
+            response = self.session.delete(f"{self.base_url}/system/clear?confirm=true")
+            if response.status_code == 200:
+                print("✅ Data cleared successfully")
+            else:
+                print(f"⚠️ Failed to clear data: {response.status_code}")
+        except Exception as e:
+            print(f"⚠️ Error clearing data: {e}")
+    
     def run_full_demo(self):
         """Run the complete demo."""
         print("🚀 SFM API Demonstration")
@@ -302,6 +331,9 @@ class SFMAPIDemo:
             return False
         
         try:
+            # Clear existing data first
+            self.clear_data()
+            
             # Run demo sections
             self.demo_health_check()
             entity_ids = self.demo_create_entities()
