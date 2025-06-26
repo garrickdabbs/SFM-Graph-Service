@@ -7,4 +7,6 @@ pyvis
 setuptools
 pydantic
 pytest
+pytest-asyncio
+httpx
 requests
