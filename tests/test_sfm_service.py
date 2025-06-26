@@ -1,3 +1,5 @@
+#type: ignore    # On the fence about strict type checking and member access for the mocks
+#  This module provides comprehensive testing for the SFMService class and related
 """
 Unit and Integration Tests for SFM Service
 
