@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Set, Tuple, Any, Union
 import uuid
 from dataclasses import dataclass
 from enum import Enum
+from datetime import datetime
 
 from core.sfm_models import (
     Node,
@@ -201,6 +202,56 @@ class SFMQueryEngine(ABC):
     @abstractmethod
     def system_vulnerability_analysis(self) -> Dict[str, Any]:
         """Analyze system-wide vulnerabilities and resilience."""
+        pass
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # ENHANCED TEMPORAL ANALYSIS
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    @abstractmethod
+    def analyze_temporal_changes(
+        self, time_slice_graphs: List[Tuple[datetime, SFMGraph]]
+    ) -> Dict[str, Any]:
+        """Analyze changes across multiple time slices of the graph."""
+        pass
+
+    @abstractmethod
+    def detect_structural_changes(
+        self, reference_graph: SFMGraph, comparison_graph: SFMGraph
+    ) -> Dict[str, Any]:
+        """Detect structural changes between two graph states."""
+        pass
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # RISK ASSESSMENT AND VULNERABILITY ANALYSIS
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    @abstractmethod
+    def assess_network_vulnerabilities(self) -> Dict[str, Any]:
+        """Comprehensive vulnerability assessment of the network."""
+        pass
+
+    @abstractmethod
+    def simulate_node_failure_impact(
+        self, node_ids: List[uuid.UUID], failure_mode: str = "cascade"
+    ) -> Dict[str, Any]:
+        """Simulate the impact of node failures on network connectivity."""
+        pass
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # ADVANCED FLOW ANALYSIS
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    @abstractmethod
+    def analyze_flow_patterns(
+        self, flow_type: FlowNature, time_window: Optional[Tuple[datetime, datetime]] = None
+    ) -> Dict[str, Any]:
+        """Analyze patterns in resource or value flows."""
+        pass
+
+    @abstractmethod
+    def identify_flow_inefficiencies(self) -> Dict[str, Any]:
+        """Identify inefficiencies in flow patterns."""
         pass
 
 
@@ -634,6 +685,302 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):
         }
 
         return analysis
+
+    def analyze_temporal_changes(
+        self, time_slice_graphs: List[Tuple[datetime, SFMGraph]]
+    ) -> Dict[str, Any]:
+        """Analyze changes across multiple time slices of the graph."""
+        if len(time_slice_graphs) < 2:
+            return {"error": "Need at least 2 time slices for temporal analysis"}
+
+        analysis = {
+            "time_periods": len(time_slice_graphs),
+            "node_evolution": {},
+            "relationship_evolution": {},
+            "structural_changes": {},
+            "growth_metrics": {}
+        }
+
+        # Track node changes
+        for i in range(1, len(time_slice_graphs)):
+            prev_time, prev_graph = time_slice_graphs[i-1]
+            curr_time, curr_graph = time_slice_graphs[i]
+            
+            prev_nodes = set(node.id for node in prev_graph)
+            curr_nodes = set(node.id for node in curr_graph)
+            
+            added_nodes = curr_nodes - prev_nodes
+            removed_nodes = prev_nodes - curr_nodes
+            
+            period_key = f"{prev_time.isoformat()}_{curr_time.isoformat()}"
+            analysis["node_evolution"][period_key] = {
+                "added": len(added_nodes),
+                "removed": len(removed_nodes),
+                "stable": len(prev_nodes & curr_nodes)
+            }
+
+        return analysis
+
+    def detect_structural_changes(
+        self, reference_graph: SFMGraph, comparison_graph: SFMGraph
+    ) -> Dict[str, Any]:
+        """Detect structural changes between two graph states."""
+        import networkx as nx
+        
+        # Build NetworkX graphs for comparison
+        ref_nx = self._build_networkx_from_graph(reference_graph)
+        comp_nx = self._build_networkx_from_graph(comparison_graph)
+        
+        changes = {
+            "density_change": nx.density(comp_nx) - nx.density(ref_nx),
+            "node_count_change": comp_nx.number_of_nodes() - ref_nx.number_of_nodes(),
+            "edge_count_change": comp_nx.number_of_edges() - ref_nx.number_of_edges(),
+            "centrality_shifts": {},
+            "new_communities": [],
+            "disbanded_communities": []
+        }
+
+        # Analyze centrality shifts for common nodes
+        common_nodes = set(ref_nx.nodes()) & set(comp_nx.nodes())
+        if common_nodes:
+            ref_centrality = nx.betweenness_centrality(ref_nx)
+            comp_centrality = nx.betweenness_centrality(comp_nx)
+            
+            for node in common_nodes:
+                shift = comp_centrality.get(node, 0) - ref_centrality.get(node, 0)
+                if abs(shift) > 0.1:  # Significant shift threshold
+                    changes["centrality_shifts"][str(node)] = shift
+
+        return changes
+
+    def assess_network_vulnerabilities(self) -> Dict[str, Any]:
+        """Comprehensive vulnerability assessment of the network."""
+        import networkx as nx
+        
+        vulnerabilities = {
+            "critical_nodes": [],
+            "single_points_of_failure": [],
+            "fragmentation_risk": 0.0,
+            "cascade_failure_risk": 0.0,
+            "resilience_score": 0.0,
+            "mitigation_recommendations": []
+        }
+
+        # Identify critical nodes (high betweenness centrality)
+        centrality = nx.betweenness_centrality(self.nx_graph)
+        critical_threshold = sorted(centrality.values())[-max(1, len(centrality) // 20)]
+        vulnerabilities["critical_nodes"] = [
+            {"node_id": str(node_id), "centrality": score}
+            for node_id, score in centrality.items()
+            if score >= critical_threshold
+        ]
+
+        # Find single points of failure (articulation points)
+        if not self.nx_graph.is_directed():
+            simple_graph = self.nx_graph
+        else:
+            simple_graph = self.nx_graph.to_undirected()
+            
+        articulation_points = list(nx.articulation_points(simple_graph))
+        vulnerabilities["single_points_of_failure"] = [str(node) for node in articulation_points]
+
+        # Calculate fragmentation risk
+        if len(articulation_points) > 0:
+            vulnerabilities["fragmentation_risk"] = len(articulation_points) / len(self.nx_graph.nodes())
+
+        # Calculate resilience score
+        connectivity = nx.node_connectivity(simple_graph) if simple_graph.number_of_nodes() > 1 else 0
+        density = nx.density(self.nx_graph)
+        vulnerabilities["resilience_score"] = (connectivity + density) / 2
+
+        # Generate mitigation recommendations
+        if vulnerabilities["fragmentation_risk"] > 0.1:
+            vulnerabilities["mitigation_recommendations"].append(
+                "High fragmentation risk detected. Consider adding redundant connections."
+            )
+        if len(vulnerabilities["critical_nodes"]) > len(self.nx_graph.nodes()) * 0.2:
+            vulnerabilities["mitigation_recommendations"].append(
+                "Many critical nodes detected. Consider distributing centrality more evenly."
+            )
+
+        return vulnerabilities
+
+    def simulate_node_failure_impact(
+        self, node_ids: List[uuid.UUID], failure_mode: str = "cascade"
+    ) -> Dict[str, Any]:
+        """Simulate the impact of node failures on network connectivity."""
+        import networkx as nx
+        
+        original_components = nx.number_weakly_connected_components(self.nx_graph)
+        original_largest_component = len(max(nx.weakly_connected_components(self.nx_graph), key=len))
+        
+        # Create a copy of the graph for simulation
+        sim_graph = self.nx_graph.copy()
+        
+        impact_results = {
+            "failed_nodes": [str(nid) for nid in node_ids],
+            "failure_mode": failure_mode,
+            "connectivity_impact": {},
+            "isolated_nodes": [],
+            "affected_components": 0,
+            "cascading_failures": []
+        }
+
+        # Remove the failed nodes
+        sim_graph.remove_nodes_from(node_ids)
+        
+        # Analyze impact
+        new_components = nx.number_weakly_connected_components(sim_graph)
+        if sim_graph.number_of_nodes() > 0:
+            new_largest_component = len(max(nx.weakly_connected_components(sim_graph), key=len))
+        else:
+            new_largest_component = 0
+            
+        impact_results["connectivity_impact"] = {
+            "original_components": original_components,
+            "new_components": new_components,
+            "component_increase": new_components - original_components,
+            "largest_component_size_change": new_largest_component - original_largest_component,
+            "connectivity_loss_percentage": 
+                (original_largest_component - new_largest_component) / original_largest_component * 100
+                if original_largest_component > 0 else 0
+        }
+
+        # Identify newly isolated nodes
+        isolated = [node for node in sim_graph.nodes() if len(list(sim_graph.neighbors(node))) == 0]
+        impact_results["isolated_nodes"] = [str(node) for node in isolated]
+        
+        # Simulate cascading failures if requested
+        if failure_mode == "cascade":
+            cascade_nodes = []
+            # Simple cascade model: remove nodes that lose significant connections
+            for node in list(sim_graph.nodes()):
+                sim_node_degree = len(list(sim_graph.neighbors(node)))
+                orig_node_degree = len(list(self.nx_graph.neighbors(node)))
+                if sim_node_degree < orig_node_degree * 0.3:  # Lost 70% of connections
+                    cascade_nodes.append(node)
+                    sim_graph.remove_node(node)
+            
+            impact_results["cascading_failures"] = [str(node) for node in cascade_nodes]
+
+        return impact_results
+
+    def analyze_flow_patterns(
+        self, flow_type: FlowNature, time_window: Optional[Tuple[datetime, datetime]] = None
+    ) -> Dict[str, Any]:
+        """Analyze patterns in resource or value flows."""
+        flow_analysis = {
+            "flow_type": flow_type.value,
+            "total_flows": 0,
+            "flow_distribution": {},
+            "major_pathways": [],
+            "flow_concentrations": [],
+            "temporal_patterns": {}
+        }
+
+        # Get flows of the specified type
+        relevant_flows = []
+        for rel in self.nx_graph.edges(data=True):
+            edge_data = rel[2]
+            if hasattr(edge_data.get("data"), "flow_nature"):
+                if edge_data["data"].flow_nature == flow_type:
+                    relevant_flows.append(rel)
+
+        flow_analysis["total_flows"] = len(relevant_flows)
+
+        # Analyze flow distribution by node type
+        node_flow_counts = {}
+        for source, target, data in relevant_flows:
+            source_type = type(self.nx_graph.nodes[source]["data"]).__name__
+            target_type = type(self.nx_graph.nodes[target]["data"]).__name__
+            
+            flow_key = f"{source_type} -> {target_type}"
+            node_flow_counts[flow_key] = node_flow_counts.get(flow_key, 0) + 1
+
+        flow_analysis["flow_distribution"] = node_flow_counts
+
+        # Identify major flow pathways (high-volume routes)
+        pathway_volumes = {}
+        for source, target, data in relevant_flows:
+            pathway_key = f"{source} -> {target}"
+            volume = data.get("weight", 1.0)
+            pathway_volumes[pathway_key] = pathway_volumes.get(pathway_key, 0) + volume
+
+        # Sort and get top pathways
+        sorted_pathways = sorted(pathway_volumes.items(), key=lambda x: x[1], reverse=True)
+        flow_analysis["major_pathways"] = sorted_pathways[:10]  # Top 10 pathways
+
+        return flow_analysis
+
+    def identify_flow_inefficiencies(self) -> Dict[str, Any]:
+        """Identify inefficiencies in flow patterns."""
+        import networkx as nx
+        
+        inefficiencies = {
+            "redundant_paths": [],
+            "flow_imbalances": [],
+            "underutilized_connections": [],
+            "optimization_opportunities": []
+        }
+
+        # Find redundant paths (multiple paths with similar flows)
+        node_pairs_with_multiple_paths = []
+        for source in self.nx_graph.nodes():
+            for target in self.nx_graph.nodes():
+                if source != target:
+                    try:
+                        paths = list(nx.all_simple_paths(
+                            self.nx_graph, source, target, cutoff=3
+                        ))
+                        if len(paths) > 1:
+                            node_pairs_with_multiple_paths.append((source, target, len(paths)))
+                    except nx.NetworkXNoPath:
+                        continue
+
+        inefficiencies["redundant_paths"] = [
+            {"source": str(s), "target": str(t), "path_count": count}
+            for s, t, count in node_pairs_with_multiple_paths[:10]  # Top 10
+        ]
+
+        # Identify flow imbalances (nodes with very high in-degree vs out-degree)
+        for node in self.nx_graph.nodes():
+            in_degree = len(list(self.nx_graph.predecessors(node)))
+            out_degree = len(list(self.nx_graph.successors(node)))
+            
+            if in_degree > 0 and out_degree > 0:
+                imbalance_ratio = abs(in_degree - out_degree) / max(in_degree, out_degree)
+                if imbalance_ratio > 0.7:  # High imbalance threshold
+                    inefficiencies["flow_imbalances"].append({
+                        "node": str(node),
+                        "in_degree": in_degree,
+                        "out_degree": out_degree,
+                        "imbalance_ratio": imbalance_ratio
+                    })
+
+        return inefficiencies
+
+    def _build_networkx_from_graph(self, sfm_graph: SFMGraph):
+        """Helper method to build NetworkX graph from SFMGraph."""
+        import networkx as nx
+        
+        G = nx.MultiDiGraph()
+        
+        # Add nodes
+        for node in sfm_graph:
+            G.add_node(node.id, data=node, type=type(node).__name__)
+        
+        # Add relationships as edges
+        for rel in sfm_graph.relationships.values():
+            G.add_edge(
+                rel.source_id,
+                rel.target_id,
+                key=rel.id,
+                data=rel,
+                kind=rel.kind,
+                weight=rel.weight or 1.0,
+            )
+        
+        return G
 
 
 class SFMQueryFactory:

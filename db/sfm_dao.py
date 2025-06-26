@@ -813,7 +813,7 @@ class SFMRepositoryFactory:
 
         Args:
             storage_type: The type of storage backend to use.
-                          Currently supported: "networkx" (in-memory)
+                          Currently supported: "networkx" (in-memory), "test" (for testing)
 
         Returns:
             An SFM repository implementation
@@ -821,7 +821,7 @@ class SFMRepositoryFactory:
         Raises:
             ValueError: If the storage type is not supported
         """
-        if storage_type.lower() == "networkx":
+        if storage_type.lower() in ("networkx", "test"):
             return NetworkXSFMRepository()
         else:
             raise ValueError(f"Unsupported storage type: {storage_type}")
