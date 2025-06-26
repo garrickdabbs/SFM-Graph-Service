@@ -21,23 +21,37 @@ from db.sfm_dao import (
     RelationshipRepository
 )
 
+# Import centralized mocks and fixtures
+from tests.mocks import (
+    MockRepositoryFactory,
+    MockStorageBackend,
+    create_mock_graph,
+    create_sample_nodes,
+)
+
 
 # ==============================================================================
 # BASIC REPOSITORY UNIT TESTS 
 # ==============================================================================
 
 class TestNetworkXSFMRepositoryUnit(unittest.TestCase):
-    """Unit tests for NetworkXSFMRepository."""
+    """Unit tests for NetworkXSFMRepository using centralized mocks."""
 
     def setUp(self):
+        """Set up test fixtures using centralized mock infrastructure."""
         self.repo = NetworkXSFMRepository()
         
-        # Create some test nodes
-        self.actor1 = Actor(label="Test Actor 1", sector="Government")
-        self.actor2 = Actor(label="Test Actor 2", sector="Private")
-        self.institution = Institution(label="Test Institution")
+        # Use centralized mock nodes
+        nodes = create_sample_nodes()
+        actors = [n for n in nodes if isinstance(n, Actor)]
+        institutions = [n for n in nodes if isinstance(n, Institution)]
         
-        # Create relationships
+        # Assign specific test nodes with fallbacks
+        self.actor1 = actors[0] if actors else Actor(label="Test Actor 1", sector="Government")
+        self.actor2 = actors[1] if len(actors) > 1 else Actor(label="Test Actor 2", sector="Private")
+        self.institution = institutions[0] if institutions else Institution(label="Test Institution")
+        
+        # Create relationships using centralized pattern
         self.relationship = Relationship(
             source_id=self.actor1.id,
             target_id=self.actor2.id,
