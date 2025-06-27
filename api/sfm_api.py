@@ -1,9 +1,8 @@
 """
 FastAPI REST API for SFM (Social Fabric Matrix) Service
 
-This module provides a comprehensive REST API interface for the SFM framework,
-exposing all core functionality through HTTP endpoints. The API is designed
-to be RESTful, well-documented, and production-ready.
+This module provides a REST API interface for the SFM framework,
+exposing functionality through HTTP endpoints. 
 
 Features:
 - Full CRUD operations for all entity types
