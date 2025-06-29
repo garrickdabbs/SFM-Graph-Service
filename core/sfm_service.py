@@ -359,8 +359,9 @@ class SFMService:
         if self.config.max_graph_size > 0:
             stats = self.get_statistics()
             if stats.total_nodes > self.config.max_graph_size:
+                max_size = self.config.max_graph_size
                 raise SFMServiceError(
-                    f"Graph size ({stats.total_nodes}) exceeds maximum ({self.config.max_graph_size})",
+                    f"Graph size ({stats.total_nodes}) exceeds maximum ({max_size})",
                     "GRAPH_SIZE_EXCEEDED",
                 )
 
@@ -861,7 +862,7 @@ class SFMService:
                 for node in graph:
                     node_type = type(node).__name__
                     type_counts[node_type] = type_counts.get(node_type, 0) + 1
-                    
+
                 total_nodes = len(graph)
             except (TypeError, AttributeError):
                 # If graph is not iterable (e.g., Mock object), return default stats
@@ -875,7 +876,7 @@ class SFMService:
                 for rel in relationships.values():
                     kind = rel.kind.name
                     rel_counts[kind] = rel_counts.get(kind, 0) + 1
-                    
+
                 total_relationships = len(relationships)
             except (TypeError, AttributeError):
                 # If relationships is not accessible, return default
@@ -939,7 +940,7 @@ class SFMService:
     ) -> PolicyImpactAnalysis:
         """Analyze the potential impact of a policy."""
         import networkx as nx
-        
+
         try:
             if isinstance(policy_id, str):
                 policy_id = uuid.UUID(policy_id)
