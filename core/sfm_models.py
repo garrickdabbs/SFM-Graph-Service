@@ -169,13 +169,6 @@ class FeedbackLoop(Node):
     strength: Optional[float] = None  # Measure of loop strength/impact
     type: Optional[str] = None  # e.g. "positive", "negative", "neutral"
 
-    # override the Node __init__ method
-    # def __init__(self, id: uuid.UUID = None, name: str = "", description: str = None,
-    #              relationships: List[uuid.UUID] = None, **kwargs):
-    #     super().__init__(id=id, name=name, description=description, **kwargs)
-    #     self.relationships = relationships or []
-
-
 @dataclass
 class TechnologySystem(Node):
     """Coherent system of techniques, tools and knowledge."""
