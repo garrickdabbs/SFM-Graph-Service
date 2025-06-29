@@ -444,3 +444,4 @@ class RelationshipKind(Enum):
     ENABLES_INNOVATION = auto()
     DISTRIBUTES_POWER = auto()
     CONCENTRATES_POWER = auto()
+    BENEFITS_FROM = auto()  # Gains advantage or support from

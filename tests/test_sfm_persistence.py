@@ -154,8 +154,9 @@ class TestSFMPersistence(unittest.TestCase):
         metadata_v1 = self.manager.save_graph(graph_id, self.sample_graph)
         self.assertEqual(metadata_v1.version, 1)
         
-        # Modify graph and save again
-        modified_graph = self.sample_graph
+        # Modify graph and save again (use a deep copy to avoid mutating the original)
+        import copy
+        modified_graph = copy.deepcopy(self.sample_graph)
         new_actor = Actor(label="New Actor", description="Added in version 2")
         modified_graph.actors[new_actor.id] = new_actor
         
@@ -182,13 +183,13 @@ class TestSFMPersistence(unittest.TestCase):
             StorageFormat.COMPRESSED_PICKLE
         ]
         
-        for format in formats_to_test:
-            with self.subTest(format=format):
-                graph_id = f"test_{format.value}"
+        for format_type in formats_to_test:
+            with self.subTest(format=format_type):
+                graph_id = f"test_{format_type.value}"
                 
                 # Save with specific format
-                metadata = self.manager.save_graph(graph_id, self.sample_graph, format=format)
-                self.assertEqual(metadata.format, format)
+                metadata = self.manager.save_graph(graph_id, self.sample_graph, format_type=format_type)
+                self.assertEqual(metadata.format, format_type)
                 
                 # Load and verify
                 loaded_graph = self.manager.load_graph(graph_id)

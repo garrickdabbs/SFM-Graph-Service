@@ -37,7 +37,15 @@ from core.sfm_enums import FlowNature, RelationshipKind, ResourceType
 from core.sfm_models import (
     Actor, AnalyticalContext, BeliefSystem, FeedbackLoop, Flow, Indicator,
     Institution, Node, Policy, Process, Relationship, Resource, SFMGraph,
-    SystemProperty, TechnologySystem
+    SystemProperty, TechnologySystem,
+    PolicyInstrument,
+    GovernanceStructure,
+    ValueSystem,
+    CeremonialBehavior,
+    InstrumentalBehavior,
+    ChangeProcess,
+    CognitiveFramework,
+    BehavioralPattern,
 )
 from db.sfm_dao import NetworkXSFMRepository, SFMRepository
 
@@ -208,17 +216,21 @@ class NodeSerializer:
     @staticmethod
     def dict_to_node(data: Dict[str, Any], node_class: type) -> Node:
         """Convert dictionary representation back to Node."""
-        # Create basic node with common fields
-        node_kwargs = {
-            'id': uuid.UUID(data['id']),
-            'label': data['label'],
-            'description': data.get('description'),
-            'meta': data.get('meta', {}),
-        }
+        try:
+            # Create basic node with common fields
+            node_kwargs = {
+                'id': uuid.UUID(data['id']),
+                'label': data['label'],
+                'description': data.get('description'),
+                'meta': data.get('meta', {}),
+            }
 
-        # Add type-specific fields using strategy pattern
-        NodeSerializer._add_type_specific_kwargs(data, node_class, node_kwargs)
-        return node_class(**node_kwargs)
+            # Add type-specific fields using strategy pattern
+            NodeSerializer._add_type_specific_kwargs(data, node_class, node_kwargs)
+            return node_class(**node_kwargs)
+        except Exception as e:
+            logger.error("Failed to deserialize node: %s", str(e))
+            raise SFMSerializationError(f"Failed to deserialize node: {str(e)}") from e
 
     @staticmethod
     def _add_type_specific_kwargs(data: Dict[str, Any], node_class: type,
@@ -312,42 +324,142 @@ class SFMGraphSerializer:
     @staticmethod
     def _serialize_pickle(graph: SFMGraph, format_type: StorageFormat) -> bytes:
         """Serialize graph to Pickle format."""
-        pickle_bytes = pickle.dumps(graph)
-
         if format_type == StorageFormat.COMPRESSED_PICKLE:
-            return gzip.compress(pickle_bytes)
-        return pickle_bytes
+            return gzip.compress(pickle.dumps(graph, protocol=pickle.HIGHEST_PROTOCOL))
+        return pickle.dumps(graph, protocol=pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
-    def deserialize_graph(data: bytes,
-                          format_type: StorageFormat = StorageFormat.JSON) -> SFMGraph:
+    def deserialize_graph(data: bytes, format_type: StorageFormat = StorageFormat.JSON) -> SFMGraph:
         """Deserialize bytes to an SFM graph."""
         try:
-            if format_type in [StorageFormat.COMPRESSED_JSON,
-                               StorageFormat.COMPRESSED_PICKLE]:
+            logger.debug("Deserializing graph with format '%s'. Data size: %d bytes", format_type, len(data))
+
+            if format_type in [StorageFormat.COMPRESSED_JSON, StorageFormat.COMPRESSED_PICKLE]:
                 data = gzip.decompress(data)
 
             if format_type in [StorageFormat.JSON, StorageFormat.COMPRESSED_JSON]:
-                return SFMGraphSerializer._deserialize_json(data)
+                dict_data = json.loads(data.decode('utf-8'))
+                logger.debug("Deserialized JSON data: %s", dict_data)
+                required_keys = ['id', 'name', 'description', 'relationships']
+                missing_keys = [key for key in required_keys if key not in dict_data]
+                if missing_keys:
+                    logger.error("Missing required keys in graph data: %s", missing_keys)
+                    raise ValueError(f"Missing required keys: {missing_keys}")
+                return SFMGraphSerializer._dict_to_graph(dict_data)
+
             elif format_type in [StorageFormat.PICKLE, StorageFormat.COMPRESSED_PICKLE]:
-                return SFMGraphSerializer._deserialize_pickle(data)
+                deserialized_data = pickle.loads(data)
+                logger.debug("Deserialized PICKLE data: %s", deserialized_data)
+                return deserialized_data
+
             else:
                 raise SFMSerializationError(f"Unsupported format: {format_type}")
 
         except Exception as e:
+            logger.error("Failed to deserialize graph. Format: '%s', Error: %s", format_type, str(e))
             raise SFMSerializationError(f"Failed to deserialize graph: {str(e)}") from e
 
     @staticmethod
-    def _deserialize_json(data: bytes) -> SFMGraph:
-        """Deserialize graph from JSON format."""
-        json_str = data.decode('utf-8')
-        dict_data = json.loads(json_str)
-        return SFMGraphSerializer._dict_to_graph(dict_data)
+    def _dict_to_graph(data: Dict[str, Any]) -> SFMGraph:
+        """Convert dictionary representation back to SFMGraph."""
+        try:
+            logger.debug("Deserializing graph from dictionary: %s", data)
+
+            # Validate dictionary keys
+            required_keys = ['id', 'name', 'description']
+            for key in required_keys:
+                if key not in data:
+                    raise ValueError(f"Missing required key '{key}' in graph data: {data}")
+
+            logger.debug("Dictionary keys: %s", list(data.keys()))
+            logger.debug("Dictionary content: %s", data)
+
+            logger.debug("Graph ID: %s, Name: %s, Description: %s", data['id'], data['name'], data.get('description', ''))
+
+            graph = SFMGraph(
+                id=uuid.UUID(data['id']),
+                name=data['name'],
+                description=data.get('description', '')
+            )
+
+            logger.debug("Graph initialized: %s", graph)
+
+            # Deserialize node collections
+            node_type_mapping = [
+                ('actors', Actor, graph.actors),
+                ('institutions', Institution, graph.institutions),
+                ('resources', Resource, graph.resources),
+                ('processes', Process, graph.processes),
+                ('flows', Flow, graph.flows),
+                ('policies', Policy, graph.policies),
+                ('belief_systems', BeliefSystem, graph.belief_systems),
+                ('technology_systems', TechnologySystem, graph.technology_systems),
+                ('indicators', Indicator, graph.indicators),
+                ('feedback_loops', FeedbackLoop, graph.feedback_loops),
+                ('system_properties', SystemProperty, graph.system_properties),
+                ('analytical_contexts', AnalyticalContext, graph.analytical_contexts),
+            ]
+
+            logger.debug("Node collections during deserialization: %s", node_type_mapping)
+
+            for collection_name, node_class, target_collection in node_type_mapping:
+                collection_data = data.get(collection_name, {})
+                if not isinstance(collection_data, dict):
+                    raise ValueError(f"Invalid data for collection '{collection_name}': {collection_data}")
+                for node_data in collection_data.values():
+                    node = NodeSerializer.dict_to_node(node_data, node_class)
+                    target_collection[node.id] = node
+
+            logger.debug("Node collections deserialized successfully.")
+
+            # Deserialize relationships
+            relationships_data = data.get('relationships', {})
+            if not isinstance(relationships_data, dict):
+                raise ValueError(f"Invalid data for relationships: {relationships_data}")
+
+            logger.debug("Relationships during deserialization: %s", relationships_data)
+
+            for rel_data in relationships_data.values():
+                relationship = SFMGraphSerializer._dict_to_relationship(rel_data)
+                graph.relationships[relationship.id] = relationship
+
+            logger.debug("Relationships deserialized successfully.")
+
+            return graph
+
+        except Exception as e:
+            logger.error("Failed to deserialize graph: %s", str(e))
+            raise SFMSerializationError(f"Failed to deserialize graph: {str(e)}") from e
 
     @staticmethod
-    def _deserialize_pickle(data: bytes) -> SFMGraph:
-        """Deserialize graph from Pickle format."""
-        return pickle.loads(data)
+    def _dict_to_relationship(data: Dict[str, Any]) -> Relationship:
+        """Convert dictionary representation back to Relationship."""
+        try:
+            logger.debug("Deserializing relationship data: %s", data)
+            return Relationship(
+                id=uuid.UUID(data['id']),
+                source_id=uuid.UUID(data['source_id']),
+                target_id=uuid.UUID(data['target_id']),
+                kind=RelationshipKind[data['kind']],
+                weight=data.get('weight', 1.0),
+                meta=data.get('meta', {}),
+                certainty=data.get('certainty', 1.0),
+                modified_at=data.get('modified_at', None)  # Handle missing modified_at
+            )
+        except Exception as e:
+            logger.error("Failed to deserialize relationship: %s", str(e))
+            raise SFMSerializationError(f"Failed to deserialize relationship: {str(e)}") from e
+
+    @staticmethod
+    def _json_serializer(obj):
+        """Custom JSON serializer for complex types."""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, uuid.UUID):
+            return str(obj)
+        elif hasattr(obj, '__dict__'):
+            return obj.__dict__
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
     @staticmethod
     def _graph_to_dict(graph: SFMGraph) -> Dict[str, Any]:
@@ -388,45 +500,8 @@ class SFMGraphSerializer:
                 for k, v in collection.items()
             }
 
+        logger.debug("Serialized graph dictionary: %s", result)
         return result
-
-    @staticmethod
-    def _dict_to_graph(data: Dict[str, Any]) -> SFMGraph:
-        """Convert dictionary representation back to SFMGraph."""
-        graph = SFMGraph(
-            id=uuid.UUID(data['id']),
-            name=data['name'],
-            description=data.get('description', '')
-        )
-
-        # Deserialize node collections
-        node_type_mapping = [
-            ('actors', Actor, graph.actors),
-            ('institutions', Institution, graph.institutions),
-            ('resources', Resource, graph.resources),
-            ('processes', Process, graph.processes),
-            ('flows', Flow, graph.flows),
-            ('policies', Policy, graph.policies),
-            ('belief_systems', BeliefSystem, graph.belief_systems),
-            ('technology_systems', TechnologySystem, graph.technology_systems),
-            ('indicators', Indicator, graph.indicators),
-            ('feedback_loops', FeedbackLoop, graph.feedback_loops),
-            ('system_properties', SystemProperty, graph.system_properties),
-            ('analytical_contexts', AnalyticalContext, graph.analytical_contexts),
-        ]
-
-        for collection_name, node_class, target_collection in node_type_mapping:
-            collection_data = data.get(collection_name, {})
-            for node_data in collection_data.values():
-                node = NodeSerializer.dict_to_node(node_data, node_class)
-                target_collection[node.id] = node
-
-        # Deserialize relationships
-        for rel_data in data.get('relationships', {}).values():
-            relationship = SFMGraphSerializer._dict_to_relationship(rel_data)
-            graph.relationships[relationship.id] = relationship
-
-        return graph
 
     @staticmethod
     def _relationship_to_dict(rel: Relationship) -> Dict[str, Any]:
@@ -440,34 +515,8 @@ class SFMGraphSerializer:
             'meta': getattr(rel, 'meta', {}),
             'certainty': getattr(rel, 'certainty', 1.0),
             'created_at': getattr(rel, 'created_at', datetime.now()).isoformat(),
-            'modified_at': NodeSerializer._serialize_datetime(
-                getattr(rel, 'modified_at', None)
-            ),
+            'modified_at': rel.modified_at.isoformat() if rel.modified_at else None,
         }
-
-    @staticmethod
-    def _dict_to_relationship(data: Dict[str, Any]) -> Relationship:
-        """Convert dictionary representation back to Relationship."""
-        return Relationship(
-            id=uuid.UUID(data['id']),
-            source_id=uuid.UUID(data['source_id']),
-            target_id=uuid.UUID(data['target_id']),
-            kind=RelationshipKind[data['kind']],
-            weight=data.get('weight', 1.0),
-            meta=data.get('meta', {}),
-            certainty=data.get('certainty', 1.0)
-        )
-
-    @staticmethod
-    def _json_serializer(obj):
-        """Custom JSON serializer for complex types."""
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        elif isinstance(obj, uuid.UUID):
-            return str(obj)
-        elif hasattr(obj, '__dict__'):
-            return obj.__dict__
-        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
 
 class FileManager:
@@ -646,41 +695,46 @@ class SFMPersistenceManager:
         """
         with self._thread_safe():
             try:
-                metadata = self._get_metadata(graph_id, version)
-                if not metadata:
+                latest_metadata = self._get_metadata(graph_id)
+                if not latest_metadata:
                     logger.warning("Graph '%s' not found", graph_id)
                     return None
 
-                graph_file = self._determine_graph_file(graph_id, version, metadata)
+                metadata_to_load: Optional[GraphMetadata]
+                graph_file: Path
+
+                if version is None or version == latest_metadata.version:
+                    # Loading the latest version
+                    metadata_to_load = latest_metadata
+                    graph_file = self.file_manager.get_graph_file_path(graph_id, metadata_to_load.format)
+                else:
+                    # Loading a specific archived version
+                    metadata_to_load = self._get_metadata(graph_id, version)
+                    if not metadata_to_load:
+                        logger.warning("Graph '%s' version %s not found", graph_id, version)
+                        return None
+                    graph_file = self.file_manager.get_version_file_path(graph_id, version, metadata_to_load.format)
+
                 if not graph_file.exists():
                     logger.error("Graph file not found: %s", graph_file)
                     return None
 
                 serialized_data = graph_file.read_bytes()
-                self._verify_checksum(serialized_data, metadata, graph_id)
+                self._verify_checksum(serialized_data, metadata_to_load, graph_id)
 
                 graph = SFMGraphSerializer.deserialize_graph(serialized_data,
-                                                              metadata.format)
+                                                             metadata_to_load.format)
 
                 if self.config.validate_on_load:
                     self._validate_graph(graph)
 
                 logger.info("Graph '%s' loaded successfully (version %d)",
-                            graph_id, metadata.version)
+                            graph_id, metadata_to_load.version)
                 return graph
 
             except Exception as e:
                 logger.error("Failed to load graph '%s': %s", graph_id, str(e))
                 raise SFMPersistenceError(f"Failed to load graph: {str(e)}") from e
-
-    def _determine_graph_file(self, graph_id: str, version: Optional[int],
-                              metadata: GraphMetadata) -> Path:
-        """Determine the correct file path for loading."""
-        if version and version != metadata.version:
-            return self.file_manager.get_version_file_path(graph_id, version,
-                                                           metadata.format)
-        else:
-            return self.file_manager.get_graph_file_path(graph_id, metadata.format)
 
     def _verify_checksum(self, serialized_data: bytes, metadata: GraphMetadata,
                          graph_id: str) -> None:
@@ -929,20 +983,21 @@ class SFMPersistenceManager:
             version_dir.mkdir(exist_ok=True)
 
             # Save version metadata
-            version_file = version_dir / f"v{metadata.version}.json"
+            version_metadata_file = version_dir / f"v{metadata.version}.json"
             metadata_dict = asdict(metadata)
             metadata_dict['format'] = metadata.format.value
-            version_file.write_text(
+            version_metadata_file.write_text(
                 json.dumps(metadata_dict, indent=2,
                            default=SFMGraphSerializer._json_serializer)
             )
 
-            # Copy current graph data
+            # Copy current graph data to versioned file
             current_graph_file = self.file_manager.get_graph_file_path(
                 graph_id, metadata.format
             )
             if current_graph_file.exists():
-                version_data_file = version_dir / f"v{metadata.version}.data"
+                version_data_file = self.file_manager.get_version_file_path(graph_id, metadata.version, metadata.format)
+                version_data_file.parent.mkdir(exist_ok=True, parents=True) # Ensure directory exists
                 shutil.copy2(current_graph_file, version_data_file)
 
         except Exception as e:
@@ -987,22 +1042,98 @@ class SFMPersistenceManager:
     # Implement remaining methods following the same pattern...
     def get_version_history(self, graph_id: str) -> List[Dict[str, Any]]:
         """Get version history for a graph."""
-        # Implementation similar to original but with improved error handling
-        return []
+        version_dir = self.file_manager.versions_path / graph_id
+        if not version_dir.exists() or not version_dir.is_dir():
+            return []
+        history: List[Dict[str, Any]] = []
+        # Iterate over version metadata files v{version}.json
+        for metadata_file in sorted(version_dir.glob("v*.json")):
+            try:
+                data = json.loads(metadata_file.read_text())
+                history.append(data)
+            except Exception as e:
+                logger.error("Failed to load version metadata from %s: %s", metadata_file, e)
+        return history
 
-    def create_backup(self, graph_id: str,
-                      backup_name: Optional[str] = None) -> str:
+    def create_backup(self, graph_id: str, backup_name: Optional[str] = None) -> str:
         """Create a backup of a specific graph."""
-        # Implementation similar to original but with improved structure
-        # Placeholder implementation to satisfy return type
-        return ""
+        with self._thread_safe():
+            try:
+                metadata = self._get_metadata(graph_id)
+                if not metadata:
+                    raise SFMPersistenceError(f"Graph '{graph_id}' not found for backup.")
 
-    def restore_from_backup(self, backup_path: str,
-                            new_graph_id: Optional[str] = None) -> str:
+                graph_file = self.file_manager.get_graph_file_path(graph_id, metadata.format)
+                if not graph_file.exists():
+                    raise SFMPersistenceError(f"Graph file '{graph_file}' not found for backup.")
+
+                backup_name = backup_name or f"{graph_id}_backup"
+                backup_path = self.file_manager.backups_path / f"{backup_name}.backup"
+
+                logger.debug("Creating backup for graph ID '%s'", graph_id)
+                logger.debug("Graph file path: %s", graph_file)
+                logger.debug("Metadata content: %s", metadata)
+                logger.debug("Backup file path: %s", backup_path)
+
+                # Log serialized data for debugging
+                serialized_data = graph_file.read_bytes()
+                logger.debug("Serialized data in graph file: %s", serialized_data[:100])
+
+                shutil.copy2(graph_file, backup_path)
+                logger.info("Backup created for graph '%s' at '%s'", graph_id, backup_path)
+                return str(backup_path)
+
+            except Exception as e:
+                logger.error("Failed to create backup for graph '%s': %s", graph_id, str(e))
+                raise SFMPersistenceError(f"Failed to create backup: {str(e)}") from e
+
+    def restore_from_backup(self, backup_path: str, new_graph_id: Optional[str] = None) -> str:
         """Restore a graph from backup."""
-        # Implementation similar to original but with improved structure
-        # Placeholder implementation to satisfy return type
-        return ""
+        with self._thread_safe():
+            try:
+                backup_file = Path(backup_path)
+                if not backup_file.exists():
+                    raise SFMPersistenceError(f"Backup file '{backup_path}' not found.")
+
+                # Extract original graph ID from backup filename
+                original_graph_id = backup_file.stem.rsplit("_backup", 1)[0]
+                new_graph_id = new_graph_id or original_graph_id
+
+                # Restore graph data
+                graph_file_path = self.file_manager.get_graph_file_path(new_graph_id, self.config.default_format)
+                shutil.copy2(backup_file, graph_file_path)
+
+                # Restore metadata
+                # This is a simplified restore; a real implementation might store metadata in the backup
+                # or reconstruct it. Here, we'll try to load the graph to create basic metadata.
+                serialized_data = graph_file_path.read_bytes()
+                if not serialized_data:
+                    raise SFMPersistenceError("Restored graph file is empty.")
+
+                restored_graph = SFMGraphSerializer.deserialize_graph(serialized_data, self.config.default_format)
+                if restored_graph is None:
+                    raise SFMPersistenceError("Failed to deserialize restored graph.")
+
+                # Create and save new metadata for the restored graph
+                metadata = self._create_metadata(
+                    graph_id=new_graph_id,
+                    graph=restored_graph,
+                    version=1,  # Start with version 1
+                    current_metadata=None,
+                    metadata={},
+                    serialized_data=serialized_data,
+                    checksum=hashlib.sha256(serialized_data).hexdigest(),
+                    format_type=self.config.default_format
+                )
+                self._save_metadata(new_graph_id, metadata)
+                self._metadata_cache[new_graph_id] = metadata
+
+                logger.info("Graph '%s' restored successfully from backup '%s'", new_graph_id, backup_path)
+                return new_graph_id
+
+            except Exception as e:
+                logger.error("Failed to restore from backup: %s", str(e))
+                raise SFMPersistenceError(f"Failed to restore from backup: {str(e)}") from e
 
 
 # Convenience functions for quick operations
