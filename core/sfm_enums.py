@@ -1,10 +1,14 @@
+"""
+Enumerations for the Social Fabric Matrix (SFM) framework.
+
+This module defines controlled vocabularies and classification systems used throughout
+the SFM analysis framework. These enumerations provide consistent categorization for
+values, institutions, resources, flows, and relationships in socio-economic systems.
+"""
+
 from __future__ import annotations
 
-import uuid
-from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Dict, List, Optional, Any
-from datetime import datetime
 
 # ───────────────────────────────────────────────
 # ENUMERATIONS  (shared controlled vocabularies)
