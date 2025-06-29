@@ -1,3 +1,11 @@
+"""
+Core data structures for modeling F. Gregory Hayden's Social Fabric Matrix (SFM).
+
+This module defines the foundational data classes and entities used to represent
+actors, institutions, resources, processes, relationships, and other components
+in SFM analysis of socio-economic systems.
+"""
+
 # sfm_schema.py
 # Core data structures for modeling an F. Gregory Hayden Social Fabric Matrix (SFM)
 
@@ -5,7 +13,6 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from enum import Enum, auto
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from core.sfm_enums import (
@@ -121,7 +128,10 @@ class Resource(Node):
 
 @dataclass
 class Process(Node):
-    """Transformation activity that converts inputs to outputs (production, consumption, disposal)."""
+    """
+    Transformation activity that converts inputs to outputs 
+    (production, consumption, disposal).
+    """
 
     technology: Optional[str] = None  # e.g. "EAF-Steel-2024"
     responsible_actor_id: Optional[str] = None  # Actor that controls the process
