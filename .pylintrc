@@ -1,0 +1,62 @@
+[MASTER]
+# Add files or directories to the blacklist
+ignore=
+
+# Add paths to the Python path
+init-hook='import sys; sys.path.insert(0, ".")'
+
+# Use multiple processes to speed up Pylint
+jobs=1
+
+# Pickle collected data for later comparisons
+persistent=yes
+
+# List of plugins
+load-plugins=
+
+# Use a conservative default for --extension-pkg-whitelist
+extension-pkg-whitelist=
+
+[MESSAGES CONTROL]
+# Disable specific warnings/errors
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    too-few-public-methods,
+    import-error
+
+[FORMAT]
+# Maximum number of characters on a single line
+max-line-length=100
+
+# Maximum number of lines in a module
+max-module-lines=1000
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args=5
+
+# Maximum number of locals for function / method body
+max-locals=15
+
+# Maximum number of return / yield for function / method body
+max-returns=6
+
+# Maximum number of branch for function / method body
+max-branches=12
+
+# Maximum number of statements in function / method body
+max-statements=50
+
+# Maximum number of parents for a class
+max-parents=7
+
+# Maximum number of attributes for a class
+max-attributes=7
+
+# Minimum number of public methods for a class
+min-public-methods=2
+
+# Maximum number of public methods for a class
+max-public-methods=20

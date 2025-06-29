@@ -58,7 +58,7 @@ class Scenario:
 
 
 @dataclass
-class Node:
+class Node:  # pylint: disable=too-many-instance-attributes
     """Generic graph node with a UUID primary key and free-form metadata."""
 
     label: str
@@ -138,7 +138,7 @@ class Process(Node):
 
 
 @dataclass
-class Flow(Node):
+class Flow(Node):  # pylint: disable=too-many-instance-attributes
     """Edge-like node representing an actual quantified transfer of resources or value."""
 
     nature: FlowNature = FlowNature.TRANSFER
@@ -204,7 +204,7 @@ class Indicator(Node):
 
 
 @dataclass
-class AnalyticalContext(Node):
+class AnalyticalContext(Node):  # pylint: disable=too-many-instance-attributes
     """Contains metadata about analysis parameters and configuration."""
 
     methods_used: List[str] = field(default_factory=list)
@@ -349,7 +349,7 @@ class ValidationRule:
 
 
 @dataclass
-class ModelMetadata:
+class ModelMetadata:  # pylint: disable=too-many-instance-attributes
     """Documentation about the model itself."""
 
     version: str
@@ -369,7 +369,7 @@ class ModelMetadata:
 
 
 @dataclass
-class Relationship:
+class Relationship:  # pylint: disable=too-many-instance-attributes
     """Typed edge connecting two nodes in the SFM graph."""
 
     source_id: uuid.UUID
@@ -398,7 +398,7 @@ class Relationship:
 
 
 @dataclass
-class SFMGraph:
+class SFMGraph:  # pylint: disable=too-many-instance-attributes
     """A complete Social Fabric Matrix representation."""
 
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -455,7 +455,7 @@ class SFMGraph:
     validation_rules: List[ValidationRule] = field(default_factory=list)
     network_metrics: Dict[uuid.UUID, NetworkMetrics] = field(default_factory=dict)
 
-    def add_node(self, node: Node) -> Node:
+    def add_node(self, node: Node) -> Node:  # pylint: disable=too-many-branches
         """Add a node to the appropriate collection based on its type."""
         # Handle most specific types first to avoid inheritance conflicts
         if isinstance(node, ValueFlow):
