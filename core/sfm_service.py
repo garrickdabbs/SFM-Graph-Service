@@ -766,7 +766,7 @@ class SFMService:
         self,
         node_id: Union[str, uuid.UUID],
         relationship_kinds: Optional[List[str]] = None,
-        distance: int = 1,
+        distance: int = DEFAULT_DISTANCE,
     ) -> List[str]:
         """
         Get neighboring nodes within specified distance.
@@ -892,38 +892,62 @@ class SFMService:
 
     # ═══ ANALYSIS OPERATIONS ═══
 
+    def _count_nodes_by_type(self, graph: SFMGraph) -> Tuple[int, Dict[str, int]]:
+        """
+        Count nodes by their type in the graph.
+
+        Returns:
+            Tuple of (total_nodes, type_counts_dict)
+        """
+        type_counts = {}
+        try:
+            # Iterate through nodes and count by type
+            # This handles both real graphs and mock objects gracefully
+            for node in graph:
+                node_type = type(node).__name__
+                type_counts[node_type] = type_counts.get(node_type, 0) + 1
+
+            total_nodes = len(graph)
+        except (TypeError, AttributeError):
+            # If graph is not iterable (e.g., Mock object in tests)
+            total_nodes = 0
+            type_counts = {}
+
+        return total_nodes, type_counts
+
+    def _count_relationships_by_kind(self, graph: SFMGraph) -> Tuple[int, Dict[str, int]]:
+        """
+        Count relationships by their kind in the graph.
+
+        Returns:
+            Tuple of (total_relationships, kind_counts_dict)
+        """
+        rel_counts = {}
+        try:
+            # Access relationships attribute safely
+            relationships = getattr(graph, 'relationships', {})
+            for rel in relationships.values():
+                kind = rel.kind.name
+                rel_counts[kind] = rel_counts.get(kind, 0) + 1
+
+            total_relationships = len(relationships)
+        except (TypeError, AttributeError):
+            # If relationships is not accessible, return defaults
+            total_relationships = 0
+            rel_counts = {}
+
+        return total_relationships, rel_counts
+
     def get_statistics(self) -> GraphStatistics:
-        """Get basic statistics about the current graph."""
+        """Get comprehensive statistics about the current graph."""
         try:
             graph = self.get_graph()
 
-            # Count entities by type
-            type_counts = {}
-            try:
-                # Handle the case where graph might be a mock object
-                for node in graph:
-                    node_type = type(node).__name__
-                    type_counts[node_type] = type_counts.get(node_type, 0) + 1
+            # Count nodes by type using helper method
+            total_nodes, type_counts = self._count_nodes_by_type(graph)
 
-                total_nodes = len(graph)
-            except (TypeError, AttributeError):
-                # If graph is not iterable (e.g., Mock object), return default stats
-                total_nodes = 0
-                type_counts = {}
-
-            # Count relationships by kind
-            rel_counts = {}
-            try:
-                relationships = getattr(graph, 'relationships', {})
-                for rel in relationships.values():
-                    kind = rel.kind.name
-                    rel_counts[kind] = rel_counts.get(kind, 0) + 1
-
-                total_relationships = len(relationships)
-            except (TypeError, AttributeError):
-                # If relationships is not accessible, return default
-                total_relationships = 0
-                rel_counts = {}
+            # Count relationships by kind using helper method
+            total_relationships, rel_counts = self._count_relationships_by_kind(graph)
 
             return GraphStatistics(
                 total_nodes=total_nodes,
@@ -937,10 +961,10 @@ class SFMService:
             logger.error("Failed to get statistics: %s", e)
             raise SFMServiceError(
                 f"Failed to get statistics: {str(e)}", "GET_STATISTICS_FAILED"
-            )
+            ) from e
 
     def analyze_centrality(
-        self, centrality_type: str = "betweenness", limit: int = 10
+        self, centrality_type: str = "betweenness", limit: int = TOP_NODES_LIMIT
     ) -> CentralityAnalysis:
         """Perform centrality analysis on the network."""
         try:
@@ -975,7 +999,7 @@ class SFMService:
             logger.error("Failed to analyze centrality: %s", e)
             raise SFMServiceError(
                 f"Failed to analyze centrality: {str(e)}", "CENTRALITY_ANALYSIS_FAILED"
-            )
+            ) from e
 
     def _validate_and_convert_uuid(self, value: Union[str, uuid.UUID]) -> uuid.UUID:
         """Validate and convert a string or UUID to a proper UUID object."""
@@ -1094,34 +1118,35 @@ class SFMService:
             # Convert UUIDs back to strings for API compatibility
             return [str(node_id) for node_id in path_ids]
 
-        except ValueError:
-            raise ValidationError(f"Invalid UUID format in path finding")
+        except ValueError as exc:
+            raise ValidationError("Invalid UUID format in path finding") from exc
         except Exception as e:
             logger.error(
-                f"Failed to find path between {source_id} and {target_id}: {e}"
+                "Failed to find path between %s and %s: %s", source_id, target_id, e
             )
             raise SFMServiceError(
                 f"Failed to find shortest path: {str(e)}", "FIND_PATH_FAILED"
-            )
+            ) from e
 
     def find_shortest_path_legacy(self, source_id: str, target_id: str) -> list:
         """
         Find the shortest path between two nodes by their IDs.
-        Returns a list of node IDs representing the path, or None if no path exists.
+        Returns a list of node IDs representing the path, or empty list if no path exists.
         """
-        # Assuming the base repo has a graph attribute with networkx
+        # Get the networkx graph from the base repository
         graph = getattr(self._base_repo, "graph", None)
         if graph is None:
             return []
-        try:
-            import networkx as nx
 
+        try:
             path = nx.shortest_path(graph, source=source_id, target=target_id)
-            if isinstance(path, list):
-                return path
-            else:
-                return []
-        except Exception:
+            return path if isinstance(path, list) else []
+        except (nx.NetworkXNoPath, nx.NodeNotFound):
+            # No path exists or nodes don't exist
+            return []
+        except Exception as e:
+            logger.error("Failed to find legacy path between %s and %s: %s",
+                        source_id, target_id, e)
             return []
 
     # ═══ SYSTEM MANAGEMENT ═══
@@ -1148,7 +1173,7 @@ class SFMService:
             logger.error("Failed to clear data: %s", e)
             raise SFMServiceError(
                 f"Failed to clear data: {str(e)}", "CLEAR_DATA_FAILED"
-            )
+            ) from e
 
     # ═══ BULK OPERATIONS ═══
 
