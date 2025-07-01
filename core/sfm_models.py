@@ -30,6 +30,8 @@ from core.sfm_enums import (
     TemporalFunctionType,
     ValidationRuleType,
     SystemPropertyType,
+    EnumValidator,
+    validate_enum_operation,
 )
 
 
@@ -168,6 +170,12 @@ class Flow(Node):  # pylint: disable=too-many-instance-attributes
     ceremonial_component: Optional[float] = None
     instrumental_component: Optional[float] = None
     temporal_dynamics: Optional[TemporalDynamics] = None  # Change over time
+    
+    def __post_init__(self):
+        """Validate flow nature and type combination after initialization."""
+        # Only validate if flow_type is a FlowType enum (not string)
+        if isinstance(self.flow_type, FlowType):
+            EnumValidator.validate_flow_combination(self.nature, self.flow_type)
 
 
 @dataclass
@@ -521,7 +529,7 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
         return node
 
     def add_relationship(self, relationship: Relationship) -> Relationship:
-        """Add a relationship to the SFM graph."""
+        """Add a relationship to the SFM graph with validation."""
         if not isinstance(relationship, Relationship):
             raise TypeError(f"Expected Relationship but got {type(relationship)}")
 
@@ -529,9 +537,29 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
         if relationship.id is None:
             relationship.id = uuid.uuid4()
 
+        # Perform SFM-specific validation if both nodes exist
+        source_node = self._find_node_by_id(relationship.source_id)
+        target_node = self._find_node_by_id(relationship.target_id)
+        
+        if source_node and target_node:
+            source_type = source_node.__class__.__name__
+            target_type = target_node.__class__.__name__
+            
+            # Validate the relationship context
+            EnumValidator.validate_relationship_context(
+                relationship.kind, source_type, target_type
+            )
+
         # Store the relationship
         self.relationships[relationship.id] = relationship
         return relationship
+    
+    def _find_node_by_id(self, node_id: uuid.UUID) -> Optional[Node]:
+        """Find a node by its ID across all node collections."""
+        for node in self:
+            if node.id == node_id:
+                return node
+        return None
 
     def __iter__(self):
         """Iterate over all nodes in the SFMGraph."""
