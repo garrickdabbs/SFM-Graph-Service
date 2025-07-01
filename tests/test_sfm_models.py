@@ -48,6 +48,12 @@ from core.sfm_enums import (
     RelationshipKind,
     TemporalFunctionType,
     ValidationRuleType,
+    PowerResourceType,
+    TechnologyReadinessLevel,
+    LegitimacySource,
+    PathDependencyStrength,
+    ToolSkillTechnologyComplex,
+    InstitutionalChangeMechanism,
     FlowType,
     PolicyInstrumentType,
     ChangeType,
@@ -2004,6 +2010,82 @@ class TestSFMBusinessLogic(unittest.TestCase):
         # Test that instrumental behavior shows adaptive characteristics
         self.assertGreater(instrumental.efficiency_measure or 0, 0.5)
         self.assertGreater(instrumental.adaptability_score or 0, 0.5)
+
+    def test_relationship_ceremonial_tendency(self):
+        """Test the ceremonial_tendency property on RelationshipKind enum."""
+        # Test highly ceremonial relationships (close to 1.0)
+        self.assertEqual(RelationshipKind.CEREMONIALLY_REINFORCES.ceremonial_tendency, 1.0)
+        self.assertEqual(RelationshipKind.LEGITIMIZES.ceremonial_tendency, 0.9)
+        self.assertGreaterEqual(RelationshipKind.NORMALIZES.ceremonial_tendency, 0.7)
+        
+        # Test highly instrumental relationships (close to 0.0)
+        self.assertEqual(RelationshipKind.INSTRUMENTALLY_ADAPTS.ceremonial_tendency, 0.0)
+        self.assertEqual(RelationshipKind.ENABLES_INNOVATION.ceremonial_tendency, 0.1)
+        self.assertLessEqual(RelationshipKind.OPTIMIZES.ceremonial_tendency, 0.2)
+        
+        # Test governance relationships (medium ceremonial)
+        self.assertEqual(RelationshipKind.GOVERNS.ceremonial_tendency, 0.6)
+        self.assertEqual(RelationshipKind.REGULATES.ceremonial_tendency, 0.6)
+        
+        # Test that neutral/unmapped relationships default to 0.5
+        self.assertEqual(RelationshipKind.FUNDS.ceremonial_tendency, 0.5)
+        
+        # Test that all values are in valid range [0.0, 1.0]
+        for relationship in RelationshipKind:
+            tendency = relationship.ceremonial_tendency
+            self.assertGreaterEqual(tendency, 0.0, 
+                                  f"{relationship.name} has tendency {tendency} < 0.0")
+            self.assertLessEqual(tendency, 1.0, 
+                               f"{relationship.name} has tendency {tendency} > 1.0")
+
+    def test_new_sfm_enums_availability(self):
+        """Test that new SFM-specific enums are available and functional."""
+        # Test PowerResourceType enum
+        self.assertIsInstance(PowerResourceType.INSTITUTIONAL_AUTHORITY, PowerResourceType)
+        self.assertIsInstance(PowerResourceType.ECONOMIC_CONTROL, PowerResourceType)
+        self.assertIsInstance(PowerResourceType.INFORMATION_ACCESS, PowerResourceType)
+        
+        # Test TechnologyReadinessLevel enum
+        self.assertEqual(TechnologyReadinessLevel.BASIC_PRINCIPLES.value, 1)
+        self.assertEqual(TechnologyReadinessLevel.ACTUAL_SYSTEM.value, 9)
+        
+        # Test LegitimacySource enum (Weber's types)
+        weber_types = [
+            LegitimacySource.TRADITIONAL,
+            LegitimacySource.CHARISMATIC,
+            LegitimacySource.LEGAL_RATIONAL
+        ]
+        for legitimacy_type in weber_types:
+            self.assertIsInstance(legitimacy_type, LegitimacySource)
+        
+        # Test PathDependencyStrength enum
+        strengths = [
+            PathDependencyStrength.WEAK,
+            PathDependencyStrength.MODERATE, 
+            PathDependencyStrength.STRONG,
+            PathDependencyStrength.LOCKED_IN
+        ]
+        for strength in strengths:
+            self.assertIsInstance(strength, PathDependencyStrength)
+        
+        # Test ToolSkillTechnologyComplex enum
+        complexes = [
+            ToolSkillTechnologyComplex.PRODUCTION_COMPLEX,
+            ToolSkillTechnologyComplex.INFORMATION_COMPLEX,
+            ToolSkillTechnologyComplex.GOVERNANCE_COMPLEX
+        ]
+        for complex_type in complexes:
+            self.assertIsInstance(complex_type, ToolSkillTechnologyComplex)
+        
+        # Test InstitutionalChangeMechanism enum
+        mechanisms = [
+            InstitutionalChangeMechanism.INCREMENTAL_DRIFT,
+            InstitutionalChangeMechanism.LAYERING,
+            InstitutionalChangeMechanism.DISPLACEMENT,
+            InstitutionalChangeMechanism.CONVERSION
+        ]
+        for mechanism in mechanisms:
+            self.assertIsInstance(mechanism, InstitutionalChangeMechanism)
 
     def test_value_flow_tracking(self):
         """Test value creation, capture, and distribution tracking."""
