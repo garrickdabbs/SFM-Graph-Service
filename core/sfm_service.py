@@ -45,16 +45,19 @@ async def create_actor(request: CreateActorRequest):
 ```
 """
 
-from typing import Dict, List, Optional, Any, Union, Tuple, Type, TypeVar
-import uuid
-
-from datetime import datetime
-from dataclasses import dataclass, asdict
-from enum import Enum
+# Standard library imports
 import logging
+import uuid
 from contextlib import contextmanager
+from dataclasses import dataclass, asdict
+from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Optional, Any, Union, Tuple, Type, TypeVar
 
-# Core imports
+# Third-party imports
+import networkx as nx
+
+# Local imports
 from core.sfm_models import (
     Node,
     Actor,
@@ -64,23 +67,12 @@ from core.sfm_models import (
     Flow,
     Relationship,
     Policy,
-    Indicator,
     SFMGraph,
-    AnalyticalContext,
     RelationshipKind,
 )
-from core.sfm_enums import ResourceType, FlowNature
-from core.sfm_query import (
-    SFMQueryEngine,
-    NetworkXSFMQueryEngine,
-    NodeMetrics,
-    FlowAnalysis,
-    QueryResult,
-)
-
-# Repository imports
+from core.sfm_enums import ResourceType
+from core.sfm_query import SFMQueryEngine, NetworkXSFMQueryEngine
 from db.sfm_dao import (
-    SFMRepository,
     SFMRepositoryFactory,
     ActorRepository,
     InstitutionRepository,
@@ -90,6 +82,15 @@ from db.sfm_dao import (
     ProcessRepository,
     FlowRepository,
 )
+
+# Constants
+DEFAULT_PAGE_LIMIT = 100
+DEFAULT_PAGE_OFFSET = 0
+MAX_PAGE_LIMIT = 1000
+DEFAULT_GRAPH_SIZE_LIMIT = 10000
+DEFAULT_QUERY_TIMEOUT = 30
+TOP_NODES_LIMIT = 10
+DEFAULT_DISTANCE = 1
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -245,8 +246,8 @@ class SFMServiceConfig:
     cache_queries: bool = True
     enable_logging: bool = True
     log_level: str = "INFO"
-    max_graph_size: int = 10000
-    query_timeout: int = 30
+    max_graph_size: int = DEFAULT_GRAPH_SIZE_LIMIT
+    query_timeout: int = DEFAULT_QUERY_TIMEOUT
 
 
 class SFMServiceError(Exception):
@@ -326,7 +327,7 @@ class SFMService:
         self._last_operation: Optional[str] = None
 
         logger.info(
-            f"SFM Service initialized with backend: {self.config.storage_backend}"
+            "SFM Service initialized with backend: %s", self.config.storage_backend
         )
 
     # ═══ PROPERTY ACCESS & INTERNAL METHODS ═══
@@ -352,26 +353,27 @@ class SFMService:
         if self.config.auto_sync:
             self._cache_dirty = True
         self._last_operation = operation or "unknown"
-        logger.debug(f"Cache marked dirty after operation: {self._last_operation}")
+        logger.debug("Cache marked dirty after operation: %s", self._last_operation)
 
     def _validate_graph_size(self):
         """Validate that the graph hasn't exceeded size limits."""
         if self.config.max_graph_size > 0:
             stats = self.get_statistics()
             if stats.total_nodes > self.config.max_graph_size:
-                raise SFMServiceError(
-                    f"Graph size ({stats.total_nodes}) exceeds maximum ({self.config.max_graph_size})",
-                    "GRAPH_SIZE_EXCEEDED",
+                message = (
+                    f"Graph size ({stats.total_nodes}) exceeds maximum "
+                    f"({self.config.max_graph_size})"
                 )
+                raise SFMServiceError(message, "GRAPH_SIZE_EXCEEDED")
 
     def _convert_to_resource_type(self, rtype_str: str) -> ResourceType:
         """Convert string to ResourceType enum."""
         try:
             return ResourceType[rtype_str.upper()]
-        except KeyError:
+        except KeyError as exc:
             raise ValidationError(
                 f"Invalid resource type: {rtype_str}", "rtype", rtype_str
-            )
+            ) from exc
 
     def _convert_to_relationship_kind(self, kind_str: str) -> RelationshipKind:
         """Convert string to RelationshipKind enum."""
@@ -379,7 +381,7 @@ class SFMService:
             return RelationshipKind[kind_str.upper()]
         except KeyError:
             # Default to AFFECTS if not found
-            logger.warning(f"Unknown relationship kind '{kind_str}', using AFFECTS")
+            logger.warning("Unknown relationship kind '%s', using AFFECTS", kind_str)
             return RelationshipKind.AFFECTS
 
     def _node_to_response(self, node: Node) -> NodeResponse:
@@ -419,7 +421,7 @@ class SFMService:
                 last_operation=self._last_operation,
             )
         except Exception as e:
-            logger.error(f"Health check failed: {e}")
+            logger.error("Health check failed: %s", e)
             return ServiceHealth(
                 status=ServiceStatus.ERROR,
                 timestamp=datetime.now().isoformat(),
@@ -468,16 +470,19 @@ class SFMService:
             self._mark_dirty("create_actor")
             self._validate_graph_size()
 
-            logger.info(f"Created actor: {result.label} ({result.id})")
+            logger.info("Created actor: %s (%s)", result.label, result.id)
             return self._node_to_response(result)
 
+        except (ValueError, TypeError) as e:
+            logger.error("Failed to create actor: %s", e)
+            raise ValidationError(f"Invalid actor data: {str(e)}") from e
+        except SFMServiceError:
+            raise
         except Exception as e:
-            logger.error(f"Failed to create actor: {e}")
-            if isinstance(e, SFMServiceError):
-                raise
+            logger.error("Failed to create actor: %s", e)
             raise SFMServiceError(
                 f"Failed to create actor: {str(e)}", "CREATE_ACTOR_FAILED"
-            )
+            ) from e
 
     def create_institution(
         self, request: Union[CreateInstitutionRequest, dict], **kwargs
@@ -504,16 +509,19 @@ class SFMService:
             result = self._institution_repo.create(institution)
             self._mark_dirty("create_institution")
 
-            logger.info(f"Created institution: {result.label} ({result.id})")
+            logger.info("Created institution: %s (%s)", result.label, result.id)
             return self._node_to_response(result)
 
+        except (ValueError, TypeError) as e:
+            logger.error("Failed to create institution: %s", e)
+            raise ValidationError(f"Invalid institution data: {str(e)}") from e
+        except SFMServiceError:
+            raise
         except Exception as e:
-            logger.error(f"Failed to create institution: {e}")
-            if isinstance(e, SFMServiceError):
-                raise
+            logger.error("Failed to create institution: %s", e)
             raise SFMServiceError(
                 f"Failed to create institution: {str(e)}", "CREATE_INSTITUTION_FAILED"
-            )
+            ) from e
 
     def create_policy(
         self, request: Union[CreatePolicyRequest, dict], **kwargs
@@ -543,16 +551,19 @@ class SFMService:
             result = self._policy_repo.create(policy)
             self._mark_dirty("create_policy")
 
-            logger.info(f"Created policy: {result.label} ({result.id})")
+            logger.info("Created policy: %s (%s)", result.label, result.id)
             return self._node_to_response(result)
 
+        except (ValueError, TypeError) as e:
+            logger.error("Failed to create policy: %s", e)
+            raise ValidationError(f"Invalid policy data: {str(e)}") from e
+        except SFMServiceError:
+            raise
         except Exception as e:
-            logger.error(f"Failed to create policy: {e}")
-            if isinstance(e, SFMServiceError):
-                raise
+            logger.error("Failed to create policy: %s", e)
             raise SFMServiceError(
                 f"Failed to create policy: {str(e)}", "CREATE_POLICY_FAILED"
-            )
+            ) from e
 
     def create_resource(
         self, request: Union[CreateResourceRequest, dict], **kwargs
@@ -583,16 +594,19 @@ class SFMService:
             result = self._resource_repo.create(resource)
             self._mark_dirty("create_resource")
 
-            logger.info(f"Created resource: {result.label} ({result.id})")
+            logger.info("Created resource: %s (%s)", result.label, result.id)
             return self._node_to_response(result)
 
+        except (ValueError, TypeError) as e:
+            logger.error("Failed to create resource: %s", e)
+            raise ValidationError(f"Invalid resource data: {str(e)}") from e
+        except SFMServiceError:
+            raise
         except Exception as e:
-            logger.error(f"Failed to create resource: {e}")
-            if isinstance(e, SFMServiceError):
-                raise
+            logger.error("Failed to create resource: %s", e)
             raise SFMServiceError(
                 f"Failed to create resource: {str(e)}", "CREATE_RESOURCE_FAILED"
-            )
+            ) from e
 
     # ═══ RELATIONSHIP MANAGEMENT ═══
 
@@ -639,19 +653,24 @@ class SFMService:
             self._mark_dirty("create_relationship")
 
             logger.info(
-                f"Created relationship: {source_id} --{kind.name}--> {target_id}"
+                "Created relationship: %s --%s--> %s",
+                source_id, kind.name, target_id
             )
             return self._relationship_to_response(result)
 
         except ValueError as e:
-            raise ValidationError(f"Invalid UUID format: {e}")
+            logger.error("Failed to create relationship: %s", e)
+            raise ValidationError(f"Invalid UUID format: {e}") from e
+        except (TypeError, AttributeError) as e:
+            logger.error("Failed to create relationship: %s", e)
+            raise ValidationError(f"Invalid relationship data: {str(e)}") from e
+        except SFMServiceError:
+            raise
         except Exception as e:
-            logger.error(f"Failed to create relationship: {e}")
-            if isinstance(e, SFMServiceError):
-                raise
+            logger.error("Failed to create relationship: %s", e)
             raise SFMServiceError(
                 f"Failed to create relationship: {str(e)}", "CREATE_RELATIONSHIP_FAILED"
-            )
+            ) from e
 
     def connect(
         self,
@@ -694,7 +713,7 @@ class SFMService:
 
             return repo.read(entity_id)
         except Exception as e:
-            logger.error(f"Failed to retrieve {entity_type.__name__} {entity_id}: {e}")
+            logger.error("Failed to retrieve %s %s: %s", entity_type.__name__, entity_id, e)
             return None
 
     def get_actor(self, actor_id: uuid.UUID) -> Optional[Actor]:
@@ -735,19 +754,19 @@ class SFMService:
 
             return self._relationship_to_response(rel)
 
-        except ValueError:
-            raise ValidationError(f"Invalid UUID format: {rel_id}")
+        except ValueError as exc:
+            raise ValidationError(f"Invalid UUID format: {rel_id}") from exc
         except Exception as e:
-            logger.error(f"Failed to get relationship {rel_id}: {e}")
+            logger.error("Failed to get relationship %s: %s", rel_id, e)
             raise SFMServiceError(
                 f"Failed to retrieve relationship: {str(e)}", "GET_RELATIONSHIP_FAILED"
-            )
+            ) from e
 
     def get_node_neighbors(
         self,
         node_id: Union[str, uuid.UUID],
         relationship_kinds: Optional[List[str]] = None,
-        distance: int = 1,
+        distance: int = DEFAULT_DISTANCE,
     ) -> List[str]:
         """
         Get neighboring nodes within specified distance.
@@ -775,7 +794,7 @@ class SFMService:
                         kind_enum = self._convert_to_relationship_kind(kind_str)
                         relationship_kind_enums.append(kind_enum)
                     except ValidationError:
-                        logger.warning(f"Unknown relationship kind: {kind_str}")
+                        logger.warning("Unknown relationship kind: %s", kind_str)
 
             # Use the query engine to find neighbors
             engine = self.query_engine
@@ -786,49 +805,70 @@ class SFMService:
             # Convert UUIDs back to strings for API compatibility
             return [str(neighbor_id) for neighbor_id in neighbor_ids]
 
-        except ValueError:
-            raise ValidationError(f"Invalid UUID format: {node_id}")
+        except ValueError as exc:
+            raise ValidationError(f"Invalid UUID format: {node_id}") from exc
         except Exception as e:
-            logger.error(f"Failed to get neighbors for node {node_id}: {e}")
+            logger.error("Failed to get neighbors for node %s: %s", node_id, e)
             raise SFMServiceError(
                 f"Failed to get node neighbors: {str(e)}", "GET_NODE_NEIGHBORS_FAILED"
-            )
+            ) from e
 
     # ═══ ENTITY LISTING ═══
 
+    def _get_node_type_mapping(self) -> Dict[str, Type[Node]]:
+        """Get mapping of string node types to their corresponding classes."""
+        return {
+            "Actor": Actor,
+            "Institution": Institution,
+            "Policy": Policy,
+            "Resource": Resource,
+            "Flow": Flow,
+        }
+
+    def _apply_pagination(
+        self, items: List[Any], limit: int, offset: int
+    ) -> List[Any]:
+        """Apply pagination to a list of items."""
+        return items[offset : offset + limit]
+
     def list_nodes(
-        self, node_type: Optional[str] = None, limit: int = 100, offset: int = 0
+        self,
+        node_type: Optional[str] = None,
+        limit: int = DEFAULT_PAGE_LIMIT,
+        offset: int = DEFAULT_PAGE_OFFSET
     ) -> List[NodeResponse]:
         """List nodes with optional filtering and pagination."""
         try:
-            # Map string types to classes
-            type_mapping = {
-                "Actor": Actor,
-                "Institution": Institution,
-                "Policy": Policy,
-                "Resource": Resource,
-                "Flow": Flow,
-            }
-
+            # Get node type mapping and filter type
+            type_mapping = self._get_node_type_mapping()
             filter_type = type_mapping.get(node_type) if node_type else None
+
+            # Get nodes from repository
             nodes = self._base_repo.list_nodes(filter_type)
 
             # Apply pagination
-            paginated_nodes = nodes[offset : offset + limit]
+            paginated_nodes = self._apply_pagination(nodes, limit, offset)
 
             return [self._node_to_response(node) for node in paginated_nodes]
 
+        except (ValueError, TypeError) as e:
+            logger.error("Failed to list nodes: %s", e)
+            raise ValidationError(f"Invalid parameters for listing nodes: {str(e)}") from e
         except Exception as e:
-            logger.error(f"Failed to list nodes: {e}")
+            logger.error("Failed to list nodes: %s", e)
             raise SFMServiceError(
                 f"Failed to list nodes: {str(e)}", "LIST_NODES_FAILED"
-            )
+            ) from e
 
     def list_relationships(
-        self, kind: Optional[str] = None, limit: int = 100, offset: int = 0
+        self,
+        kind: Optional[str] = None,
+        limit: int = DEFAULT_PAGE_LIMIT,
+        offset: int = DEFAULT_PAGE_OFFSET
     ) -> List[RelationshipResponse]:
         """List relationships with optional filtering and pagination."""
         try:
+            # Apply filtering by kind if specified
             filter_kind = self._convert_to_relationship_kind(kind) if kind else None
             relationships = (
                 self._relationship_repo.list_all()
@@ -837,50 +877,77 @@ class SFMService:
             )
 
             # Apply pagination
-            paginated_rels = relationships[offset : offset + limit]
+            paginated_rels = self._apply_pagination(relationships, limit, offset)
 
             return [self._relationship_to_response(rel) for rel in paginated_rels]
 
+        except (ValueError, TypeError) as e:
+            logger.error("Failed to list relationships: %s", e)
+            raise ValidationError(f"Invalid parameters for listing relationships: {str(e)}") from e
         except Exception as e:
-            logger.error(f"Failed to list relationships: {e}")
+            logger.error("Failed to list relationships: %s", e)
             raise SFMServiceError(
                 f"Failed to list relationships: {str(e)}", "LIST_RELATIONSHIPS_FAILED"
-            )
+            ) from e
 
     # ═══ ANALYSIS OPERATIONS ═══
 
+    def _count_nodes_by_type(self, graph: SFMGraph) -> Tuple[int, Dict[str, int]]:
+        """
+        Count nodes by their type in the graph.
+
+        Returns:
+            Tuple of (total_nodes, type_counts_dict)
+        """
+        type_counts = {}
+        try:
+            # Iterate through nodes and count by type
+            # This handles both real graphs and mock objects gracefully
+            for node in graph:
+                node_type = type(node).__name__
+                type_counts[node_type] = type_counts.get(node_type, 0) + 1
+
+            total_nodes = len(graph)
+        except (TypeError, AttributeError):
+            # If graph is not iterable (e.g., Mock object in tests)
+            total_nodes = 0
+            type_counts = {}
+
+        return total_nodes, type_counts
+
+    def _count_relationships_by_kind(self, graph: SFMGraph) -> Tuple[int, Dict[str, int]]:
+        """
+        Count relationships by their kind in the graph.
+
+        Returns:
+            Tuple of (total_relationships, kind_counts_dict)
+        """
+        rel_counts = {}
+        try:
+            # Access relationships attribute safely
+            relationships = getattr(graph, 'relationships', {})
+            for rel in relationships.values():
+                kind = rel.kind.name
+                rel_counts[kind] = rel_counts.get(kind, 0) + 1
+
+            total_relationships = len(relationships)
+        except (TypeError, AttributeError):
+            # If relationships is not accessible, return defaults
+            total_relationships = 0
+            rel_counts = {}
+
+        return total_relationships, rel_counts
+
     def get_statistics(self) -> GraphStatistics:
-        """Get basic statistics about the current graph."""
+        """Get comprehensive statistics about the current graph."""
         try:
             graph = self.get_graph()
 
-            # Count entities by type
-            type_counts = {}
-            try:
-                # Handle the case where graph might be a mock object
-                for node in graph:
-                    node_type = type(node).__name__
-                    type_counts[node_type] = type_counts.get(node_type, 0) + 1
-                    
-                total_nodes = len(graph)
-            except (TypeError, AttributeError):
-                # If graph is not iterable (e.g., Mock object), return default stats
-                total_nodes = 0
-                type_counts = {}
+            # Count nodes by type using helper method
+            total_nodes, type_counts = self._count_nodes_by_type(graph)
 
-            # Count relationships by kind
-            rel_counts = {}
-            try:
-                relationships = getattr(graph, 'relationships', {})
-                for rel in relationships.values():
-                    kind = rel.kind.name
-                    rel_counts[kind] = rel_counts.get(kind, 0) + 1
-                    
-                total_relationships = len(relationships)
-            except (TypeError, AttributeError):
-                # If relationships is not accessible, return default
-                total_relationships = 0
-                rel_counts = {}
+            # Count relationships by kind using helper method
+            total_relationships, rel_counts = self._count_relationships_by_kind(graph)
 
             return GraphStatistics(
                 total_nodes=total_nodes,
@@ -891,13 +958,13 @@ class SFMService:
             )
 
         except Exception as e:
-            logger.error(f"Failed to get statistics: {e}")
+            logger.error("Failed to get statistics: %s", e)
             raise SFMServiceError(
                 f"Failed to get statistics: {str(e)}", "GET_STATISTICS_FAILED"
-            )
+            ) from e
 
     def analyze_centrality(
-        self, centrality_type: str = "betweenness", limit: int = 10
+        self, centrality_type: str = "betweenness", limit: int = TOP_NODES_LIMIT
     ) -> CentralityAnalysis:
         """Perform centrality analysis on the network."""
         try:
@@ -929,57 +996,75 @@ class SFMService:
             )
 
         except Exception as e:
-            logger.error(f"Failed to analyze centrality: {e}")
+            logger.error("Failed to analyze centrality: %s", e)
             raise SFMServiceError(
                 f"Failed to analyze centrality: {str(e)}", "CENTRALITY_ANALYSIS_FAILED"
-            )
+            ) from e
+
+    def _validate_and_convert_uuid(self, value: Union[str, uuid.UUID]) -> uuid.UUID:
+        """Validate and convert a string or UUID to a proper UUID object."""
+        if isinstance(value, str):
+            try:
+                return uuid.UUID(value)
+            except ValueError as e:
+                raise ValidationError(f"Invalid UUID format: {value}") from e
+        return value
+
+    def _build_policy_impact_analysis(
+        self, policy_id: uuid.UUID, impact_data: Dict[str, Any], impact_radius: int
+    ) -> PolicyImpactAnalysis:
+        """Build PolicyImpactAnalysis from impact data."""
+        return PolicyImpactAnalysis(
+            policy_id=str(policy_id),
+            total_affected_nodes=impact_data.get("total_affected_nodes", 0),
+            affected_actors=[
+                str(node_id) for node_id in impact_data.get("affected_actors", [])
+            ],
+            affected_institutions=[
+                str(node_id)
+                for node_id in impact_data.get("affected_institutions", [])
+            ],
+            affected_resources=[
+                str(node_id)
+                for node_id in impact_data.get("affected_resources", [])
+            ],
+            network_metrics=impact_data.get("network_metrics", {}),
+            impact_radius=impact_radius,
+        )
 
     def analyze_policy_impact(
         self, policy_id: Union[str, uuid.UUID], impact_radius: int = 3
     ) -> PolicyImpactAnalysis:
         """Analyze the potential impact of a policy."""
-        import networkx as nx
-        
         try:
-            if isinstance(policy_id, str):
-                policy_id = uuid.UUID(policy_id)
+            # Validate and convert policy ID
+            validated_policy_id = self._validate_and_convert_uuid(policy_id)
 
+            # Get impact analysis from query engine
             engine = self.query_engine
-            impact_data = engine.analyze_policy_impact(policy_id, impact_radius)
+            impact_data = engine.analyze_policy_impact(validated_policy_id, impact_radius)
 
+            # Check for error in impact data
             if "error" in impact_data:
-                raise NotFoundError("Policy", str(policy_id))
+                raise NotFoundError("Policy", str(validated_policy_id))
 
-            return PolicyImpactAnalysis(
-                policy_id=str(policy_id),
-                total_affected_nodes=impact_data.get("total_affected_nodes", 0),
-                affected_actors=[
-                    str(node_id) for node_id in impact_data.get("affected_actors", [])
-                ],
-                affected_institutions=[
-                    str(node_id)
-                    for node_id in impact_data.get("affected_institutions", [])
-                ],
-                affected_resources=[
-                    str(node_id)
-                    for node_id in impact_data.get("affected_resources", [])
-                ],
-                network_metrics=impact_data.get("network_metrics", {}),
-                impact_radius=impact_radius,
+            # Build and return the analysis result
+            return self._build_policy_impact_analysis(
+                validated_policy_id, impact_data, impact_radius
             )
 
-        except nx.NodeNotFound:
-            raise NotFoundError("Policy", str(policy_id))
-        except ValueError:
-            raise ValidationError(f"Invalid UUID format: {policy_id}")
+        except nx.NodeNotFound as e:
+            raise NotFoundError("Policy", str(policy_id)) from e
+        except ValidationError:
+            raise
+        except (NotFoundError, SFMServiceError):
+            raise
         except Exception as e:
-            logger.error(f"Failed to analyze policy impact: {e}")
-            if isinstance(e, (SFMServiceError, NotFoundError)):
-                raise
+            logger.error("Failed to analyze policy impact: %s", e)
             raise SFMServiceError(
                 f"Failed to analyze policy impact: {str(e)}",
                 "POLICY_IMPACT_ANALYSIS_FAILED",
-            )
+            ) from e
 
     def find_shortest_path(
         self,
@@ -1019,7 +1104,7 @@ class SFMService:
                         kind_enum = self._convert_to_relationship_kind(kind_str)
                         relationship_kind_enums.append(kind_enum)
                     except ValidationError:
-                        logger.warning(f"Unknown relationship kind: {kind_str}")
+                        logger.warning("Unknown relationship kind: %s", kind_str)
 
             # Use the query engine to find the path
             engine = self.query_engine
@@ -1033,34 +1118,35 @@ class SFMService:
             # Convert UUIDs back to strings for API compatibility
             return [str(node_id) for node_id in path_ids]
 
-        except ValueError:
-            raise ValidationError(f"Invalid UUID format in path finding")
+        except ValueError as exc:
+            raise ValidationError("Invalid UUID format in path finding") from exc
         except Exception as e:
             logger.error(
-                f"Failed to find path between {source_id} and {target_id}: {e}"
+                "Failed to find path between %s and %s: %s", source_id, target_id, e
             )
             raise SFMServiceError(
                 f"Failed to find shortest path: {str(e)}", "FIND_PATH_FAILED"
-            )
+            ) from e
 
     def find_shortest_path_legacy(self, source_id: str, target_id: str) -> list:
         """
         Find the shortest path between two nodes by their IDs.
-        Returns a list of node IDs representing the path, or None if no path exists.
+        Returns a list of node IDs representing the path, or empty list if no path exists.
         """
-        # Assuming the base repo has a graph attribute with networkx
+        # Get the networkx graph from the base repository
         graph = getattr(self._base_repo, "graph", None)
         if graph is None:
             return []
-        try:
-            import networkx as nx
 
+        try:
             path = nx.shortest_path(graph, source=source_id, target=target_id)
-            if isinstance(path, list):
-                return path
-            else:
-                return []
-        except Exception:
+            return path if isinstance(path, list) else []
+        except (nx.NetworkXNoPath, nx.NodeNotFound):
+            # No path exists or nodes don't exist
+            return []
+        except Exception as e:
+            logger.error("Failed to find legacy path between %s and %s: %s",
+                        source_id, target_id, e)
             return []
 
     # ═══ SYSTEM MANAGEMENT ═══
@@ -1084,10 +1170,10 @@ class SFMService:
             }
 
         except Exception as e:
-            logger.error(f"Failed to clear data: {e}")
+            logger.error("Failed to clear data: %s", e)
             raise SFMServiceError(
                 f"Failed to clear data: {str(e)}", "CLEAR_DATA_FAILED"
-            )
+            ) from e
 
     # ═══ BULK OPERATIONS ═══
 
@@ -1101,14 +1187,18 @@ class SFMService:
                 result = self.create_actor(request)
                 results.append(result)
             except Exception as e:
-                logger.error(f"Failed to create actor in bulk operation: {e}")
+                logger.error("Failed to create actor in bulk operation: %s", e)
                 # Continue with other actors, collect errors separately
 
         return results
 
     @contextmanager
     def transaction(self):
-        """Context manager for transactional operations (placeholder for future implementation)."""
+        """
+        Context manager for transactional operations.
+
+        Note: This is a placeholder for future implementation.
+        """
         try:
             yield self
         except Exception:
@@ -1166,5 +1256,5 @@ def quick_analysis(service: SFMService) -> Dict[str, Any]:
             "analysis_timestamp": datetime.now().isoformat(),
         }
     except Exception as e:
-        logger.error(f"Quick analysis failed: {e}")
+        logger.error("Quick analysis failed: %s", e)
         return {"error": str(e), "analysis_timestamp": datetime.now().isoformat()}
