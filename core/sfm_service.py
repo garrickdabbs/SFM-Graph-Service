@@ -45,16 +45,16 @@ async def create_actor(request: CreateActorRequest):
 ```
 """
 
-from typing import Dict, List, Optional, Any, Union, Tuple, Type, TypeVar
-import uuid
-
-from datetime import datetime
-from dataclasses import dataclass, asdict
-from enum import Enum
+# Standard library imports
 import logging
+import uuid
 from contextlib import contextmanager
+from dataclasses import dataclass, asdict
+from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Optional, Any, Union, Tuple, Type, TypeVar
 
-# Core imports
+# Local imports
 from core.sfm_models import (
     Node,
     Actor,
@@ -64,23 +64,12 @@ from core.sfm_models import (
     Flow,
     Relationship,
     Policy,
-    Indicator,
     SFMGraph,
-    AnalyticalContext,
     RelationshipKind,
 )
-from core.sfm_enums import ResourceType, FlowNature
-from core.sfm_query import (
-    SFMQueryEngine,
-    NetworkXSFMQueryEngine,
-    NodeMetrics,
-    FlowAnalysis,
-    QueryResult,
-)
-
-# Repository imports
+from core.sfm_enums import ResourceType
+from core.sfm_query import SFMQueryEngine, NetworkXSFMQueryEngine
 from db.sfm_dao import (
-    SFMRepository,
     SFMRepositoryFactory,
     ActorRepository,
     InstitutionRepository,
@@ -90,6 +79,15 @@ from db.sfm_dao import (
     ProcessRepository,
     FlowRepository,
 )
+
+# Constants
+DEFAULT_PAGE_LIMIT = 100
+DEFAULT_PAGE_OFFSET = 0
+MAX_PAGE_LIMIT = 1000
+DEFAULT_GRAPH_SIZE_LIMIT = 10000
+DEFAULT_QUERY_TIMEOUT = 30
+TOP_NODES_LIMIT = 10
+DEFAULT_DISTANCE = 1
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -245,8 +243,8 @@ class SFMServiceConfig:
     cache_queries: bool = True
     enable_logging: bool = True
     log_level: str = "INFO"
-    max_graph_size: int = 10000
-    query_timeout: int = 30
+    max_graph_size: int = DEFAULT_GRAPH_SIZE_LIMIT
+    query_timeout: int = DEFAULT_QUERY_TIMEOUT
 
 
 class SFMServiceError(Exception):
@@ -326,7 +324,7 @@ class SFMService:
         self._last_operation: Optional[str] = None
 
         logger.info(
-            f"SFM Service initialized with backend: {self.config.storage_backend}"
+            "SFM Service initialized with backend: %s", self.config.storage_backend
         )
 
     # ═══ PROPERTY ACCESS & INTERNAL METHODS ═══
@@ -352,17 +350,18 @@ class SFMService:
         if self.config.auto_sync:
             self._cache_dirty = True
         self._last_operation = operation or "unknown"
-        logger.debug(f"Cache marked dirty after operation: {self._last_operation}")
+        logger.debug("Cache marked dirty after operation: %s", self._last_operation)
 
     def _validate_graph_size(self):
         """Validate that the graph hasn't exceeded size limits."""
         if self.config.max_graph_size > 0:
             stats = self.get_statistics()
             if stats.total_nodes > self.config.max_graph_size:
-                raise SFMServiceError(
-                    f"Graph size ({stats.total_nodes}) exceeds maximum ({self.config.max_graph_size})",
-                    "GRAPH_SIZE_EXCEEDED",
+                message = (
+                    f"Graph size ({stats.total_nodes}) exceeds maximum "
+                    f"({self.config.max_graph_size})"
                 )
+                raise SFMServiceError(message, "GRAPH_SIZE_EXCEEDED")
 
     def _convert_to_resource_type(self, rtype_str: str) -> ResourceType:
         """Convert string to ResourceType enum."""
@@ -379,7 +378,7 @@ class SFMService:
             return RelationshipKind[kind_str.upper()]
         except KeyError:
             # Default to AFFECTS if not found
-            logger.warning(f"Unknown relationship kind '{kind_str}', using AFFECTS")
+            logger.warning("Unknown relationship kind '%s', using AFFECTS", kind_str)
             return RelationshipKind.AFFECTS
 
     def _node_to_response(self, node: Node) -> NodeResponse:
@@ -419,7 +418,7 @@ class SFMService:
                 last_operation=self._last_operation,
             )
         except Exception as e:
-            logger.error(f"Health check failed: {e}")
+            logger.error("Health check failed: %s", e)
             return ServiceHealth(
                 status=ServiceStatus.ERROR,
                 timestamp=datetime.now().isoformat(),
@@ -468,16 +467,19 @@ class SFMService:
             self._mark_dirty("create_actor")
             self._validate_graph_size()
 
-            logger.info(f"Created actor: {result.label} ({result.id})")
+            logger.info("Created actor: %s (%s)", result.label, result.id)
             return self._node_to_response(result)
 
+        except (ValueError, TypeError) as e:
+            logger.error("Failed to create actor: %s", e)
+            raise ValidationError(f"Invalid actor data: {str(e)}")
+        except SFMServiceError:
+            raise
         except Exception as e:
-            logger.error(f"Failed to create actor: {e}")
-            if isinstance(e, SFMServiceError):
-                raise
+            logger.error("Failed to create actor: %s", e)
             raise SFMServiceError(
                 f"Failed to create actor: {str(e)}", "CREATE_ACTOR_FAILED"
-            )
+            ) from e
 
     def create_institution(
         self, request: Union[CreateInstitutionRequest, dict], **kwargs
@@ -504,16 +506,19 @@ class SFMService:
             result = self._institution_repo.create(institution)
             self._mark_dirty("create_institution")
 
-            logger.info(f"Created institution: {result.label} ({result.id})")
+            logger.info("Created institution: %s (%s)", result.label, result.id)
             return self._node_to_response(result)
 
+        except (ValueError, TypeError) as e:
+            logger.error("Failed to create institution: %s", e)
+            raise ValidationError(f"Invalid institution data: {str(e)}")
+        except SFMServiceError:
+            raise
         except Exception as e:
-            logger.error(f"Failed to create institution: {e}")
-            if isinstance(e, SFMServiceError):
-                raise
+            logger.error("Failed to create institution: %s", e)
             raise SFMServiceError(
                 f"Failed to create institution: {str(e)}", "CREATE_INSTITUTION_FAILED"
-            )
+            ) from e
 
     def create_policy(
         self, request: Union[CreatePolicyRequest, dict], **kwargs
@@ -796,39 +801,60 @@ class SFMService:
 
     # ═══ ENTITY LISTING ═══
 
+    def _get_node_type_mapping(self) -> Dict[str, Type[Node]]:
+        """Get mapping of string node types to their corresponding classes."""
+        return {
+            "Actor": Actor,
+            "Institution": Institution,
+            "Policy": Policy,
+            "Resource": Resource,
+            "Flow": Flow,
+        }
+
+    def _apply_pagination(
+        self, items: List[Any], limit: int, offset: int
+    ) -> List[Any]:
+        """Apply pagination to a list of items."""
+        return items[offset : offset + limit]
+
     def list_nodes(
-        self, node_type: Optional[str] = None, limit: int = 100, offset: int = 0
+        self, 
+        node_type: Optional[str] = None, 
+        limit: int = DEFAULT_PAGE_LIMIT, 
+        offset: int = DEFAULT_PAGE_OFFSET
     ) -> List[NodeResponse]:
         """List nodes with optional filtering and pagination."""
         try:
-            # Map string types to classes
-            type_mapping = {
-                "Actor": Actor,
-                "Institution": Institution,
-                "Policy": Policy,
-                "Resource": Resource,
-                "Flow": Flow,
-            }
-
+            # Get node type mapping and filter type
+            type_mapping = self._get_node_type_mapping()
             filter_type = type_mapping.get(node_type) if node_type else None
+            
+            # Get nodes from repository
             nodes = self._base_repo.list_nodes(filter_type)
-
+            
             # Apply pagination
-            paginated_nodes = nodes[offset : offset + limit]
-
+            paginated_nodes = self._apply_pagination(nodes, limit, offset)
+            
             return [self._node_to_response(node) for node in paginated_nodes]
 
+        except (ValueError, TypeError) as e:
+            logger.error("Failed to list nodes: %s", e)
+            raise ValidationError(f"Invalid parameters for listing nodes: {str(e)}")
         except Exception as e:
-            logger.error(f"Failed to list nodes: {e}")
+            logger.error("Failed to list nodes: %s", e)
             raise SFMServiceError(
                 f"Failed to list nodes: {str(e)}", "LIST_NODES_FAILED"
             )
 
     def list_relationships(
-        self, kind: Optional[str] = None, limit: int = 100, offset: int = 0
+        self, 
+        kind: Optional[str] = None, 
+        limit: int = DEFAULT_PAGE_LIMIT, 
+        offset: int = DEFAULT_PAGE_OFFSET
     ) -> List[RelationshipResponse]:
         """List relationships with optional filtering and pagination."""
         try:
+            # Apply filtering by kind if specified
             filter_kind = self._convert_to_relationship_kind(kind) if kind else None
             relationships = (
                 self._relationship_repo.list_all()
@@ -837,12 +863,15 @@ class SFMService:
             )
 
             # Apply pagination
-            paginated_rels = relationships[offset : offset + limit]
+            paginated_rels = self._apply_pagination(relationships, limit, offset)
 
             return [self._relationship_to_response(rel) for rel in paginated_rels]
 
+        except (ValueError, TypeError) as e:
+            logger.error("Failed to list relationships: %s", e)
+            raise ValidationError(f"Invalid parameters for listing relationships: {str(e)}")
         except Exception as e:
-            logger.error(f"Failed to list relationships: {e}")
+            logger.error("Failed to list relationships: %s", e)
             raise SFMServiceError(
                 f"Failed to list relationships: {str(e)}", "LIST_RELATIONSHIPS_FAILED"
             )
@@ -1108,7 +1137,11 @@ class SFMService:
 
     @contextmanager
     def transaction(self):
-        """Context manager for transactional operations (placeholder for future implementation)."""
+        """
+        Context manager for transactional operations.
+        
+        Note: This is a placeholder for future implementation.
+        """
         try:
             yield self
         except Exception:
