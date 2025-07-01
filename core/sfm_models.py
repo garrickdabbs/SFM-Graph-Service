@@ -21,6 +21,15 @@ from core.sfm_enums import (
     ResourceType,
     FlowNature,
     ValueCategory,
+    FlowType,
+    PolicyInstrumentType,
+    ChangeType,
+    BehaviorPatternType,
+    FeedbackPolarity,
+    FeedbackType,
+    TemporalFunctionType,
+    ValidationRuleType,
+    SystemPropertyType,
 )
 
 
@@ -149,7 +158,7 @@ class Flow(Node):  # pylint: disable=too-many-instance-attributes
     scenario: Optional[Scenario] = None
 
     # Additional SFM-specific fields
-    flow_type: str = ""  # material, energy, information, financial, social
+    flow_type: FlowType = FlowType.MATERIAL  # material, energy, information, financial, social
     source_process_id: Optional[uuid.UUID] = None
     target_process_id: Optional[uuid.UUID] = None
     transformation_coefficient: Optional[float] = None
@@ -175,9 +184,9 @@ class FeedbackLoop(Node):
 
     relationships: List[uuid.UUID] = field(default_factory=list)
     description: Optional[str] = None
-    polarity: Optional[str] = None  # "reinforcing" or "balancing"
+    polarity: Optional[FeedbackPolarity] = None  # "reinforcing" or "balancing"
     strength: Optional[float] = None  # Measure of loop strength/impact
-    type: Optional[str] = None  # e.g. "positive", "negative", "neutral"
+    type: Optional[FeedbackType] = None  # e.g. "positive", "negative", "neutral"
 
 @dataclass
 class TechnologySystem(Node):
@@ -221,7 +230,7 @@ class AnalyticalContext(Node):  # pylint: disable=too-many-instance-attributes
 class SystemProperty(Node):
     """Represents a system-level property or metric of the SFM."""
 
-    property_type: str = ""
+    property_type: SystemPropertyType = SystemPropertyType.STRUCTURAL
     value: Any = None
     unit: Optional[str] = None
     timestamp: datetime = field(default_factory=datetime.now)
@@ -266,7 +275,7 @@ class InstrumentalBehavior(Node):
 class PolicyInstrument(Node):
     """Specific tools used to implement policies."""
 
-    instrument_type: str = ""  # regulatory, economic, voluntary, information
+    instrument_type: PolicyInstrumentType = PolicyInstrumentType.REGULATORY  # regulatory, economic, voluntary, information
     target_behavior: Optional[str] = None
     compliance_mechanism: Optional[str] = None
     effectiveness_measure: Optional[float] = None
@@ -295,7 +304,7 @@ class ValueFlow(Flow):
 class ChangeProcess(Node):
     """Models institutional and technological change over time."""
 
-    change_type: str = ""  # evolutionary, revolutionary, cyclical
+    change_type: ChangeType = ChangeType.EVOLUTIONARY  # evolutionary, revolutionary, cyclical
     change_agents: List[uuid.UUID] = field(default_factory=list)
     resistance_factors: List[uuid.UUID] = field(default_factory=list)
     change_trajectory: List[TimeSlice] = field(default_factory=list)
@@ -317,7 +326,7 @@ class CognitiveFramework(Node):
 class BehavioralPattern(Node):
     """Recurring patterns of behavior in the social fabric."""
 
-    pattern_type: str = ""  # habitual, strategic, adaptive, resistant
+    pattern_type: BehaviorPatternType = BehaviorPatternType.HABITUAL  # habitual, strategic, adaptive, resistant
     frequency: Optional[float] = None
     predictability: Optional[float] = None
     context_dependency: List[str] = field(default_factory=list)
@@ -334,7 +343,7 @@ class TemporalDynamics:
 
     start_time: TimeSlice
     end_time: Optional[TimeSlice] = None
-    function_type: str = "linear"  # linear, exponential, logistic, etc.
+    function_type: TemporalFunctionType = TemporalFunctionType.LINEAR  # linear, exponential, logistic, etc.
     parameters: Dict[str, float] = field(default_factory=dict)
 
 
@@ -342,7 +351,7 @@ class TemporalDynamics:
 class ValidationRule:
     """Defines a validation rule for data integrity."""
 
-    rule_type: str  # e.g., "range", "sum", "required", "unique"
+    rule_type: ValidationRuleType  # e.g., "range", "sum", "required", "unique"
     target_field: str
     parameters: Dict[str, Any] = field(default_factory=dict)
     error_message: str = ""
