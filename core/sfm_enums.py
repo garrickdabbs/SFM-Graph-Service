@@ -261,6 +261,126 @@ class FlowNature(Enum):
     REPORTING = auto()  # Required information disclosure
 
 
+class FlowType(Enum):
+    """
+    Classification of flow types by medium/content in Social Fabric Matrix systems.
+    
+    Defines the fundamental types of flows that can occur between actors, processes,
+    and resources in socio-economic systems.
+    """
+    MATERIAL = auto()  # Physical goods and substances
+    ENERGY = auto()  # Power, heat, electricity flows
+    INFORMATION = auto()  # Data, knowledge, signals
+    FINANCIAL = auto()  # Money, credit, financial instruments
+    SOCIAL = auto()  # Relationships, trust, social capital
+
+
+class PolicyInstrumentType(Enum):
+    """
+    Classification of policy instrument types for implementation analysis.
+    
+    Categorizes the different mechanisms through which policies can be implemented
+    and enforced in socio-economic systems.
+    """
+    REGULATORY = auto()  # Rules, regulations, legal requirements
+    ECONOMIC = auto()  # Taxes, subsidies, market-based mechanisms
+    VOLUNTARY = auto()  # Voluntary agreements, codes of conduct
+    INFORMATION = auto()  # Education, disclosure, awareness campaigns
+
+
+class ChangeType(Enum):
+    """
+    Classification of institutional and technological change patterns.
+    
+    Defines different modes of change that can occur in socio-economic systems,
+    following institutional economics and innovation theory.
+    """
+    EVOLUTIONARY = auto()  # Gradual, adaptive change
+    REVOLUTIONARY = auto()  # Rapid, disruptive transformation
+    CYCLICAL = auto()  # Recurring patterns of change
+    INCREMENTAL = auto()  # Small, continuous improvements
+
+
+class BehaviorPatternType(Enum):
+    """
+    Classification of behavioral patterns in Social Fabric Matrix analysis.
+    
+    Categorizes recurring patterns of behavior that actors exhibit in
+    socio-economic systems.
+    """
+    HABITUAL = auto()  # Routine, unconscious behaviors
+    STRATEGIC = auto()  # Deliberate, goal-oriented behaviors
+    ADAPTIVE = auto()  # Flexible, responsive behaviors
+    RESISTANT = auto()  # Change-resistant, conservative behaviors
+
+
+class FeedbackPolarity(Enum):
+    """
+    Classification of feedback loop polarity in system dynamics.
+    
+    Defines whether a feedback loop reinforces or balances system behavior.
+    """
+    REINFORCING = auto()  # Amplifies or accelerates change (positive feedback)
+    BALANCING = auto()  # Stabilizes or counteracts change (negative feedback)
+
+
+class FeedbackType(Enum):
+    """
+    Classification of feedback types by directional impact.
+    
+    Categorizes feedback effects based on their directional influence
+    on system behavior.
+    """
+    POSITIVE = auto()  # Enhancing, amplifying feedback
+    NEGATIVE = auto()  # Dampening, correcting feedback
+    NEUTRAL = auto()  # Balanced or minimal feedback
+
+
+class TemporalFunctionType(Enum):
+    """
+    Classification of temporal function types for modeling change over time.
+    
+    Defines mathematical functions used to model how values change
+    over time in temporal dynamics analysis.
+    """
+    LINEAR = auto()  # Constant rate of change
+    EXPONENTIAL = auto()  # Accelerating or decelerating change
+    LOGISTIC = auto()  # S-curve growth with limits
+    CYCLICAL = auto()  # Periodic, repeating patterns
+    STEP = auto()  # Discrete jumps or threshold changes
+    RANDOM = auto()  # Stochastic or unpredictable changes
+
+
+class ValidationRuleType(Enum):
+    """
+    Classification of validation rule types for data integrity.
+    
+    Defines different types of validation rules that can be applied
+    to ensure data quality and consistency.
+    """
+    RANGE = auto()  # Value within specified bounds
+    SUM = auto()  # Sum constraints across multiple values
+    REQUIRED = auto()  # Mandatory field validation
+    UNIQUE = auto()  # Uniqueness constraints
+    FORMAT = auto()  # Format or pattern validation
+    RELATIONSHIP = auto()  # Cross-field relationship validation
+
+
+class SystemPropertyType(Enum):
+    """
+    Classification of system-level property types in SFM analysis.
+    
+    Defines different categories of system-level metrics and properties
+    that can be measured and tracked.
+    """
+    STRUCTURAL = auto()  # Network structure properties
+    DYNAMIC = auto()  # Temporal behavior properties
+    PERFORMANCE = auto()  # Efficiency and effectiveness metrics
+    RESILIENCE = auto()  # Adaptive capacity and robustness
+    EQUITY = auto()  # Distributional fairness metrics
+    SUSTAINABILITY = auto()  # Long-term viability indicators
+
+
 class RelationshipKind(Enum):
     """
     Taxonomy of relationship types in Social Fabric Matrix systems.

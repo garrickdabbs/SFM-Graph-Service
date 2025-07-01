@@ -46,6 +46,15 @@ from core.sfm_enums import (
     ResourceType,
     FlowNature,
     RelationshipKind,
+    TemporalFunctionType,
+    ValidationRuleType,
+    FlowType,
+    PolicyInstrumentType,
+    ChangeType,
+    BehaviorPatternType,
+    FeedbackPolarity,
+    FeedbackType,
+    SystemPropertyType,
 )
 
 
@@ -225,10 +234,20 @@ class TestEnums(unittest.TestCase):
     def test_all_enum_values_unique(self):
         """Test all enums have unique values."""
         for enum_class in [
-            ValueCategory,            RelationshipKind,
+            ValueCategory,
+            RelationshipKind,
             InstitutionLayer,
             ResourceType,
             FlowNature,
+            FlowType,
+            PolicyInstrumentType,
+            ChangeType,
+            BehaviorPatternType,
+            FeedbackPolarity,
+            FeedbackType,
+            TemporalFunctionType,
+            ValidationRuleType,
+            SystemPropertyType,
         ]:
             values = [member.value for member in enum_class]
             self.assertEqual(
@@ -387,12 +406,163 @@ class TestEnums(unittest.TestCase):
 
     def test_enum_documentation_completeness(self):
         """Test that enum classes have proper documentation."""
-        enum_classes = [ValueCategory, RelationshipKind, InstitutionLayer, ResourceType, FlowNature]
+        enum_classes = [
+            ValueCategory, RelationshipKind, InstitutionLayer, ResourceType, FlowNature,
+            FlowType, PolicyInstrumentType, ChangeType, BehaviorPatternType,
+            FeedbackPolarity, FeedbackType, TemporalFunctionType, ValidationRuleType,
+            SystemPropertyType
+        ]
         
         for enum_class in enum_classes:
             # Each enum class should have a docstring or be well-documented through usage
             self.assertIsNotNone(enum_class.__name__)
             self.assertTrue(len(list(enum_class)) > 0, f"{enum_class.__name__} should have members")
+
+    def test_flow_type_enum_completeness(self):
+        """Test FlowType enum contains expected flow types."""
+        expected_types = ["MATERIAL", "ENERGY", "INFORMATION", "FINANCIAL", "SOCIAL"]
+        
+        for flow_type in expected_types:
+            self.assertTrue(
+                hasattr(FlowType, flow_type),
+                f"Missing FlowType.{flow_type}"
+            )
+        
+        # Test all enum values are accessible
+        all_types = list(FlowType)
+        self.assertEqual(len(all_types), 5)
+
+    def test_policy_instrument_type_enum_completeness(self):
+        """Test PolicyInstrumentType enum contains expected instrument types."""
+        expected_types = ["REGULATORY", "ECONOMIC", "VOLUNTARY", "INFORMATION"]
+        
+        for instrument_type in expected_types:
+            self.assertTrue(
+                hasattr(PolicyInstrumentType, instrument_type),
+                f"Missing PolicyInstrumentType.{instrument_type}"
+            )
+        
+        # Test all enum values are accessible
+        all_types = list(PolicyInstrumentType)
+        self.assertEqual(len(all_types), 4)
+
+    def test_change_type_enum_completeness(self):
+        """Test ChangeType enum contains expected change types."""
+        expected_types = ["EVOLUTIONARY", "REVOLUTIONARY", "CYCLICAL", "INCREMENTAL"]
+        
+        for change_type in expected_types:
+            self.assertTrue(
+                hasattr(ChangeType, change_type),
+                f"Missing ChangeType.{change_type}"
+            )
+        
+        # Test all enum values are accessible
+        all_types = list(ChangeType)
+        self.assertEqual(len(all_types), 4)
+
+    def test_behavior_pattern_type_enum_completeness(self):
+        """Test BehaviorPatternType enum contains expected pattern types."""
+        expected_types = ["HABITUAL", "STRATEGIC", "ADAPTIVE", "RESISTANT"]
+        
+        for pattern_type in expected_types:
+            self.assertTrue(
+                hasattr(BehaviorPatternType, pattern_type),
+                f"Missing BehaviorPatternType.{pattern_type}"
+            )
+        
+        # Test all enum values are accessible
+        all_types = list(BehaviorPatternType)
+        self.assertEqual(len(all_types), 4)
+
+    def test_feedback_polarity_enum_completeness(self):
+        """Test FeedbackPolarity enum contains expected polarity types."""
+        expected_types = ["REINFORCING", "BALANCING"]
+        
+        for polarity_type in expected_types:
+            self.assertTrue(
+                hasattr(FeedbackPolarity, polarity_type),
+                f"Missing FeedbackPolarity.{polarity_type}"
+            )
+        
+        # Test all enum values are accessible
+        all_types = list(FeedbackPolarity)
+        self.assertEqual(len(all_types), 2)
+
+    def test_feedback_type_enum_completeness(self):
+        """Test FeedbackType enum contains expected feedback types."""
+        expected_types = ["POSITIVE", "NEGATIVE", "NEUTRAL"]
+        
+        for feedback_type in expected_types:
+            self.assertTrue(
+                hasattr(FeedbackType, feedback_type),
+                f"Missing FeedbackType.{feedback_type}"
+            )
+        
+        # Test all enum values are accessible
+        all_types = list(FeedbackType)
+        self.assertEqual(len(all_types), 3)
+
+    def test_temporal_function_type_enum_completeness(self):
+        """Test TemporalFunctionType enum contains expected function types."""
+        expected_types = ["LINEAR", "EXPONENTIAL", "LOGISTIC", "CYCLICAL", "STEP", "RANDOM"]
+        
+        for function_type in expected_types:
+            self.assertTrue(
+                hasattr(TemporalFunctionType, function_type),
+                f"Missing TemporalFunctionType.{function_type}"
+            )
+        
+        # Test all enum values are accessible
+        all_types = list(TemporalFunctionType)
+        self.assertEqual(len(all_types), 6)
+
+    def test_validation_rule_type_enum_completeness(self):
+        """Test ValidationRuleType enum contains expected rule types."""
+        expected_types = ["RANGE", "SUM", "REQUIRED", "UNIQUE", "FORMAT", "RELATIONSHIP"]
+        
+        for rule_type in expected_types:
+            self.assertTrue(
+                hasattr(ValidationRuleType, rule_type),
+                f"Missing ValidationRuleType.{rule_type}"
+            )
+        
+        # Test all enum values are accessible
+        all_types = list(ValidationRuleType)
+        self.assertEqual(len(all_types), 6)
+
+    def test_system_property_type_enum_completeness(self):
+        """Test SystemPropertyType enum contains expected property types."""
+        expected_types = ["STRUCTURAL", "DYNAMIC", "PERFORMANCE", "RESILIENCE", "EQUITY", "SUSTAINABILITY"]
+        
+        for property_type in expected_types:
+            self.assertTrue(
+                hasattr(SystemPropertyType, property_type),
+                f"Missing SystemPropertyType.{property_type}"
+            )
+        
+        # Test all enum values are accessible
+        all_types = list(SystemPropertyType)
+        self.assertEqual(len(all_types), 6)
+
+    def test_all_new_enum_values_unique(self):
+        """Test all new enums have unique values."""
+        for enum_class in [
+            FlowType,
+            PolicyInstrumentType,
+            ChangeType,
+            BehaviorPatternType,
+            FeedbackPolarity,
+            FeedbackType,
+            TemporalFunctionType,
+            ValidationRuleType,
+            SystemPropertyType,
+        ]:
+            values = [member.value for member in enum_class]
+            self.assertEqual(
+                len(values),
+                len(set(values)),
+                f"{enum_class.__name__} has duplicate values",
+            )
 
 
 class TestDimensionalEntities(unittest.TestCase):
@@ -2282,7 +2452,7 @@ class TestNewClasses(unittest.TestCase):
         )
         
         self.validation_rule = ValidationRule(
-            rule_type="range",
+            rule_type=ValidationRuleType.RANGE,
             target_field="data_quality",
             parameters={"min_value": 0.5, "max_value": 1.0},
             error_message="Data quality must be between 0.5 and 1.0"
@@ -2324,11 +2494,11 @@ class TestNewClasses(unittest.TestCase):
         minimal = TemporalDynamics(start_time=start_time)
         self.assertEqual(minimal.start_time.label, "minimal_start")
         self.assertIsNone(minimal.end_time)
-        self.assertEqual(minimal.function_type, "linear")
+        self.assertEqual(minimal.function_type, TemporalFunctionType.LINEAR)
 
     def test_validation_rule_creation(self):
         """Test creation of ValidationRule objects."""
-        self.assertEqual(self.validation_rule.rule_type, "range")
+        self.assertEqual(self.validation_rule.rule_type, ValidationRuleType.RANGE)
         self.assertEqual(self.validation_rule.target_field, "data_quality")
         self.assertEqual(self.validation_rule.parameters["min_value"], 0.5)
         self.assertEqual(self.validation_rule.parameters["max_value"], 1.0)
@@ -2338,10 +2508,10 @@ class TestNewClasses(unittest.TestCase):
         """Test that ValidationRule requires certain fields."""
         # Test with minimal required fields
         minimal = ValidationRule(
-            rule_type="required",
+            rule_type=ValidationRuleType.REQUIRED,
             target_field="label"
         )
-        self.assertEqual(minimal.rule_type, "required")
+        self.assertEqual(minimal.rule_type, ValidationRuleType.REQUIRED)
         self.assertEqual(minimal.target_field, "label")
         self.assertEqual(minimal.error_message, "")
 
@@ -2557,7 +2727,7 @@ class TestEnhancedSFMGraph(unittest.TestCase):
         )
         
         self.validation_rule = ValidationRule(
-            rule_type="required",
+            rule_type=ValidationRuleType.REQUIRED,
             target_field="label"
         )
         
@@ -2581,7 +2751,7 @@ class TestEnhancedSFMGraph(unittest.TestCase):
         """Test validation_rules field in SFMGraph."""
         self.assertIsNotNone(self.enhanced_graph.validation_rules)
         self.assertEqual(len(self.enhanced_graph.validation_rules), 1)
-        self.assertEqual(self.enhanced_graph.validation_rules[0].rule_type, "required")
+        self.assertEqual(self.enhanced_graph.validation_rules[0].rule_type, ValidationRuleType.REQUIRED)
         self.assertEqual(self.enhanced_graph.validation_rules[0].target_field, "label")
         
         # Test default validation rules
@@ -2666,14 +2836,14 @@ class TestValidationRulesIntegration(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.validation_rule1 = ValidationRule(
-            rule_type="range",
+            rule_type=ValidationRuleType.RANGE,
             target_field="data_quality",
             parameters={"min_value": 0.7},
             error_message="Data quality must be >= 0.7"
         )
         
         self.validation_rule2 = ValidationRule(
-            rule_type="required",
+            rule_type=ValidationRuleType.REQUIRED,
             target_field="label",
             error_message="Label is required"
         )
@@ -2684,8 +2854,8 @@ class TestValidationRulesIntegration(unittest.TestCase):
         context.validation_rules = [self.validation_rule1, self.validation_rule2]
         
         self.assertEqual(len(context.validation_rules), 2)
-        self.assertEqual(context.validation_rules[0].rule_type, "range")
-        self.assertEqual(context.validation_rules[1].rule_type, "required")
+        self.assertEqual(context.validation_rules[0].rule_type, ValidationRuleType.RANGE)
+        self.assertEqual(context.validation_rules[1].rule_type, ValidationRuleType.REQUIRED)
 
     def test_sfm_graph_with_validation_rules(self):
         """Test SFMGraph class with validation_rules field."""
