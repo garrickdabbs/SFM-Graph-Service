@@ -569,3 +569,249 @@ class RelationshipKind(Enum):
     DISTRIBUTES_POWER = auto()
     CONCENTRATES_POWER = auto()
     BENEFITS_FROM = auto()  # Gains advantage or support from
+
+
+# ───────────────────────────────────────────────
+# ERROR HANDLING AND VALIDATION
+# ───────────────────────────────────────────────
+
+
+class SFMEnumError(Exception):
+    """Base exception for SFM enum-related errors."""
+    pass
+
+
+class IncompatibleEnumError(SFMEnumError):
+    """Raised when incompatible enum values are used together."""
+    pass
+
+
+class InvalidEnumOperationError(SFMEnumError):
+    """Raised when an invalid operation is attempted on enum values."""
+    pass
+
+
+class EnumValidator:
+    """Validates enum values and combinations for SFM consistency."""
+    
+    # Define node type mappings - these correspond to the actual model classes
+    ACTOR_TYPES = {'Actor'}
+    INSTITUTION_TYPES = {'Institution', 'Policy'}
+    RESOURCE_TYPES = {'Resource'}
+    PROCESS_TYPES = {'Process', 'Flow'}
+    SYSTEM_TYPES = {'TechnologySystem', 'BeliefSystem', 'ValueSystem'}
+    OTHER_TYPES = {'FeedbackLoop', 'Indicator', 'AnalyticalContext', 'SystemProperty', 
+                   'CeremonialBehavior', 'InstrumentalBehavior', 'PolicyInstrument'}
+    
+    # Define relationship context rules
+    RELATIONSHIP_RULES = {
+        RelationshipKind.GOVERNS: {
+            'valid_combinations': [
+                ('Actor', 'Actor'),
+                ('Actor', 'Institution'),
+                ('Actor', 'Policy'),
+                ('Actor', 'Resource'),  # Actors can govern resources (ownership, stewardship)
+                ('Institution', 'Institution'),
+                ('Institution', 'Actor'),
+                ('Institution', 'Policy'),  # Institutions can govern policies
+                ('Institution', 'Resource'),  # Institutions can govern/regulate resources
+                ('Policy', 'Actor'),
+                ('Policy', 'Institution'),
+                ('Policy', 'Resource')  # Policies can govern resources (regulations)
+            ],
+            'description': 'GOVERNS relationship requires entities capable of authority or regulation',
+            'invalid_message': 'GOVERNS relationship requires authority-capable entities (Actors, Institutions, Policies) governing appropriate targets'
+        },
+        RelationshipKind.EMPLOYS: {
+            'valid_combinations': [
+                ('Actor', 'Actor'),
+                ('Institution', 'Actor')  # Organizations can employ people
+            ],
+            'description': 'EMPLOYS relationship for labor relationships',
+            'invalid_message': 'EMPLOYS relationship requires Actor or Institution employing Actor entities'
+        },
+        RelationshipKind.OWNS: {
+            'valid_combinations': [
+                ('Actor', 'Resource'),
+                ('Institution', 'Resource'),
+                ('Actor', 'TechnologySystem'),
+                ('Institution', 'TechnologySystem')
+            ],
+            'description': 'OWNS relationship requires an entity capable of ownership and an ownable resource',
+            'invalid_message': 'OWNS relationship requires Actor/Institution owning Resource/TechnologySystem'
+        },
+        RelationshipKind.USES: {
+            'valid_combinations': [
+                ('Actor', 'Resource'),
+                ('Process', 'Resource'),
+                ('Actor', 'TechnologySystem'),
+                ('Process', 'TechnologySystem'),
+                ('Actor', 'Institution'),
+                ('Process', 'Institution')
+            ],
+            'description': 'USES relationship requires a user and a usable entity',
+            'invalid_message': 'USES relationship requires Actor/Process using Resource/TechnologySystem/Institution'
+        },
+        RelationshipKind.PRODUCES: {
+            'valid_combinations': [
+                ('Actor', 'Resource'),
+                ('Process', 'Resource'),
+                ('TechnologySystem', 'Resource'),
+                ('Actor', 'Flow'),
+                ('Process', 'Flow'),
+                ('TechnologySystem', 'Flow'),
+                ('Actor', 'ValueFlow'),
+                ('Process', 'ValueFlow'),
+                ('TechnologySystem', 'ValueFlow'),
+                ('PolicyInstrument', 'Flow'),
+                ('PolicyInstrument', 'ValueFlow'),
+                ('PolicyInstrument', 'Resource')
+            ],
+            'description': 'PRODUCES relationship requires a producer and a producible output',
+            'invalid_message': 'PRODUCES relationship requires Actor/Process/TechnologySystem/PolicyInstrument producing Resource/Flow/ValueFlow'
+        }
+    }
+    
+    @staticmethod
+    def validate_relationship_context(
+        kind: RelationshipKind, 
+        source_type: str, 
+        target_type: str
+    ) -> None:
+        """Validate that relationship makes sense in context.
+        
+        Args:
+            kind: The type of relationship
+            source_type: Type of source node (class name)
+            target_type: Type of target node (class name)
+            
+        Raises:
+            IncompatibleEnumError: If relationship doesn't make sense
+            InvalidEnumOperationError: If invalid parameters provided
+        """
+        if not isinstance(kind, RelationshipKind):
+            raise InvalidEnumOperationError(
+                f"Expected RelationshipKind, got {type(kind).__name__}"
+            )
+        
+        if not source_type or not target_type:
+            raise InvalidEnumOperationError(
+                "Source and target types must be provided and non-empty"
+            )
+        
+        # Check if we have specific rules for this relationship kind
+        if kind in EnumValidator.RELATIONSHIP_RULES:
+            rule = EnumValidator.RELATIONSHIP_RULES[kind]
+            valid_combinations = rule['valid_combinations']
+            
+            if (source_type, target_type) not in valid_combinations:
+                suggestions = EnumValidator._generate_suggestions(kind, source_type, target_type)
+                raise IncompatibleEnumError(
+                    f"{rule['invalid_message']}. "
+                    f"Got {source_type}->{target_type}. "
+                    f"{suggestions}"
+                )
+    
+    @staticmethod
+    def validate_flow_combination(nature: FlowNature, flow_type: FlowType) -> None:
+        """Validate that flow nature and type are compatible.
+        
+        Args:
+            nature: The nature of the flow
+            flow_type: The type of the flow
+            
+        Raises:
+            IncompatibleEnumError: If flow nature and type are incompatible
+            InvalidEnumOperationError: If invalid parameters provided
+        """
+        if not isinstance(nature, FlowNature):
+            raise InvalidEnumOperationError(
+                f"Expected FlowNature, got {type(nature).__name__}"
+            )
+        
+        if not isinstance(flow_type, FlowType):
+            raise InvalidEnumOperationError(
+                f"Expected FlowType, got {type(flow_type).__name__}"
+            )
+        
+        # Define obviously incompatible combinations (semantically impossible)
+        strictly_incompatible = {
+            # These combinations are clearly nonsensical
+            (FlowNature.ENERGY, FlowType.INFORMATION),
+            (FlowNature.INFORMATION, FlowType.ENERGY)
+        }
+        
+        if (nature, flow_type) in strictly_incompatible:
+            raise IncompatibleEnumError(
+                f"Flow nature {nature.name} is semantically incompatible with flow type {flow_type.name}. "
+                f"Consider using compatible combinations."
+            )
+    
+    @staticmethod
+    def validate_institution_layer_context(
+        layer: InstitutionLayer,
+        institution_type: str
+    ) -> None:
+        """Validate that institution layer makes sense for the institution type.
+        
+        Args:
+            layer: The institutional layer
+            institution_type: Type of institution
+            
+        Raises:
+            IncompatibleEnumError: If layer doesn't match institution type
+            InvalidEnumOperationError: If invalid parameters provided
+        """
+        if not isinstance(layer, InstitutionLayer):
+            raise InvalidEnumOperationError(
+                f"Expected InstitutionLayer, got {type(layer).__name__}"
+            )
+        
+        # Formal rules should typically apply to formal institutions
+        if layer == InstitutionLayer.FORMAL_RULE and institution_type in ['BeliefSystem', 'ValueSystem']:
+            raise IncompatibleEnumError(
+                f"FORMAL_RULE layer is typically not appropriate for {institution_type}. "
+                f"Consider using CULTURAL_VALUE or KNOWLEDGE_SYSTEM layers for belief/value systems."
+            )
+    
+    @staticmethod
+    def _generate_suggestions(kind: RelationshipKind, source_type: str, target_type: str) -> str:
+        """Generate helpful suggestions for valid combinations."""
+        if kind in EnumValidator.RELATIONSHIP_RULES:
+            valid_combinations = EnumValidator.RELATIONSHIP_RULES[kind]['valid_combinations']
+            
+            # Find suggestions for the source type
+            source_suggestions = [combo[1] for combo in valid_combinations if combo[0] == source_type]
+            target_suggestions = [combo[0] for combo in valid_combinations if combo[1] == target_type]
+            
+            suggestions = []
+            if source_suggestions:
+                suggestions.append(f"For {source_type} sources, valid targets are: {', '.join(set(source_suggestions))}")
+            if target_suggestions:
+                suggestions.append(f"For {target_type} targets, valid sources are: {', '.join(set(target_suggestions))}")
+            
+            if suggestions:
+                return "Suggestions: " + "; ".join(suggestions)
+        
+        return "Check the relationship documentation for valid combinations."
+
+
+def validate_enum_operation(operation_name: str):
+    """Decorator to validate enum operations and provide better error messages.
+    
+    Args:
+        operation_name: Name of the operation being performed
+        
+    Returns:
+        Decorator function
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except (TypeError, ValueError, AttributeError) as e:
+                raise InvalidEnumOperationError(
+                    f"Invalid {operation_name} operation: {str(e)}"
+                ) from e
+        return wrapper
+    return decorator
