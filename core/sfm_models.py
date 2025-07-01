@@ -30,6 +30,12 @@ from core.sfm_enums import (
     TemporalFunctionType,
     ValidationRuleType,
     SystemPropertyType,
+    PowerResourceType,
+    TechnologyReadinessLevel,
+    LegitimacySource,
+    PathDependencyStrength,
+    ToolSkillTechnologyComplex,
+    InstitutionalChangeMechanism,
 )
 
 

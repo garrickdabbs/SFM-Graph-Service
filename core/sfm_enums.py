@@ -18,7 +18,7 @@ from enum import Enum, auto
 class ValueCategory(Enum):
     """
     Categories of value that can be measured and tracked in Social Fabric Matrix analysis.
-    
+
     These categories represent different dimensions of value creation, distribution, and impact
     within socio-economic systems, following Hayden's institutional analysis framework.
     """
@@ -82,7 +82,7 @@ class ValueCategory(Enum):
 class InstitutionLayer(Enum):
     """
     Hayden's three-layer institutional framework plus extended institutional forms.
-    
+
     Based on F. Gregory Hayden's analysis of institutional structure, this enum represents
     the different layers at which institutions operate, from formal constitutional rules
     to informal cultural norms, plus additional institutional forms relevant to SFM analysis.
@@ -112,7 +112,7 @@ class InstitutionLayer(Enum):
 class ResourceType(Enum):
     """
     Classification of resource types within Social Fabric Matrix analysis.
-    
+
     Categorizes different forms of resources that flow through socio-economic systems,
     including traditional economic resources and expanded categories relevant to
     institutional and technological analysis.
@@ -182,8 +182,8 @@ class ResourceType(Enum):
 class FlowNature(Enum):
     """
     Classification of flow types and patterns in Social Fabric Matrix systems.
-    
-    Describes the nature, direction, timing, and purpose of flows of resources, 
+
+    Describes the nature, direction, timing, and purpose of flows of resources,
     information, value, and other elements through socio-economic systems.
     Essential for understanding system dynamics and transformation processes.
     """
@@ -264,7 +264,7 @@ class FlowNature(Enum):
 class FlowType(Enum):
     """
     Classification of flow types by medium/content in Social Fabric Matrix systems.
-    
+
     Defines the fundamental types of flows that can occur between actors, processes,
     and resources in socio-economic systems.
     """
@@ -278,7 +278,7 @@ class FlowType(Enum):
 class PolicyInstrumentType(Enum):
     """
     Classification of policy instrument types for implementation analysis.
-    
+
     Categorizes the different mechanisms through which policies can be implemented
     and enforced in socio-economic systems.
     """
@@ -288,10 +288,109 @@ class PolicyInstrumentType(Enum):
     INFORMATION = auto()  # Education, disclosure, awareness campaigns
 
 
+class PowerResourceType(Enum):
+    """
+    Classification of power resource types for SFM power dynamics analysis.
+
+    Defines different sources and mechanisms of power within socio-economic systems,
+    following Hayden's emphasis on power distribution in institutional analysis.
+    """
+    INSTITUTIONAL_AUTHORITY = auto()  # Formal positions and roles with decision-making power
+    ECONOMIC_CONTROL = auto()  # Control over financial resources, markets, and economic decisions
+    INFORMATION_ACCESS = auto()  # Control over data, knowledge, and information flows
+    NETWORK_POSITION = auto()  # Strategic position within social and professional networks
+    CULTURAL_LEGITIMACY = auto()  # Authority derived from cultural standing and social acceptance
+    TECHNICAL_EXPERTISE = auto()  # Power from specialized knowledge and skills
+    LEGAL_AUTHORITY = auto()  # Power derived from legal frameworks and judicial systems
+    RESOURCE_OWNERSHIP = auto()  # Control over physical and natural resources
+    AGENDA_SETTING = auto()  # Ability to determine what issues receive attention
+    GATEKEEPING = auto()  # Control over access to opportunities and resources
+
+
+class TechnologyReadinessLevel(Enum):
+    """
+    Technology Readiness Levels adapted for SFM tool-skill-technology complex analysis.
+
+    Measures the maturity of technologies within socio-economic systems,
+    following NASA TRL framework adapted for institutional analysis.
+    """
+    BASIC_PRINCIPLES = 1        # Basic principles observed and reported
+    TECHNOLOGY_CONCEPT = 2      # Technology concept and/or application formulated
+    EXPERIMENTAL_PROOF = 3      # Analytical and experimental critical proof of concept
+    LABORATORY_VALIDATION = 4   # Component and/or breadboard validation in laboratory
+    RELEVANT_ENVIRONMENT = 5    # Component and/or breadboard validation in relevant environment
+    DEMONSTRATION = 6           # System/subsystem model or prototype demonstration
+    PROTOTYPE_DEMONSTRATION = 7 # System prototype demonstration in operational environment
+    SYSTEM_COMPLETE = 8         # Actual system completed and qualified through test
+    ACTUAL_SYSTEM = 9          # Actual system proven through successful mission operations
+
+
+class LegitimacySource(Enum):
+    """
+    Weber's types of authority/legitimacy adapted for SFM analysis.
+
+    Categorizes different sources of institutional legitimacy and authority
+    within socio-economic systems.
+    """
+    TRADITIONAL = auto()        # Custom, precedent, "eternal yesterday"
+    CHARISMATIC = auto()        # Personal qualities and vision of leader
+    LEGAL_RATIONAL = auto()     # Rules, procedures, and formal offices
+    EXPERT = auto()            # Technical knowledge and professional competence
+    DEMOCRATIC = auto()         # Popular consent and democratic participation
+    PERFORMANCE = auto()        # Demonstrated effectiveness and results
+
+
+class PathDependencyStrength(Enum):
+    """
+    Strength of institutional path dependencies in SFM systems.
+
+    Measures how strongly existing institutional arrangements constrain
+    future choices and development paths.
+    """
+    WEAK = auto()              # Easy to change, low switching costs, flexible arrangements
+    MODERATE = auto()          # Some resistance to change, moderate switching costs
+    STRONG = auto()            # High resistance to change, significant switching costs
+    LOCKED_IN = auto()         # Extremely difficult to change, prohibitive switching costs
+
+
+class ToolSkillTechnologyComplex(Enum):
+    """
+    Classification of tool-skill-technology complexes in SFM analysis.
+
+    Represents integrated systems of tools, skills, and technologies that
+    form coherent complexes within socio-economic systems.
+    """
+    PRODUCTION_COMPLEX = auto()      # Manufacturing and production technologies
+    INFORMATION_COMPLEX = auto()     # Data processing and communication technologies
+    TRANSPORTATION_COMPLEX = auto()  # Movement and logistics technologies
+    ENERGY_COMPLEX = auto()         # Power generation and distribution technologies
+    FINANCIAL_COMPLEX = auto()      # Monetary and financial service technologies
+    HEALTHCARE_COMPLEX = auto()     # Medical and health service technologies
+    EDUCATION_COMPLEX = auto()      # Learning and knowledge transfer technologies
+    GOVERNANCE_COMPLEX = auto()     # Administrative and regulatory technologies
+
+
+class InstitutionalChangeMechanism(Enum):
+    """
+    Mechanisms of institutional change in SFM systems.
+
+    Categorizes different ways institutions evolve and transform within
+    socio-economic systems following institutional economics theory.
+    """
+    INCREMENTAL_DRIFT = auto()      # Gradual change through small adjustments
+    LAYERING = auto()              # Adding new elements to existing institutions
+    DISPLACEMENT = auto()          # Replacement of old institutions with new ones
+    CONVERSION = auto()            # Redirecting existing institutions to new purposes
+    EXHAUSTION = auto()            # Breakdown due to accumulated contradictions
+    COMPETITIVE_SELECTION = auto()  # Change through market-like competition
+    LEARNING_ADAPTATION = auto()    # Change through knowledge and experience
+    CRISIS_TRANSFORMATION = auto()  # Rapid change triggered by external shocks
+
+
 class ChangeType(Enum):
     """
     Classification of institutional and technological change patterns.
-    
+
     Defines different modes of change that can occur in socio-economic systems,
     following institutional economics and innovation theory.
     """
@@ -304,7 +403,7 @@ class ChangeType(Enum):
 class BehaviorPatternType(Enum):
     """
     Classification of behavioral patterns in Social Fabric Matrix analysis.
-    
+
     Categorizes recurring patterns of behavior that actors exhibit in
     socio-economic systems.
     """
@@ -317,7 +416,7 @@ class BehaviorPatternType(Enum):
 class FeedbackPolarity(Enum):
     """
     Classification of feedback loop polarity in system dynamics.
-    
+
     Defines whether a feedback loop reinforces or balances system behavior.
     """
     REINFORCING = auto()  # Amplifies or accelerates change (positive feedback)
@@ -327,7 +426,7 @@ class FeedbackPolarity(Enum):
 class FeedbackType(Enum):
     """
     Classification of feedback types by directional impact.
-    
+
     Categorizes feedback effects based on their directional influence
     on system behavior.
     """
@@ -339,7 +438,7 @@ class FeedbackType(Enum):
 class TemporalFunctionType(Enum):
     """
     Classification of temporal function types for modeling change over time.
-    
+
     Defines mathematical functions used to model how values change
     over time in temporal dynamics analysis.
     """
@@ -354,7 +453,7 @@ class TemporalFunctionType(Enum):
 class ValidationRuleType(Enum):
     """
     Classification of validation rule types for data integrity.
-    
+
     Defines different types of validation rules that can be applied
     to ensure data quality and consistency.
     """
@@ -369,7 +468,7 @@ class ValidationRuleType(Enum):
 class SystemPropertyType(Enum):
     """
     Classification of system-level property types in SFM analysis.
-    
+
     Defines different categories of system-level metrics and properties
     that can be measured and tracked.
     """
@@ -384,7 +483,7 @@ class SystemPropertyType(Enum):
 class RelationshipKind(Enum):
     """
     Taxonomy of relationship types in Social Fabric Matrix systems.
-    
+
     Defines the various ways actors, institutions, resources, and processes can be
     related to each other. Includes governance, economic, social, informational,
     temporal, and ecological relationships, as well as Hayden-specific institutional
@@ -569,3 +668,61 @@ class RelationshipKind(Enum):
     DISTRIBUTES_POWER = auto()
     CONCENTRATES_POWER = auto()
     BENEFITS_FROM = auto()  # Gains advantage or support from
+
+    @property
+    def ceremonial_tendency(self) -> float:
+        """Returns 0.0-1.0 indicating ceremonial vs instrumental nature.
+
+        0.0 = fully instrumental (problem-solving, adaptive)
+        1.0 = fully ceremonial (tradition-preserving, resistant to change)
+        0.5 = neutral or mixed nature
+
+        Based on F. Gregory Hayden's Social Fabric Matrix framework.
+        """
+        # Define ceremonial vs instrumental categorization
+        ceremonial_relationships = {
+            # High ceremonial tendency (0.7-1.0) - traditional, resistance to change
+            RelationshipKind.CEREMONIALLY_REINFORCES: 1.0,
+            RelationshipKind.LEGITIMIZES: 0.9,
+            RelationshipKind.NORMALIZES: 0.8,
+            RelationshipKind.CREATES_PATH_DEPENDENCY: 0.8,
+            RelationshipKind.REINFORCES: 0.7,
+            RelationshipKind.VALUES: 0.7,
+            RelationshipKind.BELIEVES_IN: 0.7,
+            RelationshipKind.TRUSTS: 0.7,
+
+            # Medium-high ceremonial (0.6-0.7) - governance and authority
+            RelationshipKind.GOVERNS: 0.6,
+            RelationshipKind.REGULATES: 0.6,
+            RelationshipKind.MANDATES: 0.6,
+            RelationshipKind.ENFORCES: 0.6,
+            RelationshipKind.SANCTIONS: 0.6,
+            RelationshipKind.REPRESENTS: 0.6,
+
+            # Low ceremonial tendency (0.0-0.3) - instrumental, problem-solving
+            RelationshipKind.INSTRUMENTALLY_ADAPTS: 0.0,
+            RelationshipKind.ENABLES_INNOVATION: 0.1,
+            RelationshipKind.OPTIMIZES: 0.1,
+            RelationshipKind.INNOVATES_FOR: 0.1,
+            RelationshipKind.ADAPTS_TO: 0.2,
+            RelationshipKind.DEVELOPS: 0.2,
+            RelationshipKind.RESEARCHES: 0.2,
+            RelationshipKind.TESTS: 0.2,
+            RelationshipKind.ANALYZES: 0.2,
+            RelationshipKind.CALCULATES: 0.2,
+            RelationshipKind.MEASURES: 0.2,
+            RelationshipKind.TRANSFORMS: 0.3,
+            RelationshipKind.EVOLVES_WITH: 0.3,
+
+            # Medium-low instrumental (0.3-0.4) - operational efficiency
+            RelationshipKind.IMPLEMENTS: 0.3,
+            RelationshipKind.OPERATES: 0.3,
+            RelationshipKind.MAINTAINS: 0.3,
+            RelationshipKind.INTEGRATES: 0.3,
+            RelationshipKind.AUTOMATES: 0.3,
+            RelationshipKind.USES: 0.4,
+            RelationshipKind.PRODUCES: 0.4,
+            RelationshipKind.CONVERTS: 0.4,
+        }
+
+        return ceremonial_relationships.get(self, 0.5)  # Default to neutral
