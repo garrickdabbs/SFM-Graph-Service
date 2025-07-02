@@ -5,8 +5,7 @@ unit tests for the SFM data model classes defined in core/sfm_models.py
 import unittest
 import uuid
 import time
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
+from typing import Dict, Any
 from dataclasses import FrozenInstanceError
 
 from core.sfm_models import (
@@ -17,26 +16,15 @@ from core.sfm_models import (
     Actor,
     Institution,
     Resource,
-    Process,
     Flow,
     Relationship,
     SFMGraph,
-    BeliefSystem,
     Policy,
-    TechnologySystem,
-    Indicator,
-    FeedbackLoop,
-    AnalyticalContext,
-    SystemProperty,
-    ValueSystem,
     CeremonialBehavior,
     InstrumentalBehavior,
     PolicyInstrument,
     GovernanceStructure,
     ValueFlow,
-    ChangeProcess,
-    CognitiveFramework,
-    BehavioralPattern,
 )
 from core.sfm_enums import (
     ValueCategory,
@@ -44,6 +32,7 @@ from core.sfm_enums import (
     ResourceType,
     FlowNature,
     RelationshipKind,
+    PolicyInstrumentType,
 )
 
 # Test Constants
@@ -57,34 +46,39 @@ class TestDataFactory:
     """Factory class for creating consistent test data across test classes."""
     
     @staticmethod
-    def create_test_actor(label: str = "Test Actor", **kwargs) -> Actor:
+    def create_test_actor(label: str = "Test Actor", **kwargs: Any) -> Actor:
         """Create a standardized test Actor."""
-        defaults = {
+        defaults: Dict[str, Any] = {
             "description": f"Test actor: {label}",
             "legal_form": "Test Entity",
             "sector": "Test Sector",
             "power_resources": {"economic": 0.5, "political": 0.3},
             "decision_making_capacity": 0.7,
+            "institutional_affiliations": [],
+            "cognitive_frameworks": [],
+            "behavioral_patterns": [],
         }
         defaults.update(kwargs)
         return Actor(label=label, **defaults)
     
     @staticmethod
-    def create_test_institution(label: str = "Test Institution", **kwargs) -> Institution:
+    def create_test_institution(label: str = "Test Institution", **kwargs: Any) -> Institution:
         """Create a standardized test Institution."""
-        defaults = {
+        defaults: Dict[str, Any] = {
             "description": f"Test institution: {label}",
             "layer": InstitutionLayer.FORMAL_RULE,
             "formal_rules": ["Test rule 1", "Test rule 2"],
             "enforcement_mechanisms": ["Test enforcement"],
+            "informal_norms": [],
+            "path_dependencies": [],
         }
         defaults.update(kwargs)
         return Institution(label=label, **defaults)
     
     @staticmethod
-    def create_test_resource(label: str = "Test Resource", **kwargs) -> Resource:
+    def create_test_resource(label: str = "Test Resource", **kwargs: Any) -> Resource:
         """Create a standardized test Resource."""
-        defaults = {
+        defaults: Dict[str, Any] = {
             "description": f"Test resource: {label}",
             "rtype": ResourceType.NATURAL,
             "unit": "units",
@@ -93,12 +87,16 @@ class TestDataFactory:
         return Resource(label=label, **defaults)
     
     @staticmethod
-    def create_test_relationship(source_id: uuid.UUID, target_id: uuid.UUID, **kwargs) -> Relationship:
+    def create_test_relationship(source_id: uuid.UUID, target_id: uuid.UUID, **kwargs: Any) -> Relationship:
         """Create a standardized test Relationship."""
-        defaults = {
+        defaults: Dict[str, Any] = {
             "kind": RelationshipKind.GOVERNS,
             "weight": 0.5,
             "certainty": 0.8,
+            "meta": {},
+            "time": None,
+            "space": None,
+            "scenario": None,
         }
         defaults.update(kwargs)
         return Relationship(source_id=source_id, target_id=target_id, **defaults)
@@ -209,7 +207,7 @@ class EnumTestCase(unittest.TestCase):
 
     def test_enum_string_representations(self):
         """Test that enums have meaningful string representations."""
-        test_cases = [
+        test_cases: list[tuple[Any, str]] = [
             (ValueCategory.ECONOMIC, "ECONOMIC"),
             (InstitutionLayer.FORMAL_RULE, "FORMAL_RULE"),
             (ResourceType.NATURAL, "NATURAL"),
@@ -226,18 +224,19 @@ class EnumTestCase(unittest.TestCase):
 
     def test_enum_iteration_consistency(self):
         """Test that enum iteration is consistent and complete."""
-        enums_to_test = [ValueCategory, InstitutionLayer, ResourceType, FlowNature, RelationshipKind]
-        
+        from enum import Enum
+        enums_to_test: list[type[Enum]] = [
+            ValueCategory, InstitutionLayer, ResourceType, FlowNature, RelationshipKind
+        ]
         for enum_class in enums_to_test:
             with self.subTest(enum_class=enum_class):
                 # Test that iteration is consistent
-                items_list1 = list(enum_class)
-                items_list2 = list(enum_class)
+                items_list1 = list(enum_class.__members__.values())
+                items_list2 = list(enum_class.__members__.values())
                 self.assertEqual(
                     items_list1, items_list2,
                     f"Enum {enum_class.__name__} iteration should be consistent"
                 )
-                
                 # Test that all items are accessible by name
                 for item in enum_class:
                     self.assertTrue(
@@ -295,10 +294,10 @@ class DimensionalEntitiesTestCase(unittest.TestCase):
     def test_spatial_unit_immutability(self):
         """Test that SpatialUnit is immutable for referential integrity."""
         spatial_unit = SpatialUnit(code="US-CA", name="California")
-        
+        # pylint: disable=assigning-non-slot, attribute-defined-outside-init
         with self.assertRaises(FrozenInstanceError, msg="SpatialUnit should be immutable"):
             # This assignment should fail because SpatialUnit is a frozen dataclass
-            spatial_unit.code = "US-NY" #type: ignore[assignment] pass in incorrect type to test
+            spatial_unit.code = "US-NY"  # type: ignore[attr-defined]
     def test_scenario_policy_variants(self):
         """Test Scenario supports various policy and counterfactual scenarios."""
         policy_scenarios = [
@@ -321,9 +320,9 @@ class DimensionalEntitiesTestCase(unittest.TestCase):
     def test_scenario_immutability(self):
         """Test that Scenario is immutable for scenario consistency."""
         scenario = Scenario(label="baseline")
-        
+        # pylint: disable=assigning-non-slot, attribute-defined-outside-init
         with self.assertRaises(FrozenInstanceError, msg="Scenario should be immutable"):
-            scenario.label = "modified"  # type: ignore[attr-defined] pass in incorrect type to test
+            scenario.label = "modified"  # type: ignore[attr-defined]
 
 
 class CoreNodeTestCase(unittest.TestCase):
@@ -430,8 +429,6 @@ class ActorTestCase(unittest.TestCase):
 
     def test_actor_power_resources_modeling(self):
         """Test Actor power resources reflect Hayden's power analysis."""
-        power_dimensions = ["economic", "political", "social", "legal", "informational"]
-        
         # Test government actor power profile
         gov_power = self.government_actor.power_resources
         self.assertGreater(
@@ -687,20 +684,20 @@ class FlowTestCase(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures for Flow tests."""
+        from core.sfm_enums import FlowType
         self.material_flow = Flow(
             label="Steel Input",
             nature=FlowNature.INPUT,
             quantity=1000.0,
             unit="tonnes",
-            flow_type="material"
+            flow_type=FlowType.MATERIAL
         )
-        
         self.energy_flow = Flow(
             label="Electricity Consumption",
             nature=FlowNature.INPUT,
             quantity=500.0,
             unit="MWh",
-            flow_type="energy"
+            flow_type=FlowType.ENERGY
         )
 
     def test_flow_inheritance(self):
@@ -722,8 +719,14 @@ class FlowTestCase(unittest.TestCase):
 
     def test_flow_type_categories(self):
         """Test Flow type supports different flow categories."""
-        flow_types = ["material", "energy", "information", "financial", "social"]
-        
+        from core.sfm_enums import FlowType
+        flow_types = [
+            FlowType.MATERIAL,
+            FlowType.ENERGY,
+            FlowType.INFORMATION,
+            FlowType.FINANCIAL,
+            FlowType.SOCIAL
+        ]
         for flow_type in flow_types:
             with self.subTest(flow_type=flow_type):
                 flow = Flow(label="Test Flow", flow_type=flow_type)
@@ -948,15 +951,13 @@ class SFMGraphTestCase(unittest.TestCase):
 
     def test_graph_iteration_protocol(self):
         """Test SFMGraph iteration returns all nodes."""
-        # Add nodes of different types
-        nodes = [self.test_actor, self.test_institution, self.test_resource]
+        from typing import List
+        nodes: List[Node] = [self.test_actor, self.test_institution, self.test_resource]
         for node in nodes:
             self.graph.add_node(node)
-        
         # Test iteration returns all nodes
-        iterated_nodes = list(self.graph)
+        iterated_nodes: List[Node] = list(self.graph)
         self.assertEqual(len(iterated_nodes), 3)
-        
         # Test all nodes are included
         iterated_ids = {node.id for node in iterated_nodes}
         expected_ids = {node.id for node in nodes}
@@ -964,18 +965,17 @@ class SFMGraphTestCase(unittest.TestCase):
 
     def test_graph_length_calculation(self):
         """Test SFMGraph length calculation includes all node types."""
+        from typing import List
         # Start with empty graph
         self.assertEqual(len(self.graph), 0)
-        
         # Add different node types
-        nodes_to_add = [
+        nodes_to_add: List[Node] = [
             self.test_actor,
             self.test_institution,
             self.test_resource,
             Policy(label="Test Policy", authority="Gov"),
             ValueFlow(label="Test Value Flow"),
         ]
-        
         for i, node in enumerate(nodes_to_add, 1):
             self.graph.add_node(node)
             self.assertEqual(len(self.graph), i)
@@ -1158,21 +1158,21 @@ class SFMBusinessLogicTestCase(unittest.TestCase):
         instruments = [
             PolicyInstrument(
                 label="Emissions Standards",
-                instrument_type="regulatory",
+                instrument_type=PolicyInstrumentType.REGULATORY,  # Use enum instead of string
                 target_behavior="emissions reduction",
                 compliance_mechanism="mandatory_standards",
                 effectiveness_measure=0.75
             ),
             PolicyInstrument(
                 label="Carbon Tax",
-                instrument_type="economic",
+                instrument_type=PolicyInstrumentType.ECONOMIC,  # Use enum instead of string",
                 target_behavior="carbon pricing",
                 compliance_mechanism="price_signals",
                 effectiveness_measure=0.65
             ),
             PolicyInstrument(
                 label="Green Certification",
-                instrument_type="voluntary",
+                instrument_type=PolicyInstrumentType.VOLUNTARY,  # Use enum instead of string
                 target_behavior="sustainable practices", 
                 compliance_mechanism="reputation_incentives",
                 effectiveness_measure=0.45
@@ -1182,8 +1182,13 @@ class SFMBusinessLogicTestCase(unittest.TestCase):
         for instrument in instruments:
             self.graph.add_node(instrument)
         
-        # Test instrument type validity
-        valid_types = {"regulatory", "economic", "voluntary", "information"}
+        # Test instrument type validity (use enum values)
+        valid_types = {
+            PolicyInstrumentType.REGULATORY,
+            PolicyInstrumentType.ECONOMIC,
+            PolicyInstrumentType.VOLUNTARY,
+            PolicyInstrumentType.INFORMATION,
+        }
         for instrument in instruments:
             self.assertIn(instrument.instrument_type, valid_types)
         
@@ -1242,7 +1247,7 @@ class SFMBusinessLogicTestCase(unittest.TestCase):
         
         carbon_tax = PolicyInstrument(
             label="Carbon Tax",
-            instrument_type="economic",
+            instrument_type=PolicyInstrumentType.ECONOMIC,
             effectiveness_measure=0.7
         )
         
@@ -1268,11 +1273,11 @@ class SFMBusinessLogicTestCase(unittest.TestCase):
         )
         
         # Add all components
-        components = [
+        from typing import List
+        components: List[Node] = [
             government, industry, carbon_policy, carbon_tax,
             adaptation, resistance, compliance_costs
         ]
-        
         for component in components:
             self.graph.add_node(component)
         
@@ -1322,7 +1327,7 @@ class PerformanceTestCase(unittest.TestCase):
         
         # Test iteration performance
         iteration_start = time.time()
-        node_count = sum(1 for _ in graph)
+        node_count = sum(1 for _node in graph)  # type: ignore[attr-defined]
         iteration_time = time.time() - iteration_start
         
         total_time = time.time() - start_time
@@ -1346,7 +1351,7 @@ class PerformanceTestCase(unittest.TestCase):
         relationship_count = 0
         
         for i, source_actor in enumerate(actors):
-            for j, target_actor in enumerate(actors[i+1:], i+1):
+            for target_actor in actors[i+1:]:
                 rel = TestDataFactory.create_test_relationship(
                     source_actor.id, target_actor.id,
                     kind=RelationshipKind.COLLABORATES_WITH
@@ -1366,7 +1371,8 @@ class PerformanceTestCase(unittest.TestCase):
         graph = SFMGraph()
         
         # Create many nodes with similar structure
-        nodes = []
+        from typing import List
+        nodes: List[Actor] = []
         for i in range(1000):
             node = TestDataFactory.create_test_actor(
                 f"Actor_{i}",
@@ -1377,11 +1383,9 @@ class PerformanceTestCase(unittest.TestCase):
             )
             nodes.append(node)
             graph.add_node(node)
-        
         # Test that empty collections are independent
         nodes[0].institutional_affiliations.append(uuid.uuid4())
         nodes[0].power_resources["test"] = 0.5
-        
         # Other nodes should remain unaffected
         self.assertEqual(len(nodes[1].institutional_affiliations), 0)
         self.assertEqual(len(nodes[1].power_resources), 0)
