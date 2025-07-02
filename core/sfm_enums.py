@@ -486,6 +486,7 @@ class RelationshipKind(Enum):
     OPTIMIZES = auto()  # Improves efficiency of
     AUTOMATES = auto()  # Makes self-operating
     REPAIRS = auto()  # Fixes or restores
+    SOLVES = auto()  # Addresses problems or challenges
     USES = auto()  # Actor/process employs a resource or technology
 
     # Structural and Containment Relationships
@@ -569,6 +570,157 @@ class RelationshipKind(Enum):
     DISTRIBUTES_POWER = auto()
     CONCENTRATES_POWER = auto()
     BENEFITS_FROM = auto()  # Gains advantage or support from
+
+    @property
+    def ceremonial_tendency(self) -> float:
+        """
+        Returns a value from 0.0-1.0 indicating ceremonial vs instrumental nature.
+        
+        Based on Hayden's SFM framework distinction between ceremonial and instrumental
+        behaviors. 0.0 = purely instrumental (problem-solving, adaptive), 
+        1.0 = purely ceremonial (status-preserving, traditional).
+        
+        Returns:
+            float: Ceremonial tendency score from 0.0 (instrumental) to 1.0 (ceremonial)
+        """
+        # Mapping of relationship types to their ceremonial tendency
+        ceremonial_tendencies = {
+            # Highly ceremonial relationships (0.8-1.0) - status, tradition, hierarchy
+            RelationshipKind.CEREMONIALLY_REINFORCES: 0.95,
+            RelationshipKind.LEGITIMIZES: 0.85,
+            RelationshipKind.GOVERNS: 0.75,
+            RelationshipKind.AUTHORIZES: 0.75,
+            RelationshipKind.MANDATES: 0.75,
+            RelationshipKind.REPRESENTS: 0.70,
+            RelationshipKind.SANCTIONS: 0.80,
+            RelationshipKind.VALUES: 0.85,
+            RelationshipKind.TRUSTS: 0.70,
+            RelationshipKind.BELIEVES_IN: 0.80,
+            RelationshipKind.NORMALIZES: 0.75,
+            RelationshipKind.PRIORITIZES: 0.70,
+            
+            # Moderately ceremonial (0.5-0.8) - mixed institutional/adaptive
+            RelationshipKind.REGULATES: 0.65,
+            RelationshipKind.ENFORCES: 0.65,
+            RelationshipKind.DELEGATES: 0.60,
+            RelationshipKind.MONITORS: 0.55,
+            RelationshipKind.LICENSES: 0.60,
+            RelationshipKind.CERTIFIES: 0.55,
+            RelationshipKind.REINFORCES: 0.60,
+            RelationshipKind.ALIGNS_WITH: 0.55,
+            RelationshipKind.ACCEPTS: 0.55,
+            RelationshipKind.INTERPRETS: 0.50,
+            
+            # Moderately instrumental (0.2-0.5) - some adaptation with structure
+            RelationshipKind.ADVISES: 0.45,
+            RelationshipKind.EDUCATES: 0.40,
+            RelationshipKind.INFORMS: 0.35,
+            RelationshipKind.ANALYZES: 0.30,
+            RelationshipKind.MEASURES: 0.25,
+            RelationshipKind.CALCULATES: 0.20,
+            RelationshipKind.RESEARCHES: 0.30,
+            RelationshipKind.INNOVATES_FOR: 0.25,
+            RelationshipKind.DEVELOPS: 0.35,
+            RelationshipKind.EVOLVES_WITH: 0.40,
+            RelationshipKind.ADAPTS_TO: 0.35,
+            
+            # Highly instrumental (0.0-0.2) - problem-solving, adaptive, productive
+            RelationshipKind.INSTRUMENTALLY_ADAPTS: 0.05,
+            RelationshipKind.PRODUCES: 0.15,
+            RelationshipKind.PROCESSES: 0.10,
+            RelationshipKind.CONVERTS: 0.10,
+            RelationshipKind.CONSTRUCTS: 0.15,
+            RelationshipKind.OPERATES: 0.15,
+            RelationshipKind.MAINTAINS: 0.20,
+            RelationshipKind.REPAIRS: 0.15,
+            RelationshipKind.UPGRADES: 0.20,
+            RelationshipKind.CUSTOMIZES: 0.15,
+            RelationshipKind.ENABLES_INNOVATION: 0.10,
+            RelationshipKind.SOLVES: 0.05,
+            
+            # Economic relationships - moderately instrumental (0.3-0.6)
+            RelationshipKind.EXCHANGES_WITH: 0.40,
+            RelationshipKind.BUYS_FROM: 0.35,
+            RelationshipKind.SELLS_TO: 0.35,
+            RelationshipKind.INVESTS_IN: 0.45,
+            RelationshipKind.EMPLOYS: 0.50,
+            RelationshipKind.CONTRACTS_WITH: 0.45,
+            RelationshipKind.FUNDS: 0.40,
+            RelationshipKind.PAYS: 0.30,
+            RelationshipKind.ALLOCATES: 0.45,
+            RelationshipKind.DISTRIBUTES: 0.40,
+        }
+        
+        # Return the mapped value, or default to moderate (0.5) if not explicitly mapped
+        return ceremonial_tendencies.get(self, 0.5)
+
+
+class PowerResourceType(Enum):
+    """
+    Classification of power resource types in Social Fabric Matrix analysis.
+    
+    Based on Hayden's analysis of power dynamics within institutional systems,
+    representing different forms of power and control that actors can wield
+    to influence outcomes and maintain or change institutional arrangements.
+    """
+    INSTITUTIONAL_AUTHORITY = auto()  # Formal authority roles and positions
+    ECONOMIC_CONTROL = auto()  # Control over financial resources and economic flows
+    INFORMATION_ACCESS = auto()  # Access to and control of information and knowledge
+    NETWORK_POSITION = auto()  # Strategic position within social and institutional networks
+    CULTURAL_LEGITIMACY = auto()  # Cultural authority and legitimacy sources
+
+
+class ToolSkillTechnologyType(Enum):
+    """
+    Classification of tool-skill-technology complex components.
+    
+    Represents Hayden's concept of the tool-skill-technology complex as integrated
+    systems where physical tools, human skills, and technological knowledge
+    combine to enable instrumental problem-solving capabilities.
+    """
+    PHYSICAL_TOOL = auto()  # Material instruments and devices
+    COGNITIVE_SKILL = auto()  # Mental capabilities and knowledge
+    TECHNOLOGY_SYSTEM = auto()  # Integrated technological arrangements
+    TECHNIQUE = auto()  # Specific methods and procedures
+    METHODOLOGY = auto()  # Systematic approaches and frameworks
+    CRAFT_KNOWLEDGE = auto()  # Embodied practical knowledge
+    DIGITAL_CAPABILITY = auto()  # Digital tools and skills
+    ANALYTICAL_METHOD = auto()  # Formal analytical techniques
+    PROBLEM_SOLVING_APPROACH = auto()  # General problem-solving strategies
+    INNOVATION_CAPACITY = auto()  # Capability to create new solutions
+
+
+class PathDependencyType(Enum):
+    """
+    Classification of path dependency strength in institutional systems.
+    
+    Represents the degree to which institutional arrangements become locked-in
+    and resistant to change due to historical patterns, sunk costs, and
+    reinforcing mechanisms.
+    """
+    WEAK = auto()  # Easy to change, low switching costs, flexible arrangements
+    MODERATE = auto()  # Some resistance to change, moderate switching costs
+    STRONG = auto()  # High resistance to change, significant switching costs
+    LOCKED_IN = auto()  # Extremely difficult to change, path dependency dominates
+
+
+class InstitutionalChangeType(Enum):
+    """
+    Classification of institutional change mechanisms and patterns.
+    
+    Represents different modes and patterns through which institutional
+    arrangements evolve, transform, or maintain stability over time.
+    """
+    INCREMENTAL = auto()  # Gradual, small-scale adjustments
+    TRANSFORMATIONAL = auto()  # Significant structural changes
+    REVOLUTIONARY = auto()  # Rapid, fundamental system overhaul
+    EVOLUTIONARY = auto()  # Organic adaptation over time
+    ADAPTIVE = auto()  # Responsive changes to environmental pressures
+    CRISIS_DRIVEN = auto()  # Changes triggered by system crises
+    INNOVATION_LED = auto()  # Changes driven by technological or social innovation
+    REFORM_BASED = auto()  # Planned, policy-driven changes
+    EMERGENT = auto()  # Bottom-up, spontaneous changes
+    CYCLICAL = auto()  # Recurring patterns of change and stability
 
 
 # ───────────────────────────────────────────────
