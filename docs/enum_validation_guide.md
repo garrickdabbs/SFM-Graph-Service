@@ -109,6 +109,92 @@ except IncompatibleEnumError as e:
     # Consider using CULTURAL_VALUE or KNOWLEDGE_SYSTEM layers...
 ```
 
+### Policy Instrument Validation
+
+Validates that policy instrument types are appropriate for target contexts:
+
+```python
+from core.sfm_enums import PolicyInstrumentType
+
+# Valid combination
+EnumValidator.validate_policy_instrument_combination(
+    PolicyInstrumentType.REGULATORY, 'mandatory'
+)  # ✓ Passes
+
+# Invalid combination
+try:
+    EnumValidator.validate_policy_instrument_combination(
+        PolicyInstrumentType.REGULATORY, 'voluntary'
+    )
+except IncompatibleEnumError as e:
+    print(f"Error: {e}")
+    # Error: Policy instrument REGULATORY may not be appropriate for voluntary context...
+```
+
+### Value Category Context Validation
+
+Validates that value categories are appropriate for measurement contexts:
+
+```python
+from core.sfm_enums import ValueCategory
+
+# Valid combination
+EnumValidator.validate_value_category_context(
+    ValueCategory.ECONOMIC, 'quantitative'
+)  # ✓ Passes
+
+# Invalid combination
+try:
+    EnumValidator.validate_value_category_context(
+        ValueCategory.CULTURAL, 'quantitative'
+    )
+except IncompatibleEnumError as e:
+    print(f"Error: {e}")
+    # Error: Value category CULTURAL is typically difficult to measure quantitatively...
+```
+
+### Cross-Enum Dependency Validation
+
+Validates dependencies and relationships between different enum types:
+
+```python
+from core.sfm_enums import FlowNature, InstitutionLayer
+
+# Valid combination
+EnumValidator.validate_cross_enum_dependency(
+    FlowNature.FINANCIAL, InstitutionLayer.FORMAL_RULE, 'governance'
+)  # ✓ Passes
+
+# Invalid combination
+try:
+    EnumValidator.validate_cross_enum_dependency(
+        FlowNature.FINANCIAL, InstitutionLayer.INFORMAL_NORM, 'governance'
+    )
+except IncompatibleEnumError as e:
+    print(f"Error: {e}")
+    # Error: Financial flows typically require formal institutional governance...
+```
+
+### Required Enum Context Validation
+
+Validates whether enums are required or optional in specific contexts:
+
+```python
+# Check if enum is required for context
+EnumValidator.validate_required_enum_context(
+    FlowNature.FINANCIAL, 'financial_transaction', is_required=True
+)  # ✓ Passes
+
+# Invalid context usage
+try:
+    EnumValidator.validate_required_enum_context(
+        ValueCategory.ECONOMIC, 'financial_transaction', is_required=True
+    )
+except InvalidEnumOperationError as e:
+    print(f"Error: {e}")
+    # Error: Context 'financial_transaction' requires FlowNature or FlowType...
+```
+
 ## Automatic Model Validation
 
 ### Flow Validation
@@ -166,6 +252,58 @@ except IncompatibleEnumError as e:
     # Actor->Institution, or Institution relationships. Got Actor->Resource...
 ```
 
+### PolicyInstrument Validation
+
+PolicyInstrument objects automatically validate instrument type with target behavior:
+
+```python
+from core.sfm_models import PolicyInstrument
+from core.sfm_enums import PolicyInstrumentType
+
+# Valid policy instrument
+instrument = PolicyInstrument(
+    label="Carbon Tax",
+    instrument_type=PolicyInstrumentType.ECONOMIC,
+    target_behavior="market_incentive"
+)  # ✓ Creates successfully
+
+# Invalid policy instrument
+try:
+    invalid_instrument = PolicyInstrument(
+        label="Voluntary Regulation",
+        instrument_type=PolicyInstrumentType.REGULATORY,
+        target_behavior="voluntary"
+    )
+except IncompatibleEnumError as e:
+    print(f"PolicyInstrument creation failed: {e}")
+```
+
+### Indicator Validation
+
+Indicator objects automatically validate value categories with measurement contexts:
+
+```python
+from core.sfm_models import Indicator
+from core.sfm_enums import ValueCategory
+
+# Valid indicator
+indicator = Indicator(
+    label="GDP Growth Rate",
+    value_category=ValueCategory.ECONOMIC,
+    measurement_unit="percentage"
+)  # ✓ Creates successfully
+
+# Invalid indicator
+try:
+    invalid_indicator = Indicator(
+        label="Cultural Values Index",
+        value_category=ValueCategory.CULTURAL,
+        measurement_unit="dollars"  # Quantitative unit for qualitative category
+    )
+except IncompatibleEnumError as e:
+    print(f"Indicator creation failed: {e}")
+```
+
 ## Validation Rules
 
 ### Relationship Context Rules
@@ -202,9 +340,22 @@ The following relationship validation rules are enforced:
 The following flow nature and type combinations are considered incompatible:
 
 - FINANCIAL nature with MATERIAL type
+- FINANCIAL nature with ENERGY type
 - MATERIAL nature with FINANCIAL type  
+- MATERIAL nature with INFORMATION type
+- MATERIAL nature with SOCIAL type
 - ENERGY nature with INFORMATION type
+- ENERGY nature with SOCIAL type
 - INFORMATION nature with ENERGY type
+- INFORMATION nature with MATERIAL type
+- SOCIAL nature with MATERIAL type
+- SOCIAL nature with ENERGY type
+- SERVICE nature with MATERIAL type
+- SERVICE nature with ENERGY type
+- CULTURAL nature with MATERIAL type
+- CULTURAL nature with ENERGY type
+- REGULATORY nature with MATERIAL type
+- REGULATORY nature with ENERGY type
 
 ### Institution Layer Rules
 
