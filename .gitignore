@@ -5,9 +5,6 @@ sfm_data
 # Build artifacts
 SFM_Graph_Service.egg-info
 *.egg-info
-.coverage*
-*coverage*
-coverage
 .coverage
 dist
 build
@@ -16,11 +13,4 @@ build
 *.tar.gz
 *.zip
 .cache
-htmlcov
-.coverage/*
-.cache/*
-htmlcov/*
-*.pyc
-*.pyo
-*.pyd
-*.pdb
+htmlcov/
