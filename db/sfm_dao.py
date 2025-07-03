@@ -590,13 +590,13 @@ class TechnologySystemRepository(TypedSFMRepository[TechnologySystem]):
         super().__init__(base_repo, TechnologySystem)
 
     def find_by_maturity_range(
-        self, min_maturity: float, max_maturity: float
+        self, min_maturity: int, max_maturity: int
     ) -> List[TechnologySystem]:
-        """Find technology systems within maturity range."""
+        """Find technology systems within maturity range (TRL 1-9)."""
         return [
             t
             for t in self.list_all()
-            if t.maturity is not None and min_maturity <= t.maturity <= max_maturity
+            if t.maturity is not None and min_maturity <= t.maturity.value <= max_maturity
         ]
 
     def find_compatible_with(
