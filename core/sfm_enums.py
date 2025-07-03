@@ -3,8 +3,8 @@ Enumerations for the Social Fabric Matrix (SFM) framework.
 
 This module defines controlled vocabularies and classification systems used throughout
 the SFM analysis framework, based on F. Gregory Hayden's institutional economics work.
-These enumerations provide consistent categorization for values, institutions, resources,
-flows, and relationships in socio-economic systems.
+These enumerations provide consistent categorization for values, institutions,
+resources, flows, and relationships in socio-economic systems.
 
 ## Theoretical Foundation
 
@@ -256,7 +256,8 @@ class ValueCategory(Enum):
     - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 4: Value Theory
     - Hayden, F.G. (1982). "Social Fabric Matrix: From Perspective to Analytical Tool"
     - Tool, M.R. (1977). "A Social Value Theory in Neoinstitutional Economics"
-    - Hodgson, G.M. (1988). "Economics and Institutions", Chapter 8: Values and Valuation
+    - Hodgson, G.M. (1988). "Economics and Institutions", Chapter 8: Values and
+      Valuation
     """
     # Original categories
     ECONOMIC = auto()  # Market-priced goods, services, financial returns
@@ -319,8 +320,9 @@ class InstitutionLayer(Enum):
     """
     Hayden's three-layer institutional framework plus extended institutional forms.
 
-    Based on F. Gregory Hayden's analysis of institutional structure, this enum represents
-    the different layers at which institutions operate within socio-economic systems.
+    Based on F. Gregory Hayden's analysis of institutional structure, this enum
+    represents the different layers at which institutions operate within socio-economic
+    systems.
     Hayden's framework distinguishes between formal constitutional rules, organizational
     structures, and informal cultural norms, providing a comprehensive taxonomy for
     institutional analysis in SFM applications.
@@ -423,8 +425,10 @@ class InstitutionLayer(Enum):
     ## Integration with SFM Analysis
     
     InstitutionLayer enables:
-    - **Hierarchical Analysis**: Understanding how different institutional levels interact
-    - **Change Process Mapping**: Tracking how changes propagate across institutional layers
+    - **Hierarchical Analysis**: Understanding how different institutional levels
+      interact
+    - **Change Process Mapping**: Tracking how changes propagate across institutional
+      layers
     - **Policy Design**: Identifying appropriate institutional levels for intervention
     - **Governance Assessment**: Evaluating institutional capacity at different layers
     
@@ -474,7 +478,8 @@ class ResourceType(Enum):
     Categorizes different forms of resources that flow through socio-economic systems,
     including traditional economic resources and expanded categories relevant to
     institutional and technological analysis. This comprehensive taxonomy enables
-    detailed tracking of resource flows, dependencies, and transformations in SFM models.
+    detailed tracking of resource flows, dependencies, and transformations in SFM
+    models.
     
     ## Theoretical Background
     
@@ -625,13 +630,16 @@ class ResourceType(Enum):
     - `Resource`: Primary classification for all resource entities
     - `Flow`: Specification of what type of resource is flowing
     - `Actor`: Understanding resource ownership and control
-    - `PolicyInstrument`: Targeting specific resource types for policy intervention
+    - `PolicyInstrument`: Targeting specific resource types for policy
+      intervention
     
     ## References
     
-    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 5: Resource Systems
-    - Commons, J.R. (1924). "Legal Foundations of Capitalism" 
-    - Ostrom, E. (1990). "Governing the Commons: The Evolution of Institutions for Collective Action"
+    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 5: Resource
+      Systems
+    - Commons, J.R. (1924). "Legal Foundations of Capitalism"
+    - Ostrom, E. (1990). "Governing the Commons: The Evolution of Institutions for
+      Collective Action"
     - Lin, N. (2001). "Social Capital: A Theory of Social Structure and Action"
     """
     # Existing values
@@ -984,7 +992,8 @@ class FlowType(Enum):
     
     ## Usage with FlowNature
     
-    FlowType works in combination with FlowNature to provide complete flow specification:
+    FlowType works in combination with FlowNature to provide complete flow
+    specification:
     
     ```python
     # Financial payment flow
@@ -2162,13 +2171,20 @@ class TechnologyReadinessLevel(Enum):
     """
     BASIC_PRINCIPLES = 1        # Basic principles observed and reported
     TECHNOLOGY_CONCEPT = 2      # Technology concept and/or application formulated
-    EXPERIMENTAL_PROOF = 3      # Analytical and experimental critical function proof of concept
-    LABORATORY_VALIDATION = 4   # Component and/or breadboard validation in laboratory environment
-    RELEVANT_ENVIRONMENT = 5    # Component and/or breadboard validation in relevant environment
-    DEMONSTRATION = 6           # System/subsystem model or prototype demonstration in relevant environment
-    PROTOTYPE_DEMONSTRATION = 7 # System prototype demonstration in operational environment
-    SYSTEM_COMPLETE = 8         # Actual system completed and qualified through test and demonstration
-    ACTUAL_SYSTEM = 9          # Actual system proven through successful mission operations
+    EXPERIMENTAL_PROOF = 3      # Analytical and experimental critical function
+                                # proof of concept
+    LABORATORY_VALIDATION = 4   # Component and/or breadboard validation in
+                                # laboratory environment
+    RELEVANT_ENVIRONMENT = 5    # Component and/or breadboard validation in
+                                # relevant environment
+    DEMONSTRATION = 6           # System/subsystem model or prototype demonstration
+                                # in relevant environment
+    PROTOTYPE_DEMONSTRATION = 7 # System prototype demonstration in operational
+                                # environment
+    SYSTEM_COMPLETE = 8         # Actual system completed and qualified through
+                                # test and demonstration
+    ACTUAL_SYSTEM = 9          # Actual system proven through successful mission
+                               # operations
 
 
 class LegitimacySource(Enum):
