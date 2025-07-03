@@ -237,6 +237,171 @@ python -m examples.us_grain_export_example
 python examples/us_grain_export_example.py  # Works from any directory
 ```
 
+## Advanced Examples
+
+The framework includes sophisticated examples that demonstrate the full analytical power of the Social Fabric Matrix methodology for complex real-world systems. These examples showcase advanced features including temporal dynamics, cognitive frameworks, multi-stakeholder analysis, and comprehensive policy evaluation.
+
+### 1. Smart City Urban Planning (`smart_city_urban_planning_example.py`)
+
+**Scenario**: Comprehensive smart city initiative involving multiple stakeholders, technology systems, and policy instruments working together to achieve sustainable urban development goals.
+
+**Advanced Features Demonstrated**:
+- **42 nodes across 6 entity types**: 7 actors, 3 institutions, 7 resources, 3 policies, 4 flows, 6 indicators, 3 technology systems, 3 policy instruments
+- **Temporal dynamics**: Policy rollout, crisis response, and technology adoption patterns
+- **Technology readiness levels**: IoT sensors (TRL 8), AI traffic systems (TRL 7), green building tech (TRL 9)
+- **Cognitive frameworks**: Government efficiency, community quality of life, and innovation frameworks
+- **Multi-dimensional analysis**: Network centrality, vulnerability assessment, stakeholder power distribution
+
+**Key Stakeholders**: City Government, Urban Planning Department, Tech Companies, Community Groups, Environmental NGOs, Research Universities
+
+**Policy Analysis**: Smart city master plan implementation, green building standards enforcement, data privacy regulations
+
+```bash
+python examples/smart_city_urban_planning_example.py
+```
+
+**Sample Output**:
+```
+🎯 Most Central Actors (Betweenness Centrality):
+  • Smart Infrastructure Corp: 0.011
+  • Neighborhood Associations: 0.001
+
+🔬 Technology Maturity Analysis:
+  • IoT Environmental Sensor Network: TRL 8 (0.77 compatibility)
+  • AI Traffic Management System: TRL 7 (0.82 compatibility)
+  • Smart Green Building Technology: TRL 9 (0.82 compatibility)
+
+⏰ Temporal Change Analysis:
+  • Smart City Investment Flow: EXPONENTIAL dynamics
+  • Research to Practice Knowledge Transfer: LOGISTIC dynamics
+```
+
+### 2. Global Supply Chain Resilience (`global_supply_chain_resilience_example.py`)
+
+**Scenario**: Global supply chain ecosystem with multiple tiers, regions, and stakeholders working together to maintain operational resilience in the face of global disruptions.
+
+**Advanced Features Demonstrated**:
+- **68 nodes across 9 entity types**: 10 actors, 5 institutions, 10 resources, 4 policies, 6 flows, 11 indicators, 4 technology systems, 4 policy instruments, 3 processes, 2 feedback loops
+- **Crisis and recovery dynamics**: Exponential disruption patterns, logistic recovery models
+- **Multi-tier analysis**: OEMs, Tier 1/2 suppliers, raw material providers, logistics networks
+- **Technology integration**: Blockchain platforms, AI forecasting, IoT tracking, digital twins
+- **Comprehensive resilience metrics**: 8 value categories including performance, economic, technological, social, environmental, institutional, resilience, and diversity
+
+**Key Stakeholders**: Automotive OEMs, Electronics Manufacturers, Global Suppliers, Logistics Providers, Financial Services, Trade Organizations
+
+**Policy Analysis**: Supply chain transparency mandates, diversification incentives, resilience standards, digital trade facilitation
+
+```bash
+python examples/global_supply_chain_resilience_example.py
+```
+
+**Sample Output**:
+```
+🎯 Most Central Supply Chain Actors:
+  • Global Automotive OEM: 0.007
+  • Tier 1 Component Supplier (Asia): 0.005
+  • Semiconductor Foundry: 0.003
+
+🚧 Supply Chain Bottleneck Identification:
+  • Material flow bottlenecks: 6 identified
+  • Information flow bottlenecks: 6 identified
+  • Financial flow bottlenecks: 6 identified
+
+⏰ Crisis and Recovery Dynamics:
+  • Critical Component Flow: EXPONENTIAL dynamics
+  • Raw Material Supply Flow: LOGISTIC dynamics
+  • Cross-Border Payment Flows: EXPONENTIAL dynamics
+```
+
+### 3. Healthcare System Policy Analysis (`healthcare_system_policy_example.py`)
+
+**Scenario**: Healthcare system policy evaluation involving patients, providers, payers, regulators, and technology systems working together to improve health outcomes through coordinated policy interventions.
+
+**Advanced Features Demonstrated**:
+- **69 nodes across 8 entity types**: 10 actors, 5 institutions, 10 resources, 4 policies, 6 flows, 12 indicators, 4 technology systems, 4 policy instruments, 3 processes
+- **Cognitive frameworks**: Evidence-based medicine, health economics, patient-centered care, prevention frameworks
+- **Value systems**: Medical ethics, population health values, patient rights and autonomy
+- **Behavioral patterns**: Technology adoption, clinical guideline adherence, preventive care seeking, collaborative coordination
+- **Multi-dimensional outcomes**: Health, equity, economic, technological, and social indicators
+
+**Key Stakeholders**: Primary Care Physicians, Hospital Systems, Health Insurance Companies, Public Health Agencies, Patient Advocacy Groups, Health Tech Companies, Research Institutions
+
+**Policy Analysis**: Universal coverage expansion, quality payment programs, interoperability mandates, prevention investments
+
+```bash
+python examples/healthcare_system_policy_example.py
+```
+
+**Sample Output**:
+```
+⚡ Healthcare Stakeholder Power Distribution:
+  • Regional Hospital Systems: 0.91 average power
+  • Health Research Institutions: 0.89 average power
+  • Health Insurance Companies: 0.88 average power
+
+🔬 Healthcare Technology Integration Assessment:
+  • Electronic Health Records System: TRL 9 (0.74 compatibility)
+  • AI-Powered Diagnostic Support: TRL 7 (0.68 compatibility)
+  • Comprehensive Telehealth Platform: TRL 8 (0.79 compatibility)
+
+📊 Health Outcome Indicators by Category:
+  Health Indicators:
+    • Clinical Quality Outcomes: 72.0 → 85.0
+    • Patient Safety Incidents: 12.5 → 6.0
+    • Preventable Hospitalizations: 45.0 → 25.0
+```
+
+### Example Comparison and Use Cases
+
+| Example | Domain | Nodes | Focus | Key Features |
+|---------|--------|-------|-------|--------------|
+| **Smart City** | Urban Planning | 42 | Technology Integration & Governance | Temporal dynamics, IoT systems, multi-stakeholder coordination |
+| **Supply Chain** | Global Commerce | 68 | Resilience & Crisis Response | Multi-tier networks, disruption modeling, bottleneck analysis |
+| **Healthcare** | Policy Analysis | 69 | Outcomes & Quality Improvement | Cognitive frameworks, value systems, behavioral patterns |
+
+### Running Advanced Examples
+
+All examples include comprehensive analysis output and can be run independently:
+
+```bash
+# Smart city planning with technology integration
+python examples/smart_city_urban_planning_example.py
+
+# Global supply chain resilience analysis
+python examples/global_supply_chain_resilience_example.py
+
+# Healthcare system policy evaluation
+python examples/healthcare_system_policy_example.py
+```
+
+### Customizing Examples
+
+Each example can be easily modified to explore different scenarios:
+
+```python
+# Modify stakeholder power distributions
+actor.power_resources = {
+    "technological": 0.95,
+    "financial": 0.8,
+    "regulatory": 0.6
+}
+
+# Adjust temporal dynamics parameters
+temporal_dynamics = TemporalDynamics(
+    start_time=baseline_period,
+    function_type=TemporalFunctionType.LOGISTIC,
+    parameters={"growth_rate": 0.4, "capacity": 100.0}
+)
+
+# Change policy effectiveness measures
+policy_instrument.effectiveness_measure = 0.85
+
+# Modify technology readiness levels
+tech_system.maturity = TechnologyReadinessLevel.PROTOTYPE_DEMONSTRATION
+```
+
+These examples serve as comprehensive templates for building domain-specific SFM models and demonstrate the framework's capability to handle complex, multi-stakeholder systems with sophisticated analytical requirements.
+
 ## Architecture
 
 ### Core Components
@@ -577,6 +742,14 @@ python examples/us_grain_export_example.py
 - Export capabilities to common formats (GraphML, GEXF, CSV)
 - Enhanced policy simulation features
 - Integration with external policy analysis tools
+
+**New Example Domains for Contribution:**
+- Environmental policy and climate change adaptation
+- Financial system stability and regulatory analysis
+- Educational system reform and outcome improvement
+- Energy transition and renewable technology adoption
+- International trade and diplomatic relationship modeling
+- Social media and information flow analysis
 
 ### Adding New Storage Backends
 
