@@ -33,7 +33,6 @@ from core.sfm_enums import (
     TechnologyReadinessLevel,
     LegitimacySource,
     EnumValidator,
-    validate_enum_operation,
 )
 
 
@@ -142,7 +141,7 @@ class Resource(Node):
 @dataclass
 class Process(Node):
     """
-    Transformation activity that converts inputs to outputs 
+    Transformation activity that converts inputs to outputs
     (production, consumption, disposal).
     """
 
@@ -172,7 +171,7 @@ class Flow(Node):  # pylint: disable=too-many-instance-attributes
     ceremonial_component: Optional[float] = None
     instrumental_component: Optional[float] = None
     temporal_dynamics: Optional[TemporalDynamics] = None  # Change over time
-    
+
     def __post_init__(self):
         """Validate flow nature and type combination after initialization."""
         # Only validate if flow_type is a FlowType enum (not string)
@@ -220,17 +219,17 @@ class Indicator(Node):
     target_value: Optional[float] = None
     threshold_values: Dict[str, float] = field(default_factory=dict)
     temporal_dynamics: Optional[TemporalDynamics] = None  # Track changes over time
-    
+
     def __post_init__(self):
         """Validate indicator configuration after initialization."""
         # Validate value category context if measurement unit suggests measurement type
         if self.value_category and self.measurement_unit:
             # Infer measurement context from measurement unit
             measurement_context = "quantitative"  # Default assumption
-            if any(qual_indicator in self.measurement_unit.lower() for qual_indicator in 
+            if any(qual_indicator in self.measurement_unit.lower() for qual_indicator in
                    ['scale', 'rating', 'level', 'score', 'index']):
                 measurement_context = "qualitative"
-            
+
             EnumValidator.validate_value_category_context(
                 self.value_category, measurement_context
             )
@@ -303,7 +302,7 @@ class PolicyInstrument(Node):
     target_behavior: Optional[str] = None
     compliance_mechanism: Optional[str] = None
     effectiveness_measure: Optional[float] = None
-    
+
     def __post_init__(self):
         """Validate policy instrument configuration after initialization."""
         # Validate instrument type if target behavior is specified
@@ -564,11 +563,11 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
         # Perform SFM-specific validation if both nodes exist
         source_node = self._find_node_by_id(relationship.source_id)
         target_node = self._find_node_by_id(relationship.target_id)
-        
+
         if source_node and target_node:
             source_type = source_node.__class__.__name__
             target_type = target_node.__class__.__name__
-            
+
             # Validate the relationship context
             EnumValidator.validate_relationship_context(
                 relationship.kind, source_type, target_type
@@ -577,7 +576,7 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
         # Store the relationship
         self.relationships[relationship.id] = relationship
         return relationship
-    
+
     def _find_node_by_id(self, node_id: uuid.UUID) -> Optional[Node]:
         """Find a node by its ID across all node collections."""
         for node in self:

@@ -18,7 +18,7 @@ from enum import Enum, auto
 class ValueCategory(Enum):
     """
     Categories of value that can be measured and tracked in Social Fabric Matrix analysis.
-    
+
     These categories represent different dimensions of value creation, distribution, and impact
     within socio-economic systems, following Hayden's institutional analysis framework.
     """
@@ -82,7 +82,7 @@ class ValueCategory(Enum):
 class InstitutionLayer(Enum):
     """
     Hayden's three-layer institutional framework plus extended institutional forms.
-    
+
     Based on F. Gregory Hayden's analysis of institutional structure, this enum represents
     the different layers at which institutions operate, from formal constitutional rules
     to informal cultural norms, plus additional institutional forms relevant to SFM analysis.
@@ -112,7 +112,7 @@ class InstitutionLayer(Enum):
 class ResourceType(Enum):
     """
     Classification of resource types within Social Fabric Matrix analysis.
-    
+
     Categorizes different forms of resources that flow through socio-economic systems,
     including traditional economic resources and expanded categories relevant to
     institutional and technological analysis.
@@ -182,8 +182,8 @@ class ResourceType(Enum):
 class FlowNature(Enum):
     """
     Classification of flow types and patterns in Social Fabric Matrix systems.
-    
-    Describes the nature, direction, timing, and purpose of flows of resources, 
+
+    Describes the nature, direction, timing, and purpose of flows of resources,
     information, value, and other elements through socio-economic systems.
     Essential for understanding system dynamics and transformation processes.
     """
@@ -264,7 +264,7 @@ class FlowNature(Enum):
 class FlowType(Enum):
     """
     Classification of flow types by medium/content in Social Fabric Matrix systems.
-    
+
     Defines the fundamental types of flows that can occur between actors, processes,
     and resources in socio-economic systems.
     """
@@ -278,7 +278,7 @@ class FlowType(Enum):
 class PolicyInstrumentType(Enum):
     """
     Classification of policy instrument types for implementation analysis.
-    
+
     Categorizes the different mechanisms through which policies can be implemented
     and enforced in socio-economic systems.
     """
@@ -291,7 +291,7 @@ class PolicyInstrumentType(Enum):
 class ChangeType(Enum):
     """
     Classification of institutional and technological change patterns.
-    
+
     Defines different modes of change that can occur in socio-economic systems,
     following institutional economics and innovation theory.
     """
@@ -304,7 +304,7 @@ class ChangeType(Enum):
 class BehaviorPatternType(Enum):
     """
     Classification of behavioral patterns in Social Fabric Matrix analysis.
-    
+
     Categorizes recurring patterns of behavior that actors exhibit in
     socio-economic systems.
     """
@@ -317,7 +317,7 @@ class BehaviorPatternType(Enum):
 class FeedbackPolarity(Enum):
     """
     Classification of feedback loop polarity in system dynamics.
-    
+
     Defines whether a feedback loop reinforces or balances system behavior.
     """
     REINFORCING = auto()  # Amplifies or accelerates change (positive feedback)
@@ -327,7 +327,7 @@ class FeedbackPolarity(Enum):
 class FeedbackType(Enum):
     """
     Classification of feedback types by directional impact.
-    
+
     Categorizes feedback effects based on their directional influence
     on system behavior.
     """
@@ -339,7 +339,7 @@ class FeedbackType(Enum):
 class TemporalFunctionType(Enum):
     """
     Classification of temporal function types for modeling change over time.
-    
+
     Defines mathematical functions used to model how values change
     over time in temporal dynamics analysis.
     """
@@ -354,7 +354,7 @@ class TemporalFunctionType(Enum):
 class ValidationRuleType(Enum):
     """
     Classification of validation rule types for data integrity.
-    
+
     Defines different types of validation rules that can be applied
     to ensure data quality and consistency.
     """
@@ -369,7 +369,7 @@ class ValidationRuleType(Enum):
 class SystemPropertyType(Enum):
     """
     Classification of system-level property types in SFM analysis.
-    
+
     Defines different categories of system-level metrics and properties
     that can be measured and tracked.
     """
@@ -384,7 +384,7 @@ class SystemPropertyType(Enum):
 class RelationshipKind(Enum):
     """
     Taxonomy of relationship types in Social Fabric Matrix systems.
-    
+
     Defines the various ways actors, institutions, resources, and processes can be
     related to each other. Includes governance, economic, social, informational,
     temporal, and ecological relationships, as well as Hayden-specific institutional
@@ -575,11 +575,11 @@ class RelationshipKind(Enum):
     def ceremonial_tendency(self) -> float:
         """
         Returns a value from 0.0-1.0 indicating ceremonial vs instrumental nature.
-        
+
         Based on Hayden's SFM framework distinction between ceremonial and instrumental
-        behaviors. 0.0 = purely instrumental (problem-solving, adaptive), 
+        behaviors. 0.0 = purely instrumental (problem-solving, adaptive),
         1.0 = purely ceremonial (status-preserving, traditional).
-        
+
         Returns:
             float: Ceremonial tendency score from 0.0 (instrumental) to 1.0 (ceremonial)
         """
@@ -598,7 +598,7 @@ class RelationshipKind(Enum):
             RelationshipKind.BELIEVES_IN: 0.80,
             RelationshipKind.NORMALIZES: 0.75,
             RelationshipKind.PRIORITIZES: 0.70,
-            
+
             # Moderately ceremonial (0.5-0.8) - mixed institutional/adaptive
             RelationshipKind.REGULATES: 0.65,
             RelationshipKind.ENFORCES: 0.65,
@@ -610,7 +610,7 @@ class RelationshipKind(Enum):
             RelationshipKind.ALIGNS_WITH: 0.55,
             RelationshipKind.ACCEPTS: 0.55,
             RelationshipKind.INTERPRETS: 0.50,
-            
+
             # Moderately instrumental (0.2-0.5) - some adaptation with structure
             RelationshipKind.ADVISES: 0.45,
             RelationshipKind.EDUCATES: 0.40,
@@ -623,7 +623,7 @@ class RelationshipKind(Enum):
             RelationshipKind.DEVELOPS: 0.35,
             RelationshipKind.EVOLVES_WITH: 0.40,
             RelationshipKind.ADAPTS_TO: 0.35,
-            
+
             # Highly instrumental (0.0-0.2) - problem-solving, adaptive, productive
             RelationshipKind.INSTRUMENTALLY_ADAPTS: 0.05,
             RelationshipKind.PRODUCES: 0.15,
@@ -637,7 +637,7 @@ class RelationshipKind(Enum):
             RelationshipKind.CUSTOMIZES: 0.15,
             RelationshipKind.ENABLES_INNOVATION: 0.10,
             RelationshipKind.SOLVES: 0.05,
-            
+
             # Economic relationships - moderately instrumental (0.3-0.6)
             RelationshipKind.EXCHANGES_WITH: 0.40,
             RelationshipKind.BUYS_FROM: 0.35,
@@ -650,7 +650,7 @@ class RelationshipKind(Enum):
             RelationshipKind.ALLOCATES: 0.45,
             RelationshipKind.DISTRIBUTES: 0.40,
         }
-        
+
         # Return the mapped value, or default to moderate (0.5) if not explicitly mapped
         return ceremonial_tendencies.get(self, 0.5)
 
@@ -658,7 +658,7 @@ class RelationshipKind(Enum):
 class PowerResourceType(Enum):
     """
     Classification of power resource types in Social Fabric Matrix analysis.
-    
+
     Based on Hayden's analysis of power dynamics within institutional systems,
     representing different forms of power and control that actors can wield
     to influence outcomes and maintain or change institutional arrangements.
@@ -673,7 +673,7 @@ class PowerResourceType(Enum):
 class ToolSkillTechnologyType(Enum):
     """
     Classification of tool-skill-technology complex components.
-    
+
     Represents Hayden's concept of the tool-skill-technology complex as integrated
     systems where physical tools, human skills, and technological knowledge
     combine to enable instrumental problem-solving capabilities.
@@ -693,7 +693,7 @@ class ToolSkillTechnologyType(Enum):
 class PathDependencyType(Enum):
     """
     Classification of path dependency strength in institutional systems.
-    
+
     Represents the degree to which institutional arrangements become locked-in
     and resistant to change due to historical patterns, sunk costs, and
     reinforcing mechanisms.
@@ -707,7 +707,7 @@ class PathDependencyType(Enum):
 class InstitutionalChangeType(Enum):
     """
     Classification of institutional change mechanisms and patterns.
-    
+
     Represents different modes and patterns through which institutional
     arrangements evolve, transform, or maintain stability over time.
     """
@@ -726,22 +726,22 @@ class InstitutionalChangeType(Enum):
 class TechnologyReadinessLevel(Enum):
     """
     NASA Technology Readiness Levels adapted for Social Fabric Matrix analysis.
-    
+
     Provides a systematic metric for assessing the maturity of technologies
     within socio-economic systems, following NASA's TRL framework but adapted
     for Hayden's tool-skill-technology complex analysis.
-    
+
     Based on:
     - NASA Technology Readiness Assessment (TRA) Guidance
     - Hayden's analysis of technological systems in SFM framework
     - Institutional economics perspectives on technology adoption
     """
     BASIC_PRINCIPLES = 1        # Basic principles observed and reported
-    TECHNOLOGY_CONCEPT = 2      # Technology concept and/or application formulated  
+    TECHNOLOGY_CONCEPT = 2      # Technology concept and/or application formulated
     EXPERIMENTAL_PROOF = 3      # Analytical and experimental critical function proof of concept
     LABORATORY_VALIDATION = 4   # Component and/or breadboard validation in laboratory environment
     RELEVANT_ENVIRONMENT = 5    # Component and/or breadboard validation in relevant environment
-    DEMONSTRATION = 6           # System/subsystem model or prototype demonstration in relevant environment  
+    DEMONSTRATION = 6           # System/subsystem model or prototype demonstration in relevant environment
     PROTOTYPE_DEMONSTRATION = 7 # System prototype demonstration in operational environment
     SYSTEM_COMPLETE = 8         # Actual system completed and qualified through test and demonstration
     ACTUAL_SYSTEM = 9          # Actual system proven through successful mission operations
@@ -750,11 +750,11 @@ class TechnologyReadinessLevel(Enum):
 class LegitimacySource(Enum):
     """
     Weber's types of authority and legitimacy sources adapted for SFM analysis.
-    
+
     Based on Max Weber's tripartite classification of authority types,
     extended with additional sources relevant to contemporary institutional
     analysis within Social Fabric Matrix framework.
-    
+
     References:
     - Weber, M. "Economy and Society" - three pure types of legitimate domination
     - Hayden's analysis of legitimacy in institutional systems
@@ -789,16 +789,16 @@ class InvalidEnumOperationError(SFMEnumError):
 
 class EnumValidator:
     """Validates enum values and combinations for SFM consistency."""
-    
+
     # Define node type mappings - these correspond to the actual model classes
     ACTOR_TYPES = {'Actor'}
     INSTITUTION_TYPES = {'Institution', 'Policy'}
     RESOURCE_TYPES = {'Resource'}
     PROCESS_TYPES = {'Process', 'Flow'}
     SYSTEM_TYPES = {'TechnologySystem', 'BeliefSystem', 'ValueSystem'}
-    OTHER_TYPES = {'FeedbackLoop', 'Indicator', 'AnalyticalContext', 'SystemProperty', 
+    OTHER_TYPES = {'FeedbackLoop', 'Indicator', 'AnalyticalContext', 'SystemProperty',
                    'CeremonialBehavior', 'InstrumentalBehavior', 'PolicyInstrument'}
-    
+
     # Define relationship context rules
     RELATIONSHIP_RULES = {
         RelationshipKind.GOVERNS: {
@@ -867,20 +867,20 @@ class EnumValidator:
             'invalid_message': 'PRODUCES relationship requires Actor/Process/TechnologySystem/PolicyInstrument producing Resource/Flow/ValueFlow'
         }
     }
-    
+
     @staticmethod
     def validate_relationship_context(
-        kind: RelationshipKind, 
-        source_type: str, 
+        kind: RelationshipKind,
+        source_type: str,
         target_type: str
     ) -> None:
         """Validate that relationship makes sense in context.
-        
+
         Args:
             kind: The type of relationship
             source_type: Type of source node (class name)
             target_type: Type of target node (class name)
-            
+
         Raises:
             IncompatibleEnumError: If relationship doesn't make sense
             InvalidEnumOperationError: If invalid parameters provided
@@ -889,17 +889,17 @@ class EnumValidator:
             raise InvalidEnumOperationError(
                 f"Expected RelationshipKind, got {type(kind).__name__}"
             )
-        
+
         if not source_type or not target_type:
             raise InvalidEnumOperationError(
                 "Source and target types must be provided and non-empty"
             )
-        
+
         # Check if we have specific rules for this relationship kind
         if kind in EnumValidator.RELATIONSHIP_RULES:
             rule = EnumValidator.RELATIONSHIP_RULES[kind]
             valid_combinations = rule['valid_combinations']
-            
+
             if (source_type, target_type) not in valid_combinations:
                 suggestions = EnumValidator._generate_suggestions(kind, source_type, target_type)
                 raise IncompatibleEnumError(
@@ -907,15 +907,15 @@ class EnumValidator:
                     f"Got {source_type}->{target_type}. "
                     f"{suggestions}"
                 )
-    
+
     @staticmethod
     def validate_flow_combination(nature: FlowNature, flow_type: FlowType) -> None:
         """Validate that flow nature and type are compatible.
-        
+
         Args:
             nature: The nature of the flow
             flow_type: The type of the flow
-            
+
         Raises:
             IncompatibleEnumError: If flow nature and type are incompatible
             InvalidEnumOperationError: If invalid parameters provided
@@ -924,12 +924,12 @@ class EnumValidator:
             raise InvalidEnumOperationError(
                 f"Expected FlowNature, got {type(nature).__name__}"
             )
-        
+
         if not isinstance(flow_type, FlowType):
             raise InvalidEnumOperationError(
                 f"Expected FlowType, got {type(flow_type).__name__}"
             )
-        
+
         # Define obviously incompatible combinations (semantically impossible)
         strictly_incompatible = {
             # These combinations are clearly nonsensical
@@ -941,7 +941,7 @@ class EnumValidator:
             # Financial flows cannot be material or energy
             (FlowNature.FINANCIAL, FlowType.MATERIAL),
             (FlowNature.FINANCIAL, FlowType.ENERGY),
-            # Information flows cannot be material or energy  
+            # Information flows cannot be material or energy
             (FlowNature.INFORMATION, FlowType.MATERIAL),
             # Energy flows cannot be informational or social
             (FlowNature.ENERGY, FlowType.SOCIAL),
@@ -958,24 +958,24 @@ class EnumValidator:
             (FlowNature.REGULATORY, FlowType.MATERIAL),
             (FlowNature.REGULATORY, FlowType.ENERGY),
         }
-        
+
         if (nature, flow_type) in strictly_incompatible:
             raise IncompatibleEnumError(
                 f"Flow nature {nature.name} is semantically incompatible with flow type {flow_type.name}. "
                 f"Consider using compatible combinations."
             )
-    
+
     @staticmethod
     def validate_institution_layer_context(
         layer: InstitutionLayer,
         institution_type: str
     ) -> None:
         """Validate that institution layer makes sense for the institution type.
-        
+
         Args:
             layer: The institutional layer
             institution_type: Type of institution
-            
+
         Raises:
             IncompatibleEnumError: If layer doesn't match institution type
             InvalidEnumOperationError: If invalid parameters provided
@@ -984,25 +984,25 @@ class EnumValidator:
             raise InvalidEnumOperationError(
                 f"Expected InstitutionLayer, got {type(layer).__name__}"
             )
-        
+
         # Formal rules should typically apply to formal institutions
         if layer == InstitutionLayer.FORMAL_RULE and institution_type in ['BeliefSystem', 'ValueSystem']:
             raise IncompatibleEnumError(
                 f"FORMAL_RULE layer is typically not appropriate for {institution_type}. "
                 f"Consider using CULTURAL_VALUE or KNOWLEDGE_SYSTEM layers for belief/value systems."
             )
-    
+
     @staticmethod
     def validate_policy_instrument_combination(
         instrument_type: PolicyInstrumentType,
         target_context: str
     ) -> None:
         """Validate that policy instrument type is appropriate for target context.
-        
+
         Args:
             instrument_type: The type of policy instrument
             target_context: Context where the instrument is being applied
-            
+
         Raises:
             IncompatibleEnumError: If instrument type doesn't match context
             InvalidEnumOperationError: If invalid parameters provided
@@ -1011,12 +1011,12 @@ class EnumValidator:
             raise InvalidEnumOperationError(
                 f"Expected PolicyInstrumentType, got {type(instrument_type).__name__}"
             )
-        
+
         if not target_context:
             raise InvalidEnumOperationError(
                 "Target context must be provided and non-empty"
             )
-        
+
         # Define inappropriate combinations
         inappropriate_combinations = {
             # Regulatory instruments should not be used for voluntary contexts
@@ -1026,24 +1026,24 @@ class EnumValidator:
             (PolicyInstrumentType.ECONOMIC, 'information_provision'),
             (PolicyInstrumentType.ECONOMIC, 'awareness_building'),
         }
-        
+
         if (instrument_type, target_context.lower()) in inappropriate_combinations:
             raise IncompatibleEnumError(
                 f"Policy instrument {instrument_type.name} may not be appropriate for {target_context} context. "
                 f"Consider alternative instrument types that better align with the target context."
             )
-    
+
     @staticmethod
     def validate_value_category_context(
         category: ValueCategory,
         measurement_context: str
     ) -> None:
         """Validate that value category is appropriate for measurement context.
-        
+
         Args:
             category: The value category being measured
             measurement_context: Context of measurement (e.g., 'quantitative', 'qualitative')
-            
+
         Raises:
             IncompatibleEnumError: If category doesn't match measurement context
             InvalidEnumOperationError: If invalid parameters provided
@@ -1052,38 +1052,38 @@ class EnumValidator:
             raise InvalidEnumOperationError(
                 f"Expected ValueCategory, got {type(category).__name__}"
             )
-        
+
         if not measurement_context:
             raise InvalidEnumOperationError(
                 "Measurement context must be provided and non-empty"
             )
-        
+
         # Define categories that are difficult to measure quantitatively
         qualitative_preferred = {
             ValueCategory.CULTURAL, ValueCategory.SPIRITUAL, ValueCategory.AESTHETIC,
             ValueCategory.ETHICAL, ValueCategory.PSYCHOLOGICAL, ValueCategory.COMMUNITY
         }
-        
+
         # Define categories that are typically quantitative
         quantitative_preferred = {
             ValueCategory.ECONOMIC, ValueCategory.PERFORMANCE, ValueCategory.EFFICIENCY,
             ValueCategory.EFFECTIVENESS, ValueCategory.DEMOGRAPHIC
         }
-        
+
         context_lower = measurement_context.lower()
-        
+
         if (context_lower == 'quantitative' and category in qualitative_preferred):
             raise IncompatibleEnumError(
                 f"Value category {category.name} is typically difficult to measure quantitatively. "
                 f"Consider qualitative measurement approaches or complementary quantitative indicators."
             )
-        
+
         if (context_lower == 'qualitative' and category in quantitative_preferred):
             raise IncompatibleEnumError(
                 f"Value category {category.name} is typically measured quantitatively. "
                 f"Consider quantitative measurement approaches or mixed-method evaluation."
             )
-    
+
     @staticmethod
     def validate_cross_enum_dependency(
         primary_enum: Enum,
@@ -1091,12 +1091,12 @@ class EnumValidator:
         relationship_type: str
     ) -> None:
         """Validate cross-enum dependencies and relationships.
-        
+
         Args:
             primary_enum: The primary enum that constrains choices
             dependent_enum: The dependent enum that must align with primary
             relationship_type: Type of dependency relationship
-            
+
         Raises:
             IncompatibleEnumError: If enums are incompatible
             InvalidEnumOperationError: If invalid parameters provided
@@ -1105,28 +1105,28 @@ class EnumValidator:
             raise InvalidEnumOperationError(
                 "Relationship type must be provided and non-empty"
             )
-        
+
         # Handle flow nature and institution layer dependencies
-        if (isinstance(primary_enum, FlowNature) and 
+        if (isinstance(primary_enum, FlowNature) and
             isinstance(dependent_enum, InstitutionLayer) and
             relationship_type.lower() == 'governance'):
-            
+
             # Financial flows should typically be governed by formal institutions
-            if (primary_enum == FlowNature.FINANCIAL and 
+            if (primary_enum == FlowNature.FINANCIAL and
                 dependent_enum == InstitutionLayer.INFORMAL_NORM):
                 raise IncompatibleEnumError(
                     f"Financial flows ({primary_enum.name}) typically require formal institutional governance, "
                     f"not {dependent_enum.name}. Consider FORMAL_RULE or ORGANIZATION layers."
                 )
-            
+
             # Cultural flows align better with cultural value layers
-            if (primary_enum == FlowNature.CULTURAL and 
+            if (primary_enum == FlowNature.CULTURAL and
                 dependent_enum == InstitutionLayer.FORMAL_RULE):
                 raise IncompatibleEnumError(
                     f"Cultural flows ({primary_enum.name}) may be over-regulated by {dependent_enum.name}. "
                     f"Consider CULTURAL_VALUE or INFORMAL_NORM layers."
                 )
-    
+
     @staticmethod
     def validate_required_enum_context(
         enum_value: Enum,
@@ -1134,12 +1134,12 @@ class EnumValidator:
         is_required: bool = True
     ) -> None:
         """Validate whether an enum is required or optional in given context.
-        
+
         Args:
             enum_value: The enum value to validate
             context: The context where the enum is used
             is_required: Whether the enum is required in this context
-            
+
         Raises:
             InvalidEnumOperationError: If required enum is missing or invalid
         """
@@ -1147,7 +1147,7 @@ class EnumValidator:
             raise InvalidEnumOperationError(
                 "Context must be provided and non-empty"
             )
-        
+
         # Define contexts where specific enums are required
         required_contexts = {
             'financial_transaction': [FlowNature, FlowType],
@@ -1156,33 +1156,33 @@ class EnumValidator:
             'value_measurement': [ValueCategory],
             'relationship_creation': [RelationshipKind]
         }
-        
+
         context_lower = context.lower()
         if context_lower in required_contexts:
             required_enum_types = required_contexts[context_lower]
             enum_type = type(enum_value)
-            
+
             if is_required and enum_type not in required_enum_types:
                 raise InvalidEnumOperationError(
                     f"Context '{context}' requires one of these enum types: "
                     f"{[t.__name__ for t in required_enum_types]}, but got {enum_type.__name__}"
                 )
-            
+
             if not is_required and enum_type in required_enum_types:
                 # This is fine - optional usage of a typically required enum
                 pass
-    
+
     @staticmethod
     def validate_technology_readiness_level(
         level: TechnologyReadinessLevel,
         context: str = "general"
     ) -> None:
         """Validate TechnologyReadinessLevel usage in context.
-        
+
         Args:
             level: The TRL level to validate
             context: Context where TRL is being used
-            
+
         Raises:
             InvalidEnumOperationError: If invalid parameters provided
             IncompatibleEnumError: If TRL inappropriate for context
@@ -1191,15 +1191,15 @@ class EnumValidator:
             raise InvalidEnumOperationError(
                 f"Expected TechnologyReadinessLevel, got {type(level).__name__}"
             )
-        
+
         if not context:
             raise InvalidEnumOperationError(
                 "Context must be provided and non-empty"
             )
-        
+
         # Define context-specific validation rules
         context_lower = context.lower()
-        
+
         # Research contexts typically use lower TRL levels
         if context_lower in ['research', 'basic_research', 'laboratory']:
             if level.value > 6:
@@ -1207,7 +1207,7 @@ class EnumValidator:
                     f"TRL {level.value} ({level.name}) may be too advanced for {context} context. "
                     f"Research contexts typically use TRL 1-6."
                 )
-        
+
         # Commercial contexts typically require higher TRL levels
         elif context_lower in ['commercial', 'production', 'deployment']:
             if level.value < 7:
@@ -1222,11 +1222,11 @@ class EnumValidator:
         institutional_context: str
     ) -> None:
         """Validate LegitimacySource appropriateness for institutional context.
-        
+
         Args:
             source: The legitimacy source to validate
             institutional_context: Type of institutional context
-            
+
         Raises:
             InvalidEnumOperationError: If invalid parameters provided
             IncompatibleEnumError: If source inappropriate for context
@@ -1235,67 +1235,70 @@ class EnumValidator:
             raise InvalidEnumOperationError(
                 f"Expected LegitimacySource, got {type(source).__name__}"
             )
-        
+
         if not institutional_context:
             raise InvalidEnumOperationError(
                 "Institutional context must be provided and non-empty"
             )
-        
+
         context_lower = institutional_context.lower()
-        
+
         # Traditional legitimacy rarely appropriate for modern bureaucratic contexts
         if source == LegitimacySource.TRADITIONAL and context_lower in [
             'bureaucracy', 'modern_government', 'corporation', 'scientific_institution'
         ]:
             raise IncompatibleEnumError(
-                f"Traditional legitimacy may not be appropriate for {institutional_context}. "
-                f"Consider LEGAL_RATIONAL or EXPERT legitimacy sources."
+                f"Traditional legitimacy may not be appropriate for "
+                f"{institutional_context}. Consider LEGAL_RATIONAL or EXPERT "
+                f"legitimacy sources."
             )
-        
+
         # Charismatic legitimacy typically unstable for large-scale institutions
         if source == LegitimacySource.CHARISMATIC and context_lower in [
             'large_organization', 'government_agency', 'public_administration'
         ]:
             raise IncompatibleEnumError(
-                f"Charismatic legitimacy may be inappropriate for {institutional_context}. "
-                f"Large-scale institutions typically require LEGAL_RATIONAL legitimacy."
+                f"Charismatic legitimacy may be inappropriate for "
+                f"{institutional_context}. Large-scale institutions typically "
+                f"require LEGAL_RATIONAL legitimacy."
             )
-        
+
         # Expert legitimacy most appropriate for technical/scientific contexts
         if source != LegitimacySource.EXPERT and context_lower in [
             'technical_organization', 'research_institution', 'professional_body'
         ]:
-            # This is a warning rather than error - other sources can exist but expert is preferred
+            # This is a warning rather than error - other sources can exist
+            # but expert is preferred
             pass
-    
+
     @staticmethod
     def _generate_suggestions(kind: RelationshipKind, source_type: str, target_type: str) -> str:
         """Generate helpful suggestions for valid combinations."""
         if kind in EnumValidator.RELATIONSHIP_RULES:
             valid_combinations = EnumValidator.RELATIONSHIP_RULES[kind]['valid_combinations']
-            
+
             # Find suggestions for the source type
             source_suggestions = [combo[1] for combo in valid_combinations if combo[0] == source_type]
             target_suggestions = [combo[0] for combo in valid_combinations if combo[1] == target_type]
-            
+
             suggestions = []
             if source_suggestions:
                 suggestions.append(f"For {source_type} sources, valid targets are: {', '.join(set(source_suggestions))}")
             if target_suggestions:
                 suggestions.append(f"For {target_type} targets, valid sources are: {', '.join(set(target_suggestions))}")
-            
+
             if suggestions:
                 return "Suggestions: " + "; ".join(suggestions)
-        
+
         return "Check the relationship documentation for valid combinations."
 
 
 def validate_enum_operation(operation_name: str):
     """Decorator to validate enum operations and provide better error messages.
-    
+
     Args:
         operation_name: Name of the operation being performed
-        
+
     Returns:
         Decorator function
     """
