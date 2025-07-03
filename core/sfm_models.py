@@ -30,6 +30,8 @@ from core.sfm_enums import (
     TemporalFunctionType,
     ValidationRuleType,
     SystemPropertyType,
+    TechnologyReadinessLevel,
+    LegitimacySource,
     EnumValidator,
     validate_enum_operation,
 )
@@ -200,7 +202,7 @@ class FeedbackLoop(Node):
 class TechnologySystem(Node):
     """Coherent system of techniques, tools and knowledge."""
 
-    maturity: Optional[float] = None  # Technology readiness level
+    maturity: Optional[TechnologyReadinessLevel] = None  # Technology readiness level
     compatibility: Dict[str, float] = field(
         default_factory=dict
     )  # Fit with other systems
@@ -272,7 +274,7 @@ class ValueSystem(Node):
     parent_values: List[uuid.UUID] = field(default_factory=list)
     priority_weight: Optional[float] = None
     cultural_domain: Optional[str] = None
-    legitimacy_source: Optional[str] = None  # tradition, charisma, legal-rational
+    legitimacy_source: Optional[LegitimacySource] = None  # Weber's authority types
 
 
 @dataclass

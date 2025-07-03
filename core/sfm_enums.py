@@ -723,6 +723,50 @@ class InstitutionalChangeType(Enum):
     CYCLICAL = auto()  # Recurring patterns of change and stability
 
 
+class TechnologyReadinessLevel(Enum):
+    """
+    NASA Technology Readiness Levels adapted for Social Fabric Matrix analysis.
+    
+    Provides a systematic metric for assessing the maturity of technologies
+    within socio-economic systems, following NASA's TRL framework but adapted
+    for Hayden's tool-skill-technology complex analysis.
+    
+    Based on:
+    - NASA Technology Readiness Assessment (TRA) Guidance
+    - Hayden's analysis of technological systems in SFM framework
+    - Institutional economics perspectives on technology adoption
+    """
+    BASIC_PRINCIPLES = 1        # Basic principles observed and reported
+    TECHNOLOGY_CONCEPT = 2      # Technology concept and/or application formulated  
+    EXPERIMENTAL_PROOF = 3      # Analytical and experimental critical function proof of concept
+    LABORATORY_VALIDATION = 4   # Component and/or breadboard validation in laboratory environment
+    RELEVANT_ENVIRONMENT = 5    # Component and/or breadboard validation in relevant environment
+    DEMONSTRATION = 6           # System/subsystem model or prototype demonstration in relevant environment  
+    PROTOTYPE_DEMONSTRATION = 7 # System prototype demonstration in operational environment
+    SYSTEM_COMPLETE = 8         # Actual system completed and qualified through test and demonstration
+    ACTUAL_SYSTEM = 9          # Actual system proven through successful mission operations
+
+
+class LegitimacySource(Enum):
+    """
+    Weber's types of authority and legitimacy sources adapted for SFM analysis.
+    
+    Based on Max Weber's tripartite classification of authority types,
+    extended with additional sources relevant to contemporary institutional
+    analysis within Social Fabric Matrix framework.
+    
+    References:
+    - Weber, M. "Economy and Society" - three pure types of legitimate domination
+    - Hayden's analysis of legitimacy in institutional systems
+    - Contemporary institutional theory on authority and legitimacy
+    """
+    TRADITIONAL = auto()        # Custom, precedent, "eternal yesterday" - based on established traditions
+    CHARISMATIC = auto()        # Personal qualities of leader - based on devotion to exceptional individual
+    LEGAL_RATIONAL = auto()     # Rules, procedures, offices - based on legally established impersonal order
+    EXPERT = auto()            # Technical knowledge and competence - based on specialized expertise
+    DEMOCRATIC = auto()         # Popular consent and participation - based on democratic legitimation
+
+
 # ───────────────────────────────────────────────
 # ERROR HANDLING AND VALIDATION
 # ───────────────────────────────────────────────
@@ -1127,6 +1171,102 @@ class EnumValidator:
             if not is_required and enum_type in required_enum_types:
                 # This is fine - optional usage of a typically required enum
                 pass
+    
+    @staticmethod
+    def validate_technology_readiness_level(
+        level: TechnologyReadinessLevel,
+        context: str = "general"
+    ) -> None:
+        """Validate TechnologyReadinessLevel usage in context.
+        
+        Args:
+            level: The TRL level to validate
+            context: Context where TRL is being used
+            
+        Raises:
+            InvalidEnumOperationError: If invalid parameters provided
+            IncompatibleEnumError: If TRL inappropriate for context
+        """
+        if not isinstance(level, TechnologyReadinessLevel):
+            raise InvalidEnumOperationError(
+                f"Expected TechnologyReadinessLevel, got {type(level).__name__}"
+            )
+        
+        if not context:
+            raise InvalidEnumOperationError(
+                "Context must be provided and non-empty"
+            )
+        
+        # Define context-specific validation rules
+        context_lower = context.lower()
+        
+        # Research contexts typically use lower TRL levels
+        if context_lower in ['research', 'basic_research', 'laboratory']:
+            if level.value > 6:
+                raise IncompatibleEnumError(
+                    f"TRL {level.value} ({level.name}) may be too advanced for {context} context. "
+                    f"Research contexts typically use TRL 1-6."
+                )
+        
+        # Commercial contexts typically require higher TRL levels
+        elif context_lower in ['commercial', 'production', 'deployment']:
+            if level.value < 7:
+                raise IncompatibleEnumError(
+                    f"TRL {level.value} ({level.name}) may be too early for {context} context. "
+                    f"Commercial contexts typically require TRL 7-9."
+                )
+
+    @staticmethod
+    def validate_legitimacy_source_context(
+        source: LegitimacySource,
+        institutional_context: str
+    ) -> None:
+        """Validate LegitimacySource appropriateness for institutional context.
+        
+        Args:
+            source: The legitimacy source to validate
+            institutional_context: Type of institutional context
+            
+        Raises:
+            InvalidEnumOperationError: If invalid parameters provided
+            IncompatibleEnumError: If source inappropriate for context
+        """
+        if not isinstance(source, LegitimacySource):
+            raise InvalidEnumOperationError(
+                f"Expected LegitimacySource, got {type(source).__name__}"
+            )
+        
+        if not institutional_context:
+            raise InvalidEnumOperationError(
+                "Institutional context must be provided and non-empty"
+            )
+        
+        context_lower = institutional_context.lower()
+        
+        # Traditional legitimacy rarely appropriate for modern bureaucratic contexts
+        if source == LegitimacySource.TRADITIONAL and context_lower in [
+            'bureaucracy', 'modern_government', 'corporation', 'scientific_institution'
+        ]:
+            raise IncompatibleEnumError(
+                f"Traditional legitimacy may not be appropriate for {institutional_context}. "
+                f"Consider LEGAL_RATIONAL or EXPERT legitimacy sources."
+            )
+        
+        # Charismatic legitimacy typically unstable for large-scale institutions
+        if source == LegitimacySource.CHARISMATIC and context_lower in [
+            'large_organization', 'government_agency', 'public_administration'
+        ]:
+            raise IncompatibleEnumError(
+                f"Charismatic legitimacy may be inappropriate for {institutional_context}. "
+                f"Large-scale institutions typically require LEGAL_RATIONAL legitimacy."
+            )
+        
+        # Expert legitimacy most appropriate for technical/scientific contexts
+        if source != LegitimacySource.EXPERT and context_lower in [
+            'technical_organization', 'research_institution', 'professional_body'
+        ]:
+            # This is a warning rather than error - other sources can exist but expert is preferred
+            pass
     
     @staticmethod
     def _generate_suggestions(kind: RelationshipKind, source_type: str, target_type: str) -> str:
