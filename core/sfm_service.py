@@ -172,7 +172,6 @@ class NodeResponse:
     meta: Dict[str, Any]
     created_at: Optional[str] = None
 
-
 @dataclass
 class RelationshipResponse:
     """Response model for relationships."""
