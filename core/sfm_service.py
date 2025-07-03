@@ -1256,5 +1256,5 @@ def quick_analysis(service: SFMService) -> Dict[str, Any]:
             "analysis_timestamp": datetime.now().isoformat(),
         }
     except Exception as e:
-        logger.error("Quick analysis failed: %s", e)
-        return {"error": str(e), "analysis_timestamp": datetime.now().isoformat()}
+        logger.error("Quick analysis failed: %s", e, exc_info=True)
+        return {"error": "An internal error occurred. Please try again later.", "analysis_timestamp": datetime.now().isoformat()}
