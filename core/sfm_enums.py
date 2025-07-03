@@ -890,7 +890,29 @@ class EnumValidator:
         strictly_incompatible = {
             # These combinations are clearly nonsensical
             (FlowNature.ENERGY, FlowType.INFORMATION),
-            (FlowNature.INFORMATION, FlowType.ENERGY)
+            (FlowNature.INFORMATION, FlowType.ENERGY),
+            # Physical flows cannot be purely informational
+            (FlowNature.MATERIAL, FlowType.INFORMATION),
+            (FlowNature.MATERIAL, FlowType.SOCIAL),
+            # Financial flows cannot be material or energy
+            (FlowNature.FINANCIAL, FlowType.MATERIAL),
+            (FlowNature.FINANCIAL, FlowType.ENERGY),
+            # Information flows cannot be material or energy  
+            (FlowNature.INFORMATION, FlowType.MATERIAL),
+            # Energy flows cannot be informational or social
+            (FlowNature.ENERGY, FlowType.SOCIAL),
+            # Social flows are not material or energy based
+            (FlowNature.SOCIAL, FlowType.MATERIAL),
+            (FlowNature.SOCIAL, FlowType.ENERGY),
+            # Service flows are not typically material
+            (FlowNature.SERVICE, FlowType.MATERIAL),
+            (FlowNature.SERVICE, FlowType.ENERGY),
+            # Cultural flows are not material or energy based
+            (FlowNature.CULTURAL, FlowType.MATERIAL),
+            (FlowNature.CULTURAL, FlowType.ENERGY),
+            # Regulatory flows are primarily informational
+            (FlowNature.REGULATORY, FlowType.MATERIAL),
+            (FlowNature.REGULATORY, FlowType.ENERGY),
         }
         
         if (nature, flow_type) in strictly_incompatible:
@@ -925,6 +947,186 @@ class EnumValidator:
                 f"FORMAL_RULE layer is typically not appropriate for {institution_type}. "
                 f"Consider using CULTURAL_VALUE or KNOWLEDGE_SYSTEM layers for belief/value systems."
             )
+    
+    @staticmethod
+    def validate_policy_instrument_combination(
+        instrument_type: PolicyInstrumentType,
+        target_context: str
+    ) -> None:
+        """Validate that policy instrument type is appropriate for target context.
+        
+        Args:
+            instrument_type: The type of policy instrument
+            target_context: Context where the instrument is being applied
+            
+        Raises:
+            IncompatibleEnumError: If instrument type doesn't match context
+            InvalidEnumOperationError: If invalid parameters provided
+        """
+        if not isinstance(instrument_type, PolicyInstrumentType):
+            raise InvalidEnumOperationError(
+                f"Expected PolicyInstrumentType, got {type(instrument_type).__name__}"
+            )
+        
+        if not target_context:
+            raise InvalidEnumOperationError(
+                "Target context must be provided and non-empty"
+            )
+        
+        # Define inappropriate combinations
+        inappropriate_combinations = {
+            # Regulatory instruments should not be used for voluntary contexts
+            (PolicyInstrumentType.REGULATORY, 'voluntary'),
+            (PolicyInstrumentType.REGULATORY, 'market_based'),
+            # Economic instruments less effective for information provision
+            (PolicyInstrumentType.ECONOMIC, 'information_provision'),
+            (PolicyInstrumentType.ECONOMIC, 'awareness_building'),
+        }
+        
+        if (instrument_type, target_context.lower()) in inappropriate_combinations:
+            raise IncompatibleEnumError(
+                f"Policy instrument {instrument_type.name} may not be appropriate for {target_context} context. "
+                f"Consider alternative instrument types that better align with the target context."
+            )
+    
+    @staticmethod
+    def validate_value_category_context(
+        category: ValueCategory,
+        measurement_context: str
+    ) -> None:
+        """Validate that value category is appropriate for measurement context.
+        
+        Args:
+            category: The value category being measured
+            measurement_context: Context of measurement (e.g., 'quantitative', 'qualitative')
+            
+        Raises:
+            IncompatibleEnumError: If category doesn't match measurement context
+            InvalidEnumOperationError: If invalid parameters provided
+        """
+        if not isinstance(category, ValueCategory):
+            raise InvalidEnumOperationError(
+                f"Expected ValueCategory, got {type(category).__name__}"
+            )
+        
+        if not measurement_context:
+            raise InvalidEnumOperationError(
+                "Measurement context must be provided and non-empty"
+            )
+        
+        # Define categories that are difficult to measure quantitatively
+        qualitative_preferred = {
+            ValueCategory.CULTURAL, ValueCategory.SPIRITUAL, ValueCategory.AESTHETIC,
+            ValueCategory.ETHICAL, ValueCategory.PSYCHOLOGICAL, ValueCategory.COMMUNITY
+        }
+        
+        # Define categories that are typically quantitative
+        quantitative_preferred = {
+            ValueCategory.ECONOMIC, ValueCategory.PERFORMANCE, ValueCategory.EFFICIENCY,
+            ValueCategory.EFFECTIVENESS, ValueCategory.DEMOGRAPHIC
+        }
+        
+        context_lower = measurement_context.lower()
+        
+        if (context_lower == 'quantitative' and category in qualitative_preferred):
+            raise IncompatibleEnumError(
+                f"Value category {category.name} is typically difficult to measure quantitatively. "
+                f"Consider qualitative measurement approaches or complementary quantitative indicators."
+            )
+        
+        if (context_lower == 'qualitative' and category in quantitative_preferred):
+            raise IncompatibleEnumError(
+                f"Value category {category.name} is typically measured quantitatively. "
+                f"Consider quantitative measurement approaches or mixed-method evaluation."
+            )
+    
+    @staticmethod
+    def validate_cross_enum_dependency(
+        primary_enum: Enum,
+        dependent_enum: Enum,
+        relationship_type: str
+    ) -> None:
+        """Validate cross-enum dependencies and relationships.
+        
+        Args:
+            primary_enum: The primary enum that constrains choices
+            dependent_enum: The dependent enum that must align with primary
+            relationship_type: Type of dependency relationship
+            
+        Raises:
+            IncompatibleEnumError: If enums are incompatible
+            InvalidEnumOperationError: If invalid parameters provided
+        """
+        if not relationship_type:
+            raise InvalidEnumOperationError(
+                "Relationship type must be provided and non-empty"
+            )
+        
+        # Handle flow nature and institution layer dependencies
+        if (isinstance(primary_enum, FlowNature) and 
+            isinstance(dependent_enum, InstitutionLayer) and
+            relationship_type.lower() == 'governance'):
+            
+            # Financial flows should typically be governed by formal institutions
+            if (primary_enum == FlowNature.FINANCIAL and 
+                dependent_enum == InstitutionLayer.INFORMAL_NORM):
+                raise IncompatibleEnumError(
+                    f"Financial flows ({primary_enum.name}) typically require formal institutional governance, "
+                    f"not {dependent_enum.name}. Consider FORMAL_RULE or ORGANIZATION layers."
+                )
+            
+            # Cultural flows align better with cultural value layers
+            if (primary_enum == FlowNature.CULTURAL and 
+                dependent_enum == InstitutionLayer.FORMAL_RULE):
+                raise IncompatibleEnumError(
+                    f"Cultural flows ({primary_enum.name}) may be over-regulated by {dependent_enum.name}. "
+                    f"Consider CULTURAL_VALUE or INFORMAL_NORM layers."
+                )
+    
+    @staticmethod
+    def validate_required_enum_context(
+        enum_value: Enum,
+        context: str,
+        is_required: bool = True
+    ) -> None:
+        """Validate whether an enum is required or optional in given context.
+        
+        Args:
+            enum_value: The enum value to validate
+            context: The context where the enum is used
+            is_required: Whether the enum is required in this context
+            
+        Raises:
+            InvalidEnumOperationError: If required enum is missing or invalid
+        """
+        if not context:
+            raise InvalidEnumOperationError(
+                "Context must be provided and non-empty"
+            )
+        
+        # Define contexts where specific enums are required
+        required_contexts = {
+            'financial_transaction': [FlowNature, FlowType],
+            'policy_implementation': [PolicyInstrumentType],
+            'institutional_analysis': [InstitutionLayer],
+            'value_measurement': [ValueCategory],
+            'relationship_creation': [RelationshipKind]
+        }
+        
+        context_lower = context.lower()
+        if context_lower in required_contexts:
+            required_enum_types = required_contexts[context_lower]
+            enum_type = type(enum_value)
+            
+            if is_required and enum_type not in required_enum_types:
+                raise InvalidEnumOperationError(
+                    f"Context '{context}' requires one of these enum types: "
+                    f"{[t.__name__ for t in required_enum_types]}, but got {enum_type.__name__}"
+                )
+            
+            if not is_required and enum_type in required_enum_types:
+                # This is fine - optional usage of a typically required enum
+                pass
     
     @staticmethod
     def _generate_suggestions(kind: RelationshipKind, source_type: str, target_type: str) -> str:

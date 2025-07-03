@@ -218,6 +218,20 @@ class Indicator(Node):
     target_value: Optional[float] = None
     threshold_values: Dict[str, float] = field(default_factory=dict)
     temporal_dynamics: Optional[TemporalDynamics] = None  # Track changes over time
+    
+    def __post_init__(self):
+        """Validate indicator configuration after initialization."""
+        # Validate value category context if measurement unit suggests measurement type
+        if self.value_category and self.measurement_unit:
+            # Infer measurement context from measurement unit
+            measurement_context = "quantitative"  # Default assumption
+            if any(qual_indicator in self.measurement_unit.lower() for qual_indicator in 
+                   ['scale', 'rating', 'level', 'score', 'index']):
+                measurement_context = "qualitative"
+            
+            EnumValidator.validate_value_category_context(
+                self.value_category, measurement_context
+            )
 
 
 @dataclass
@@ -287,6 +301,14 @@ class PolicyInstrument(Node):
     target_behavior: Optional[str] = None
     compliance_mechanism: Optional[str] = None
     effectiveness_measure: Optional[float] = None
+    
+    def __post_init__(self):
+        """Validate policy instrument configuration after initialization."""
+        # Validate instrument type if target behavior is specified
+        if self.target_behavior:
+            EnumValidator.validate_policy_instrument_combination(
+                self.instrument_type, self.target_behavior
+            )
 
 
 @dataclass
