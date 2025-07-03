@@ -6,6 +6,21 @@ the SFM analysis framework, based on F. Gregory Hayden's institutional economics
 These enumerations provide consistent categorization for values, institutions, resources, 
 flows, and relationships in socio-economic systems.
 
+## Naming Conventions
+
+All enum values in this module follow strict naming conventions documented in
+`docs/naming-conventions.md`. Key principles:
+
+- Use SCREAMING_SNAKE_CASE for all enum values
+- Prefer singular forms: `FORMAL_RULE` not `FORMAL_RULES`
+- Use active voice: `GOVERNS` not `GOVERNED_BY`
+- Consistent preposition usage:
+  - `_WITH` for mutual/symmetric relationships: `COLLABORATES_WITH`
+  - `_TO` for directional relationships: `SELLS_TO`
+  - `_FROM` for source relationships: `BUYS_FROM`
+
+Use `tools/naming_convention_linter.py` to validate naming conventions.
+
 ## Theoretical Foundation
 
 This module implements key concepts from Hayden's Social Fabric Matrix framework:
@@ -356,10 +371,10 @@ class InstitutionLayer(Enum):
         kind=RelationshipKind.IMPLEMENTS
     )
     
-    guided_by_rel = Relationship(
+    influenced_by_rel = Relationship(
         source_id=congress.id,
         target_id=political_norms.id,
-        kind=RelationshipKind.GUIDED_BY
+        kind=RelationshipKind.INFLUENCES
     )
     ```
     
@@ -1960,6 +1975,9 @@ class RelationshipKind(Enum):
     DISTRIBUTES_POWER = auto()
     CONCENTRATES_POWER = auto()
     BENEFITS_FROM = auto()  # Gains advantage or support from
+
+    # Deprecated values - use alternatives
+    # GUIDED_BY = auto()  # Deprecated: Use INFLUENCES or SHAPES instead
 
     @property
     def ceremonial_tendency(self) -> float:
