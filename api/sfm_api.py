@@ -17,13 +17,15 @@ Usage:
     uvicorn api.sfm_api:app --reload --host 0.0.0.0 --port 8000
 """
 
-from fastapi import FastAPI, HTTPException, Depends, Query, Path, Body, status
+from fastapi import FastAPI, HTTPException, Depends, Query, Path, Body, status, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List, Optional, Any, Union
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
+import time
+from collections import defaultdict, deque
 
 # Import SFM Service and related classes
 from core.sfm_service import (
@@ -31,6 +33,7 @@ from core.sfm_service import (
     SFMServiceConfig,
     SFMServiceError,
     ValidationError,
+    SecurityValidationError,
     NotFoundError,
     ServiceStatus,
     ServiceHealth,
@@ -53,6 +56,48 @@ from core.sfm_service import (
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Rate limiting configuration
+RATE_LIMIT_REQUESTS = 100  # requests per minute
+RATE_LIMIT_WINDOW = 60     # seconds
+rate_limit_storage = defaultdict(deque)
+
+def check_rate_limit(request: Request) -> bool:
+    """
+    Check if request is within rate limits.
+    
+    Args:
+        request: FastAPI request object
+        
+    Returns:
+        True if request is within limits
+        
+    Raises:
+        HTTPException: If rate limit is exceeded
+    """
+    client_ip = request.client.host
+    current_time = time.time()
+    
+    # Clean old entries
+    client_requests = rate_limit_storage[client_ip]
+    while client_requests and current_time - client_requests[0] > RATE_LIMIT_WINDOW:
+        client_requests.popleft()
+    
+    # Check if limit exceeded
+    if len(client_requests) >= RATE_LIMIT_REQUESTS:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded. Maximum {RATE_LIMIT_REQUESTS} requests per minute allowed.",
+            headers={"Retry-After": "60"}
+        )
+    
+    # Add current request
+    client_requests.append(current_time)
+    return True
+
+def rate_limit_dependency(request: Request) -> bool:
+    """FastAPI dependency for rate limiting."""
+    return check_rate_limit(request)
 
 # FastAPI app configuration
 app = FastAPI(
@@ -88,6 +133,20 @@ async def validation_error_handler(request, exc: ValidationError):
         status_code=status.HTTP_400_BAD_REQUEST,
         content={
             "error": "Validation Error",
+            "message": exc.message,
+            "error_code": exc.error_code,
+            "details": exc.details,
+            "timestamp": datetime.now().isoformat()
+        }
+    )
+
+@app.exception_handler(SecurityValidationError)
+async def security_validation_error_handler(request, exc: SecurityValidationError):
+    """Handle security validation errors."""
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "error": "Security Validation Error",
             "message": exc.message,
             "error_code": exc.error_code,
             "details": exc.details,
@@ -235,10 +294,11 @@ async def find_shortest_path(
 @app.post("/actors", response_model=NodeResponse, status_code=status.HTTP_201_CREATED, tags=["Actors"])
 async def create_actor(
     request: CreateActorRequest,
-    service: SFMService = Depends(get_sfm_service_dependency)
+    service: SFMService = Depends(get_sfm_service_dependency),
+    _: bool = Depends(rate_limit_dependency)
 ):
     """
-    Create a new actor entity.
+    Create a new actor entity with input validation and rate limiting.
     
     Actors represent organizations, individuals, or groups that can take actions
     within the social fabric matrix.
@@ -282,10 +342,11 @@ async def get_actor_neighbors(
 @app.post("/institutions", response_model=NodeResponse, status_code=status.HTTP_201_CREATED, tags=["Institutions"])
 async def create_institution(
     request: CreateInstitutionRequest,
-    service: SFMService = Depends(get_sfm_service_dependency)
+    service: SFMService = Depends(get_sfm_service_dependency),
+    _: bool = Depends(rate_limit_dependency)
 ):
     """
-    Create a new institution entity.
+    Create a new institution entity with input validation and rate limiting.
     
     Institutions represent formal structures, rules, and norms that govern
     behavior within the social fabric matrix.

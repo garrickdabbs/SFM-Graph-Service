@@ -72,6 +72,13 @@ from core.sfm_models import (
 )
 from core.sfm_enums import ResourceType
 from core.sfm_query import SFMQueryEngine, NetworkXSFMQueryEngine
+from core.security_validators import (
+    validate_and_sanitize_node_data,
+    SecurityValidationError,
+    validate_node_label,
+    validate_node_description,
+    validate_metadata,
+)
 from db.sfm_dao import (
     SFMRepositoryFactory,
     ActorRepository,
@@ -164,7 +171,6 @@ class NodeResponse:
     node_type: str
     meta: Dict[str, Any]
     created_at: Optional[str] = None
-
 
 @dataclass
 class RelationshipResponse:
@@ -270,6 +276,14 @@ class ValidationError(SFMServiceError):
 
     def __init__(self, message: str, field: Optional[str] = None, value: Any = None):
         super().__init__(message, "VALIDATION_ERROR", {"field": field, "value": value})
+
+
+class SecurityValidationError(ValidationError):
+    """Security validation error - extends ValidationError for security issues."""
+
+    def __init__(self, message: str, field: Optional[str] = None, value: Any = None):
+        super().__init__(message, field, value)
+        self.error_code = "SECURITY_VALIDATION_ERROR"
 
 
 class NotFoundError(SFMServiceError):
@@ -435,7 +449,7 @@ class SFMService:
         self, request: Union[CreateActorRequest, dict], **kwargs
     ) -> NodeResponse:
         """
-        Create a new Actor entity.
+        Create a new Actor entity with security validation.
 
         Args:
             request: CreateActorRequest object or dict with actor data
@@ -453,6 +467,13 @@ class SFMService:
             else:
                 # Direct call with named parameters
                 data = {"name": request, **kwargs}
+
+            # Security validation - sanitize and validate input data
+            try:
+                data = validate_and_sanitize_node_data(data)
+            except SecurityValidationError as e:
+                logger.warning("Security validation failed for actor creation: %s", e.message)
+                raise ValidationError(f"Security validation failed: {e.message}", e.field, e.value) from e
 
             if self.config.validation_enabled:
                 if not data.get("name"):
@@ -487,7 +508,7 @@ class SFMService:
     def create_institution(
         self, request: Union[CreateInstitutionRequest, dict], **kwargs
     ) -> NodeResponse:
-        """Create a new Institution entity."""
+        """Create a new Institution entity with security validation."""
         try:
             if isinstance(request, dict):
                 data = request
@@ -495,6 +516,13 @@ class SFMService:
                 data = asdict(request)
             else:
                 data = {"name": request, **kwargs}
+
+            # Security validation - sanitize and validate input data
+            try:
+                data = validate_and_sanitize_node_data(data)
+            except SecurityValidationError as e:
+                logger.warning("Security validation failed for institution creation: %s", e.message)
+                raise ValidationError(f"Security validation failed: {e.message}", e.field, e.value) from e
 
             if self.config.validation_enabled:
                 if not data.get("name"):
@@ -526,7 +554,7 @@ class SFMService:
     def create_policy(
         self, request: Union[CreatePolicyRequest, dict], **kwargs
     ) -> NodeResponse:
-        """Create a new Policy entity."""
+        """Create a new Policy entity with security validation."""
         try:
             if isinstance(request, dict):
                 data = request
@@ -534,6 +562,13 @@ class SFMService:
                 data = asdict(request)
             else:
                 data = {"name": request, **kwargs}
+
+            # Security validation - sanitize and validate input data
+            try:
+                data = validate_and_sanitize_node_data(data)
+            except SecurityValidationError as e:
+                logger.warning("Security validation failed for policy creation: %s", e.message)
+                raise ValidationError(f"Security validation failed: {e.message}", e.field, e.value) from e
 
             if self.config.validation_enabled:
                 if not data.get("name"):
@@ -568,7 +603,7 @@ class SFMService:
     def create_resource(
         self, request: Union[CreateResourceRequest, dict], **kwargs
     ) -> NodeResponse:
-        """Create a new Resource entity."""
+        """Create a new Resource entity with security validation."""
         try:
             if isinstance(request, dict):
                 data = request
@@ -576,6 +611,13 @@ class SFMService:
                 data = asdict(request)
             else:
                 data = {"name": request, **kwargs}
+
+            # Security validation - sanitize and validate input data
+            try:
+                data = validate_and_sanitize_node_data(data)
+            except SecurityValidationError as e:
+                logger.warning("Security validation failed for resource creation: %s", e.message)
+                raise ValidationError(f"Security validation failed: {e.message}", e.field, e.value) from e
 
             if self.config.validation_enabled:
                 if not data.get("name"):
