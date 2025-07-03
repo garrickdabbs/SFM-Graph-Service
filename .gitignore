@@ -1,7 +1,12 @@
 __pycache__
-node_modules/
-sfm_data/
+node_modules
+sfm_data
 
 # Build artifacts
-SFM_Graph_Service.egg-info/
-*.egg-info/
+SFM_Graph_Service.egg-info
+*.egg-info
+.coverage
+*.pyc
+*.pyo
+*.pyd
+*.pdb 

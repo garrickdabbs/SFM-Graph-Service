@@ -29,7 +29,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Sequence
+from typing import Any, Dict, List, Optional, Union, Sequence, Mapping
 
 # Local imports
 from core.sfm_enums import FlowNature, RelationshipKind, ResourceType, InstitutionLayer
@@ -115,7 +115,7 @@ class NodeSerializer:
     @staticmethod
     def node_to_dict(node: Node) -> Dict[str, Any]:
         """Convert a Node to dictionary representation."""
-        result = {
+        result: Dict[str, Any] = {
             'type': type(node).__name__,
             'id': str(node.id),
             'label': node.label,
@@ -141,7 +141,7 @@ class NodeSerializer:
     @staticmethod
     def _add_type_specific_fields(node: Node, result: Dict[str, Any]) -> None:
         """Add type-specific fields to node dictionary."""
-        type_handlers = {
+        type_handlers: Dict[type, Any] = {
             Actor: NodeSerializer._handle_actor,
             Institution: NodeSerializer._handle_institution,
             Resource: NodeSerializer._handle_resource,
@@ -208,7 +208,7 @@ class NodeSerializer:
         """Convert dictionary representation back to Node."""
         try:
             # Create basic node with common fields
-            node_kwargs = {
+            node_kwargs: Dict[str, Any] = {
                 'id': uuid.UUID(data['id']),
                 'label': data['label'],
                 'description': data.get('description'),
@@ -226,7 +226,7 @@ class NodeSerializer:
     def _add_type_specific_kwargs(data: Dict[str, Any], node_class: type,
                                   node_kwargs: Dict[str, Any]) -> None:
         """Add type-specific constructor arguments."""
-        type_handlers = {
+        type_handlers: Dict[type, Any] = {
             Actor: NodeSerializer._add_actor_kwargs,
             Institution: NodeSerializer._add_institution_kwargs,
             Resource: NodeSerializer._add_resource_kwargs,
@@ -376,7 +376,7 @@ class SFMGraphSerializer:
             logger.debug("Graph initialized: %s", graph)
 
             # Deserialize node collections
-            node_type_mapping = [
+            node_type_mapping: List[tuple[str, type, Mapping[Any, Node]]] = [
                 ('actors', Actor, graph.actors),
                 ('institutions', Institution, graph.institutions),
                 ('resources', Resource, graph.resources),
@@ -399,7 +399,7 @@ class SFMGraphSerializer:
                     raise ValueError(f"Invalid data for collection '{collection_name}': "
                                    f"{collection_data}")
                 for node_data in collection_data.values():
-                    node = NodeSerializer.dict_to_node(node_data, node_class)
+                    node: Node = NodeSerializer.dict_to_node(node_data, node_class)
                     target_collection[node.id] = node
 
             logger.debug("Node collections deserialized successfully.")
@@ -443,7 +443,7 @@ class SFMGraphSerializer:
             raise SFMSerializationError(f"Failed to deserialize relationship: {str(e)}") from e
 
     @staticmethod
-    def _json_serializer(obj):
+    def _json_serializer(obj: Any) -> str:
         """Custom JSON serializer for complex types."""
         if isinstance(obj, datetime):
             return obj.isoformat()
@@ -456,7 +456,7 @@ class SFMGraphSerializer:
     @staticmethod
     def _graph_to_dict(graph: SFMGraph) -> Dict[str, Any]:
         """Convert SFMGraph to dictionary representation."""
-        node_collections = [
+        node_collections: List[tuple[str, Mapping[Any, Node]]] = [
             ('actors', graph.actors),
             ('institutions', graph.institutions),
             ('resources', graph.resources),
@@ -471,7 +471,7 @@ class SFMGraphSerializer:
             ('analytical_contexts', graph.analytical_contexts),
         ]
 
-        result = {
+        result: Dict[str, Any] = {
             'id': str(graph.id),
             'name': graph.name,
             'description': graph.description,
