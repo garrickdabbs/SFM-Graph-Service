@@ -1369,7 +1369,48 @@ class BehaviorPatternType(Enum):
     Classification of behavioral patterns in Social Fabric Matrix analysis.
 
     Categorizes recurring patterns of behavior that actors exhibit in
-    socio-economic systems.
+    socio-economic systems, particularly relevant to Hayden's analysis of
+    ceremonial versus instrumental behavior patterns that shape institutional
+    dynamics and economic outcomes.
+    
+    ## Theoretical Background
+    
+    Hayden's institutional analysis distinguishes between different behavioral
+    patterns that either support or hinder adaptive institutional development.
+    Understanding these patterns is crucial for predicting institutional change
+    and designing effective policy interventions.
+    
+    ## Core Behavior Patterns
+    
+    - **HABITUAL**: Routine, unconscious behaviors following established patterns
+    - **STRATEGIC**: Deliberate, goal-oriented behaviors with explicit objectives
+    - **ADAPTIVE**: Flexible, responsive behaviors that adjust to changing conditions
+    - **RESISTANT**: Change-resistant, conservative behaviors that maintain status quo
+    
+    ## Usage Examples
+    
+    ```python
+    # Habitual behavior pattern
+    routine_compliance = BehaviorPattern(
+        label="Standard Regulatory Compliance",
+        pattern_type=BehaviorPatternType.HABITUAL,
+        description="Routine following of established regulatory procedures"
+    )
+    
+    # Strategic behavior pattern
+    market_positioning = BehaviorPattern(
+        label="Competitive Market Strategy",
+        pattern_type=BehaviorPatternType.STRATEGIC,
+        description="Deliberate positioning for market advantage"
+    )
+    
+    # Adaptive behavior pattern
+    crisis_response = BehaviorPattern(
+        label="Crisis Adaptation Response",
+        pattern_type=BehaviorPatternType.ADAPTIVE,
+        description="Flexible adjustment to emergency conditions"
+    )
+    ```
     """
     HABITUAL = auto()  # Routine, unconscious behaviors
     STRATEGIC = auto()  # Deliberate, goal-oriented behaviors
@@ -1382,6 +1423,26 @@ class FeedbackPolarity(Enum):
     Classification of feedback loop polarity in system dynamics.
 
     Defines whether a feedback loop reinforces or balances system behavior.
+    Essential for understanding system stability, growth patterns, and
+    intervention points in Social Fabric Matrix analysis.
+    
+    ## Usage Examples
+    
+    ```python
+    # Reinforcing feedback (amplifies change)
+    growth_feedback = Feedback(
+        label="Economic Growth Feedback",
+        polarity=FeedbackPolarity.REINFORCING,
+        description="Investment leads to growth, which attracts more investment"
+    )
+    
+    # Balancing feedback (stabilizes system)  
+    regulatory_feedback = Feedback(
+        label="Market Regulation Feedback",
+        polarity=FeedbackPolarity.BALANCING,
+        description="Market excess triggers regulatory response"
+    )
+    ```
     """
     REINFORCING = auto()  # Amplifies or accelerates change (positive feedback)
     BALANCING = auto()  # Stabilizes or counteracts change (negative feedback)
@@ -1434,7 +1495,40 @@ class SystemPropertyType(Enum):
     Classification of system-level property types in SFM analysis.
 
     Defines different categories of system-level metrics and properties
-    that can be measured and tracked.
+    that can be measured and tracked in Social Fabric Matrix systems.
+    Essential for evaluating overall system performance, health, and
+    development outcomes in institutional analysis.
+    
+    ## Usage Examples
+    
+    ```python
+    # Structural system property
+    network_density = SystemProperty(
+        label="Institutional Network Density",
+        property_type=SystemPropertyType.STRUCTURAL,
+        value=0.65,
+        unit="density_ratio",
+        description="Measure of interconnectedness in institutional network"
+    )
+    
+    # Performance system property
+    policy_effectiveness = SystemProperty(
+        label="Policy Implementation Effectiveness",
+        property_type=SystemPropertyType.PERFORMANCE,
+        value=78.5,
+        unit="percentage",
+        description="Overall effectiveness of policy implementation"
+    )
+    
+    # Sustainability system property
+    resource_efficiency = SystemProperty(
+        label="Resource Use Efficiency",
+        property_type=SystemPropertyType.SUSTAINABILITY,
+        value=0.82,
+        unit="efficiency_index",
+        description="Long-term sustainability of resource utilization"
+    )
+    ```
     """
     STRUCTURAL = auto()  # Network structure properties
     DYNAMIC = auto()  # Temporal behavior properties
