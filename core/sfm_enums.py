@@ -3,7 +3,8 @@ Enumerations for the Social Fabric Matrix (SFM) framework.
 
 This module defines controlled vocabularies and classification systems used throughout
 the SFM analysis framework, based on F. Gregory Hayden's institutional economics work.
-These enumerations provide consistent categorization for values, institutions, resources, 
+These enumerations provide consistent categorization for values, institutions,
+resources, 
 flows, and relationships in socio-economic systems.
 
 ## Theoretical Foundation
@@ -61,7 +62,8 @@ governs_rel = Relationship(
 
 The enums integrate seamlessly with core SFM model classes:
 
-- **ValueCategory**: Used in `Indicator` and `ValueSystem` for multi-dimensional measurement
+- **ValueCategory**: Used in `Indicator` and `ValueSystem` for multi-dimensional
+  measurement
 - **InstitutionLayer**: Used in `Institution` for Hayden's three-layer framework
 - **ResourceType**: Used in `Resource` for comprehensive resource classification
 - **FlowNature/FlowType**: Used in `Flow` for movement pattern analysis
@@ -71,7 +73,8 @@ The enums integrate seamlessly with core SFM model classes:
 
 The module includes validation through `EnumValidator` class that ensures:
 - Compatible enum combinations (e.g., FlowNature.FINANCIAL with FlowType.FINANCIAL)
-- Contextually appropriate usage (e.g., measurable ValueCategory for quantitative indicators)
+- Contextually appropriate usage (e.g., measurable ValueCategory for
+  quantitative indicators)
 - Cross-enum relationship consistency
 
 ### Type Hints and Patterns
@@ -111,6 +114,40 @@ See Also:
 from __future__ import annotations
 
 from enum import Enum, auto
+
+# Module metadata
+__version__ = "1.0.0"
+__author__ = "SFM Development Team"
+__all__ = [
+    # Core enums
+    'ValueCategory',
+    'InstitutionLayer',
+    'ResourceType',
+    'FlowNature',
+    'FlowType',
+    'PolicyInstrumentType',
+    'ChangeType',
+    'BehaviorPatternType',
+    'FeedbackPolarity',
+    'FeedbackType',
+    'TemporalFunctionType',
+    'ValidationRuleType',
+    'SystemPropertyType',
+    'RelationshipKind',
+    'PowerResourceType',
+    'ToolSkillTechnologyType',
+    'PathDependencyType',
+    'InstitutionalChangeType',
+    'TechnologyReadinessLevel',
+    'LegitimacySource',
+    # Exception classes
+    'SFMEnumError',
+    'IncompatibleEnumError',
+    'InvalidEnumOperationError',
+    # Validation utilities
+    'EnumValidator',
+    'validate_enum_operation',
+]
 
 # ───────────────────────────────────────────────
 # ENUMERATIONS  (shared controlled vocabularies)
@@ -223,7 +260,8 @@ class ValueCategory(Enum):
     - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 4: Value Theory
     - Hayden, F.G. (1982). "Social Fabric Matrix: From Perspective to Analytical Tool"
     - Tool, M.R. (1977). "A Social Value Theory in Neoinstitutional Economics"
-    - Hodgson, G.M. (1988). "Economics and Institutions", Chapter 8: Values and Valuation
+    - Hodgson, G.M. (1988). "Economics and Institutions", Chapter 8: Values and
+  Valuation
     """
     # Original categories
     ECONOMIC = auto()  # Market-priced goods, services, financial returns
@@ -286,7 +324,8 @@ class InstitutionLayer(Enum):
     """
     Hayden's three-layer institutional framework plus extended institutional forms.
 
-    Based on F. Gregory Hayden's analysis of institutional structure, this enum represents
+    Based on F. Gregory Hayden's analysis of institutional structure, this enum
+represents
     the different layers at which institutions operate within socio-economic systems.
     Hayden's framework distinguishes between formal constitutional rules, organizational
     structures, and informal cultural norms, providing a comprehensive taxonomy for
@@ -345,9 +384,11 @@ class InstitutionLayer(Enum):
     ### Institutional Relationship Analysis
     ```python
     # Hierarchical institutional relationships
-    constitution = Institution(label="US Constitution", layer=InstitutionLayer.FORMAL_RULE)
+    constitution = Institution(label="US Constitution",
+                               layer=InstitutionLayer.FORMAL_RULE)
     congress = Institution(label="US Congress", layer=InstitutionLayer.ORGANIZATION)
-    political_norms = Institution(label="Democratic Norms", layer=InstitutionLayer.INFORMAL_NORM)
+    political_norms = Institution(label="Democratic Norms",
+                                  layer=InstitutionLayer.INFORMAL_NORM)
     
     # Relationships showing institutional hierarchy
     implements_rel = Relationship(
@@ -390,8 +431,10 @@ class InstitutionLayer(Enum):
     ## Integration with SFM Analysis
     
     InstitutionLayer enables:
-    - **Hierarchical Analysis**: Understanding how different institutional levels interact
-    - **Change Process Mapping**: Tracking how changes propagate across institutional layers
+    - **Hierarchical Analysis**: Understanding how different institutional levels
+  interact
+    - **Change Process Mapping**: Tracking how changes propagate across
+  institutional layers
     - **Policy Design**: Identifying appropriate institutional levels for intervention
     - **Governance Assessment**: Evaluating institutional capacity at different layers
     
@@ -407,7 +450,8 @@ class InstitutionLayer(Enum):
     
     ## References
     
-    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 3: Institutional Structure
+    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 3:
+  Institutional Structure
     - Hayden, F.G. (1982). "Social Fabric Matrix: From Perspective to Analytical Tool"
     - North, D.C. (1990). "Institutions, Institutional Change and Economic Performance"
     - Ostrom, E. (2005). "Understanding Institutional Diversity"
@@ -439,9 +483,11 @@ class ResourceType(Enum):
     Classification of resource types within Social Fabric Matrix analysis.
 
     Categorizes different forms of resources that flow through socio-economic systems,
-    including traditional economic resources and expanded categories relevant to
+    including traditional economic resources and expanded categories relevant
+    to
     institutional and technological analysis. This comprehensive taxonomy enables
-    detailed tracking of resource flows, dependencies, and transformations in SFM models.
+    detailed tracking of resource flows, dependencies, and transformations in
+    SFM models.
     
     ## Theoretical Background
     
@@ -596,9 +642,11 @@ class ResourceType(Enum):
     
     ## References
     
-    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 5: Resource Systems
+    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 5:
+  Resource Systems
     - Commons, J.R. (1924). "Legal Foundations of Capitalism" 
-    - Ostrom, E. (1990). "Governing the Commons: The Evolution of Institutions for Collective Action"
+    - Ostrom, E. (1990). "Governing the Commons: The Evolution of Institutions
+  for Collective Action"
     - Lin, N. (2001). "Social Capital: A Theory of Social Structure and Action"
     """
     # Existing values
@@ -951,7 +999,8 @@ class FlowType(Enum):
     
     ## Usage with FlowNature
     
-    FlowType works in combination with FlowNature to provide complete flow specification:
+    FlowType works in combination with FlowNature to provide complete flow
+    specification:
     
     ```python
     # Financial payment flow
@@ -1146,7 +1195,8 @@ class PolicyInstrumentType(Enum):
     
     ## References
     
-    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 8: Policy Instruments
+    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 8:
+  Policy Instruments
     - Hood, C. (1983). "The Tools of Government"
     - Salamon, L.M. (2002). "The Tools of Government: A Guide to the New Governance"
     - Vedung, E. (1998). "Policy Instruments: Typologies and Theories"
@@ -1352,10 +1402,12 @@ class ChangeType(Enum):
     
     ## References
     
-    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 9: Institutional Change
+    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 9:
+  Institutional Change
     - North, D.C. (1990). "Institutions, Institutional Change and Economic Performance"
     - Arthur, W.B. (1994). "Increasing Returns and Path Dependence in the Economy"
-    - Pierson, P. (2000). "Increasing Returns, Path Dependence, and the Study of Politics"
+    - Pierson, P. (2000). "Increasing Returns, Path Dependence, and the Study
+  of Politics"
     - Commons, J.R. (1924). "Legal Foundations of Capitalism", Chapter 7: Going Concerns
     """
     EVOLUTIONARY = auto()  # Gradual, adaptive change
@@ -1543,13 +1595,15 @@ class RelationshipKind(Enum):
     Taxonomy of relationship types in Social Fabric Matrix systems.
 
     Defines the various ways actors, institutions, resources, and processes can be
-    related to each other in Hayden's institutional analysis framework. This comprehensive
+    related to each other in Hayden's institutional analysis framework. This
+comprehensive
     taxonomy enables detailed mapping of institutional dependencies, resource flows,
     power relationships, and system dynamics essential for SFM analysis.
     
     ## Theoretical Foundation
     
-    Relationship analysis in SFM recognizes that socio-economic systems are fundamentally
+    Relationship analysis in SFM recognizes that socio-economic systems are
+fundamentally
     structured by relationships between actors, institutions, and resources. Hayden's
     framework emphasizes how these relationships create patterns of coordination,
     dependency, and power that shape economic outcomes and social welfare.
@@ -1775,10 +1829,13 @@ class RelationshipKind(Enum):
     
     ## References
     
-    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 7: Institutional Relationships
+    - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 7:
+  Institutional Relationships
     - Hayden, F.G. (1982). "Social Fabric Matrix: From Perspective to Analytical Tool"
-    - Commons, J.R. (1924). "Legal Foundations of Capitalism", Chapter 5: The Institutional Economics of Legal Rights
-    - Mitchell, W.C. (1937). "The Backward Art of Spending Money", Chapter 3: Institutional Analysis
+    - Commons, J.R. (1924). "Legal Foundations of Capitalism", Chapter 5:
+  The Institutional Economics of Legal Rights
+    - Mitchell, W.C. (1937). "The Backward Art of Spending Money", Chapter 3:
+  Institutional Analysis
     """
     # Governance and Authority Relationships
     GOVERNS = auto()  # Authority over another entity
@@ -2056,7 +2113,7 @@ class PowerResourceType(Enum):
     INSTITUTIONAL_AUTHORITY = auto()  # Formal authority roles and positions
     ECONOMIC_CONTROL = auto()  # Control over financial resources and economic flows
     INFORMATION_ACCESS = auto()  # Access to and control of information and knowledge
-    NETWORK_POSITION = auto()  # Strategic position within social and institutional networks
+    NETWORK_POSITION = auto()  # Strategic position within networks
     CULTURAL_LEGITIMACY = auto()  # Cultural authority and legitimacy sources
 
 
@@ -2128,13 +2185,13 @@ class TechnologyReadinessLevel(Enum):
     """
     BASIC_PRINCIPLES = 1        # Basic principles observed and reported
     TECHNOLOGY_CONCEPT = 2      # Technology concept and/or application formulated
-    EXPERIMENTAL_PROOF = 3      # Analytical and experimental critical function proof of concept
-    LABORATORY_VALIDATION = 4   # Component and/or breadboard validation in laboratory environment
-    RELEVANT_ENVIRONMENT = 5    # Component and/or breadboard validation in relevant environment
-    DEMONSTRATION = 6           # System/subsystem model or prototype demonstration in relevant environment
-    PROTOTYPE_DEMONSTRATION = 7 # System prototype demonstration in operational environment
-    SYSTEM_COMPLETE = 8         # Actual system completed and qualified through test and demonstration
-    ACTUAL_SYSTEM = 9          # Actual system proven through successful mission operations
+    EXPERIMENTAL_PROOF = 3      # Experimental proof of concept
+    LABORATORY_VALIDATION = 4   # Component validation in laboratory
+    RELEVANT_ENVIRONMENT = 5    # Component validation in relevant env
+    DEMONSTRATION = 6           # System demonstration in relevant env
+    PROTOTYPE_DEMONSTRATION = 7 # Prototype demo in operational env
+    SYSTEM_COMPLETE = 8         # System completed and qualified
+    ACTUAL_SYSTEM = 9          # System proven through successful missions
 
 
 class LegitimacySource(Enum):
@@ -2150,11 +2207,11 @@ class LegitimacySource(Enum):
     - Hayden's analysis of legitimacy in institutional systems
     - Contemporary institutional theory on authority and legitimacy
     """
-    TRADITIONAL = auto()        # Custom, precedent, "eternal yesterday" - based on established traditions
-    CHARISMATIC = auto()        # Personal qualities of leader - based on devotion to exceptional individual
-    LEGAL_RATIONAL = auto()     # Rules, procedures, offices - based on legally established impersonal order
-    EXPERT = auto()            # Technical knowledge and competence - based on specialized expertise
-    DEMOCRATIC = auto()         # Popular consent and participation - based on democratic legitimation
+    TRADITIONAL = auto()        # Custom, precedent, established traditions
+    CHARISMATIC = auto()        # Personal qualities - exceptional individual
+    LEGAL_RATIONAL = auto()     # Rules, procedures - impersonal order
+    EXPERT = auto()            # Technical knowledge and competence
+    DEMOCRATIC = auto()         # Popular consent and participation
 
 
 # ───────────────────────────────────────────────
@@ -2164,17 +2221,14 @@ class LegitimacySource(Enum):
 
 class SFMEnumError(Exception):
     """Base exception for SFM enum-related errors."""
-    pass
 
 
 class IncompatibleEnumError(SFMEnumError):
     """Raised when incompatible enum values are used together."""
-    pass
 
 
 class InvalidEnumOperationError(SFMEnumError):
     """Raised when an invalid operation is attempted on enum values."""
-    pass
 
 
 class EnumValidator:
