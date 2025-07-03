@@ -5,8 +5,13 @@ sfm_data
 # Build artifacts
 SFM_Graph_Service.egg-info
 *.egg-info
-.coverage
+.coverage*
+.cache
+htmlcov
+.coverage/*
+.cache/*
+htmlcov/*
 *.pyc
 *.pyo
 *.pyd
-*.pdb 
+*.pdb
