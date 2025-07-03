@@ -3,7 +3,7 @@ Enumerations for the Social Fabric Matrix (SFM) framework.
 
 This module defines controlled vocabularies and classification systems used throughout
 the SFM analysis framework, based on F. Gregory Hayden's institutional economics work.
-These enumerations provide consistent categorization for values, institutions, resources, 
+These enumerations provide consistent categorization for values, institutions, resources,
 flows, and relationships in socio-economic systems.
 
 ## Theoretical Foundation
@@ -61,7 +61,8 @@ governs_rel = Relationship(
 
 The enums integrate seamlessly with core SFM model classes:
 
-- **ValueCategory**: Used in `Indicator` and `ValueSystem` for multi-dimensional measurement
+- **ValueCategory**: Used in `Indicator` and `ValueSystem` for multi-dimensional
+  measurement
 - **InstitutionLayer**: Used in `Institution` for Hayden's three-layer framework
 - **ResourceType**: Used in `Resource` for comprehensive resource classification
 - **FlowNature/FlowType**: Used in `Flow` for movement pattern analysis
@@ -70,8 +71,10 @@ The enums integrate seamlessly with core SFM model classes:
 ### Validation and Constraints
 
 The module includes validation through `EnumValidator` class that ensures:
-- Compatible enum combinations (e.g., FlowNature.FINANCIAL with FlowType.FINANCIAL)
-- Contextually appropriate usage (e.g., measurable ValueCategory for quantitative indicators)
+- Compatible enum combinations (e.g., FlowNature.FINANCIAL with
+  FlowType.FINANCIAL)
+- Contextually appropriate usage (e.g., measurable ValueCategory for quantitative
+  indicators)
 - Cross-enum relationship consistency
 
 ### Type Hints and Patterns
@@ -111,6 +114,36 @@ See Also:
 from __future__ import annotations
 
 from enum import Enum, auto
+
+__version__ = "1.0.0"
+__author__ = "SFM Development Team"
+__all__ = [
+    'ValueCategory',
+    'InstitutionLayer',
+    'ResourceType',
+    'FlowNature',
+    'RelationshipKind',
+    'FlowType',
+    'PolicyInstrumentType',
+    'ChangeType',
+    'BehaviorPatternType',
+    'FeedbackPolarity',
+    'FeedbackType',
+    'TemporalFunctionType',
+    'ValidationRuleType',
+    'SystemPropertyType',
+    'PowerResourceType',
+    'ToolSkillTechnologyType',
+    'PathDependencyType',
+    'InstitutionalChangeType',
+    'TechnologyReadinessLevel',
+    'LegitimacySource',
+    'SFMEnumError',
+    'IncompatibleEnumError',
+    'InvalidEnumOperationError',
+    'EnumValidator',
+    'validate_enum_operation',
+]
 
 # ───────────────────────────────────────────────
 # ENUMERATIONS  (shared controlled vocabularies)
@@ -1777,7 +1810,8 @@ class RelationshipKind(Enum):
     
     - Hayden, F.G. (2006). "Policymaking for a Good Society", Chapter 7: Institutional Relationships
     - Hayden, F.G. (1982). "Social Fabric Matrix: From Perspective to Analytical Tool"
-    - Commons, J.R. (1924). "Legal Foundations of Capitalism", Chapter 5: The Institutional Economics of Legal Rights
+    - Commons, J.R. (1924). "Legal Foundations of Capitalism", Chapter 5: The 
+      Institutional Economics of Legal Rights
     - Mitchell, W.C. (1937). "The Backward Art of Spending Money", Chapter 3: Institutional Analysis
     """
     # Governance and Authority Relationships
@@ -2164,17 +2198,14 @@ class LegitimacySource(Enum):
 
 class SFMEnumError(Exception):
     """Base exception for SFM enum-related errors."""
-    pass
 
 
 class IncompatibleEnumError(SFMEnumError):
     """Raised when incompatible enum values are used together."""
-    pass
 
 
 class InvalidEnumOperationError(SFMEnumError):
     """Raised when an invalid operation is attempted on enum values."""
-    pass
 
 
 class EnumValidator:
@@ -2206,7 +2237,8 @@ class EnumValidator:
                 ('Policy', 'Resource')  # Policies can govern resources (regulations)
             ],
             'description': 'GOVERNS relationship requires entities capable of authority or regulation',
-            'invalid_message': 'GOVERNS relationship requires authority-capable entities (Actors, Institutions, Policies) governing appropriate targets'
+            'invalid_message': ('GOVERNS relationship requires authority-capable entities '
+                                '(Actors, Institutions, Policies) governing appropriate targets')
         },
         RelationshipKind.EMPLOYS: {
             'valid_combinations': [
@@ -2223,8 +2255,10 @@ class EnumValidator:
                 ('Actor', 'TechnologySystem'),
                 ('Institution', 'TechnologySystem')
             ],
-            'description': 'OWNS relationship requires an entity capable of ownership and an ownable resource',
-            'invalid_message': 'OWNS relationship requires Actor/Institution owning Resource/TechnologySystem'
+            'description': ('OWNS relationship requires an entity capable of ownership '
+                            'and an ownable resource'),
+            'invalid_message': ('OWNS relationship requires Actor/Institution owning '
+                                'Resource/TechnologySystem')
         },
         RelationshipKind.USES: {
             'valid_combinations': [
@@ -2236,7 +2270,8 @@ class EnumValidator:
                 ('Process', 'Institution')
             ],
             'description': 'USES relationship requires a user and a usable entity',
-            'invalid_message': 'USES relationship requires Actor/Process using Resource/TechnologySystem/Institution'
+            'invalid_message': ('USES relationship requires Actor/Process using '
+                                'Resource/TechnologySystem/Institution')
         },
         RelationshipKind.PRODUCES: {
             'valid_combinations': [
@@ -2254,7 +2289,8 @@ class EnumValidator:
                 ('PolicyInstrument', 'Resource')
             ],
             'description': 'PRODUCES relationship requires a producer and a producible output',
-            'invalid_message': 'PRODUCES relationship requires Actor/Process/TechnologySystem/PolicyInstrument producing Resource/Flow/ValueFlow'
+            'invalid_message': ('PRODUCES relationship requires Actor/Process/TechnologySystem/'
+                                'PolicyInstrument producing Resource/Flow/ValueFlow')
         }
     }
 
@@ -2668,14 +2704,18 @@ class EnumValidator:
             valid_combinations = EnumValidator.RELATIONSHIP_RULES[kind]['valid_combinations']
 
             # Find suggestions for the source type
-            source_suggestions = [combo[1] for combo in valid_combinations if combo[0] == source_type]
-            target_suggestions = [combo[0] for combo in valid_combinations if combo[1] == target_type]
+            source_suggestions = [combo[1] for combo in valid_combinations
+                                  if combo[0] == source_type]
+            target_suggestions = [combo[0] for combo in valid_combinations
+                                  if combo[1] == target_type]
 
             suggestions = []
             if source_suggestions:
-                suggestions.append(f"For {source_type} sources, valid targets are: {', '.join(set(source_suggestions))}")
+                suggestions.append(f"For {source_type} sources, valid targets are: "
+                                   f"{', '.join(set(source_suggestions))}")
             if target_suggestions:
-                suggestions.append(f"For {target_type} targets, valid sources are: {', '.join(set(target_suggestions))}")
+                suggestions.append(f"For {target_type} targets, valid sources are: "
+                                   f"{', '.join(set(target_suggestions))}")
 
             if suggestions:
                 return "Suggestions: " + "; ".join(suggestions)
