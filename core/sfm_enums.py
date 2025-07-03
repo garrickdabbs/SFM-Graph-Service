@@ -2207,11 +2207,11 @@ class LegitimacySource(Enum):
     - Hayden's analysis of legitimacy in institutional systems
     - Contemporary institutional theory on authority and legitimacy
     """
-    TRADITIONAL = auto()        # Custom, precedent, "eternal yesterday" - based on established traditions
-    CHARISMATIC = auto()        # Personal qualities of leader - based on devotion to exceptional individual
-    LEGAL_RATIONAL = auto()     # Rules, procedures, offices - based on legally established impersonal order
-    EXPERT = auto()            # Technical knowledge and competence - based on specialized expertise
-    DEMOCRATIC = auto()         # Popular consent and participation - based on democratic legitimation
+    TRADITIONAL = auto()        # Custom, precedent, established traditions
+    CHARISMATIC = auto()        # Personal qualities - exceptional individual
+    LEGAL_RATIONAL = auto()     # Rules, procedures - impersonal order
+    EXPERT = auto()            # Technical knowledge and competence
+    DEMOCRATIC = auto()         # Popular consent and participation
 
 
 # ───────────────────────────────────────────────
