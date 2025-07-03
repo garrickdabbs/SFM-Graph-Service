@@ -6,6 +6,15 @@ sfm_data
 SFM_Graph_Service.egg-info
 *.egg-info
 .coverage*
+*coverage*
+coverage
+.coverage
+dist
+build
+*.egg
+*.whl
+*.tar.gz
+*.zip
 .cache
 htmlcov
 .coverage/*
