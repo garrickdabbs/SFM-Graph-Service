@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: SFM-Graph-Service
+Version: 1.0.0
+Summary: A Social Fabric Matrix framework for modeling and forecasting changes to US commodity grain prices.
+Author: Your Name
+Author-email: your.email@example.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+License-File: LICENSE
+Requires-Dist: networkx
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
