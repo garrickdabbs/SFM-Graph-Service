@@ -171,7 +171,10 @@ async def get_quick_analysis(service: SFMService = Depends(get_sfm_service_depen
     
     Returns summary statistics, health status, and top central nodes.
     """
-    return quick_analysis(service)
+    result = quick_analysis(service)
+    if "error" in result:
+        raise HTTPException(status_code=500, detail=result["error"])
+    return result
 
 @app.get("/analytics/centrality", response_model=CentralityAnalysis, tags=["Analytics"])
 async def analyze_centrality(
