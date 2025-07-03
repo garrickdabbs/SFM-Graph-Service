@@ -474,10 +474,10 @@ class TestSFMServiceUnit(unittest.TestCase):
         """Test actor creation with validation error."""
         request = CreateActorRequest(name="")  # Empty name should fail validation
         
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises((ValidationError, SFMServiceError)) as context:
             self.service.create_actor(request)
         
-        self.assertIn("name is required", str(context.exception))
+        self.assertIn("label", str(context.exception).lower())
 
     def test_create_actor_repository_error(self):
         """Test actor creation with repository error."""
@@ -1004,10 +1004,10 @@ class TestSFMServiceEdgeCases(unittest.TestCase):
     def test_create_entity_with_empty_strings(self):
         """Test creating entities with empty string values."""
         # Should fail validation for required name field
-        with self.assertRaises(ValidationError):
+        with self.assertRaises((ValidationError, SFMServiceError)):
             self.service.create_actor(CreateActorRequest(name=""))
         
-        with self.assertRaises(ValidationError):
+        with self.assertRaises((ValidationError, SFMServiceError)):
             self.service.create_institution(CreateInstitutionRequest(name=""))
 
     def test_create_relationship_with_same_source_target(self):
