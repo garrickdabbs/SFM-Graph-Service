@@ -2440,7 +2440,7 @@ class EnumValidator:
             )
 
         # Formal rules should typically apply to formal institutions
-        if (layer == InstitutionLayer.FORMAL_RULE and 
+        if (layer == InstitutionLayer.FORMAL_RULE and
             institution_type in ['BeliefSystem', 'ValueSystem']):
             raise IncompatibleEnumError(
                 f"FORMAL_RULE layer is typically not appropriate for {institution_type}. "
