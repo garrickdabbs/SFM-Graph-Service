@@ -114,6 +114,7 @@ See Also:
 from __future__ import annotations
 
 from enum import Enum, auto
+from typing import Dict, List, Type, Union, Callable, Any
 
 # Module metadata
 __version__ = "1.0.0"
@@ -2593,7 +2594,7 @@ class EnumValidator:
             )
 
         # Define contexts where specific enums are required
-        required_contexts = {
+        required_contexts: Dict[str, List[Type[Enum]]] = {
             'financial_transaction': [FlowNature, FlowType],
             'policy_implementation': [PolicyInstrumentType],
             'institutional_analysis': [InstitutionLayer],
@@ -2737,7 +2738,7 @@ class EnumValidator:
         return "Check the relationship documentation for valid combinations."
 
 
-def validate_enum_operation(operation_name: str):
+def validate_enum_operation(operation_name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Decorator to validate enum operations and provide better error messages.
 
     Args:
@@ -2746,8 +2747,8 @@ def validate_enum_operation(operation_name: str):
     Returns:
         Decorator function
     """
-    def decorator(func):
-        def wrapper(*args, **kwargs):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
                 return func(*args, **kwargs)
             except (TypeError, ValueError, AttributeError) as e:

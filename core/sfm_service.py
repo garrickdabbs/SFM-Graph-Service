@@ -278,14 +278,6 @@ class ValidationError(SFMServiceError):
         super().__init__(message, "VALIDATION_ERROR", {"field": field, "value": value})
 
 
-class SecurityValidationError(ValidationError):
-    """Security validation error - extends ValidationError for security issues."""
-
-    def __init__(self, message: str, field: Optional[str] = None, value: Any = None):
-        super().__init__(message, field, value)
-        self.error_code = "SECURITY_VALIDATION_ERROR"
-
-
 class NotFoundError(SFMServiceError):
     """Entity not found error."""
 
@@ -941,7 +933,7 @@ class SFMService:
         Returns:
             Tuple of (total_nodes, type_counts_dict)
         """
-        type_counts = {}
+        type_counts: Dict[str, int] = {}
         try:
             # Iterate through nodes and count by type
             # This handles both real graphs and mock objects gracefully
@@ -964,7 +956,7 @@ class SFMService:
         Returns:
             Tuple of (total_relationships, kind_counts_dict)
         """
-        rel_counts = {}
+        rel_counts: Dict[str, int] = {}
         try:
             # Access relationships attribute safely
             relationships = getattr(graph, 'relationships', {})

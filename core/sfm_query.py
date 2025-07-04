@@ -238,7 +238,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
         super().__init__(graph)
         self.nx_graph = self._build_networkx_graph()
 
-    def _build_networkx_graph(self):
+    def _build_networkx_graph(self) -> nx.MultiDiGraph:
         """Convert SFMGraph to NetworkX graph for analysis."""
         # Create directed multigraph to handle multiple relationships
         nx_graph = nx.MultiDiGraph()
@@ -441,9 +441,9 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
     ) -> FlowAnalysis:
         """Trace flows of specific resource types through the network."""
         # This is a simplified implementation - would need more sophisticated flow analysis
-        flow_paths = []
-        bottlenecks = []
-        flow_volumes = {}
+        flow_paths: List[List[uuid.UUID]] = []
+        bottlenecks: List[uuid.UUID] = []
+        flow_volumes: Dict[uuid.UUID, float] = {}
 
         # Find resource nodes of the specified type
         resource_nodes = [
@@ -515,7 +515,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
             affected_nodes = list(ego_graph.nodes())
 
             # Categorize affected nodes by type
-            impact_analysis = {
+            impact_analysis: Dict[str, Any] = {
                 "total_affected_nodes": len(affected_nodes)
                 - 1,  # Exclude policy node itself
                 "affected_actors": [],
@@ -653,7 +653,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
         if len(time_slice_graphs) < 2:
             return {"error": "Need at least 2 time slices for temporal analysis"}
 
-        analysis = {
+        analysis: Dict[str, Any] = {
             "time_periods": len(time_slice_graphs),
             "node_evolution": {},
             "relationship_evolution": {},
@@ -713,7 +713,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
 
     def assess_network_vulnerabilities(self) -> Dict[str, Any]:
         """Comprehensive vulnerability assessment of the network."""
-        vulnerabilities = {
+        vulnerabilities: Dict[str, Any] = {
             "critical_nodes": [],
             "single_points_of_failure": [],
             "fragmentation_risk": 0.0,
@@ -766,7 +766,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
 
         return vulnerabilities
 
-    def _calculate_connectivity_impact(self, sim_graph, original_components, original_largest):
+    def _calculate_connectivity_impact(self, sim_graph: nx.MultiDiGraph, original_components: int, original_largest: int) -> Dict[str, Any]:
         """Calculate connectivity impact metrics."""
         new_components = nx.number_weakly_connected_components(sim_graph)
         if sim_graph.number_of_nodes() > 0:
@@ -785,7 +785,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
             )
         }
 
-    def _simulate_cascade_failures(self, sim_graph):
+    def _simulate_cascade_failures(self, sim_graph: nx.MultiDiGraph) -> List[Any]:
         """Simulate cascading node failures."""
         cascade_nodes = []
         # Simple cascade model: remove nodes that lose significant connections
@@ -836,7 +836,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
 
         return impact_results
 
-    def _get_relevant_flows(self, flow_type: FlowNature):
+    def _get_relevant_flows(self, flow_type: FlowNature) -> List[Tuple[Any, Any, Dict[str, Any]]]:
         """Get flows of the specified type."""
         relevant_flows = []
         for rel in self.nx_graph.edges(data=True):
@@ -846,9 +846,9 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
                     relevant_flows.append(rel)
         return relevant_flows
 
-    def _analyze_flow_distribution(self, relevant_flows):
+    def _analyze_flow_distribution(self, relevant_flows: List[Tuple[Any, Any, Dict[str, Any]]]) -> Dict[str, int]:
         """Analyze flow distribution by node type."""
-        node_flow_counts = {}
+        node_flow_counts: Dict[str, int] = {}
         for source, target, _ in relevant_flows:  # Use _ for unused variable
             source_type = type(self.nx_graph.nodes[source]["data"]).__name__
             target_type = type(self.nx_graph.nodes[target]["data"]).__name__
@@ -857,9 +857,9 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
             node_flow_counts[flow_key] = node_flow_counts.get(flow_key, 0) + 1
         return node_flow_counts
 
-    def _identify_major_pathways(self, relevant_flows):
+    def _identify_major_pathways(self, relevant_flows: List[Tuple[Any, Any, Dict[str, Any]]]) -> List[Tuple[str, float]]:
         """Identify major flow pathways (high-volume routes)."""
-        pathway_volumes = {}
+        pathway_volumes: Dict[str, float] = {}
         for source, target, data in relevant_flows:
             pathway_key = f"{source} -> {target}"
             volume = data.get("weight", 1.0)
@@ -896,7 +896,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
 
     def identify_flow_inefficiencies(self) -> Dict[str, Any]:
         """Identify inefficiencies in flow patterns."""
-        inefficiencies = {
+        inefficiencies: Dict[str, Any] = {
             "redundant_paths": [],
             "flow_imbalances": [],
             "underutilized_connections": [],
@@ -941,7 +941,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
 
         return inefficiencies
 
-    def _build_networkx_from_graph(self, sfm_graph: SFMGraph):
+    def _build_networkx_from_graph(self, sfm_graph: SFMGraph) -> nx.MultiDiGraph:
         """Helper method to build NetworkX graph from SFMGraph."""
         nx_graph = nx.MultiDiGraph()
 

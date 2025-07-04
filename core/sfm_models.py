@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Iterator, Tuple
 from datetime import datetime
 from core.sfm_enums import (
     InstitutionLayer,
@@ -85,7 +85,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
     data_quality: Optional[str] = None  # Description of data quality
     previous_version_id: Optional[uuid.UUID] = None
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Tuple[str, Any]]:
         """Iterator that yields (attribute_name, attribute_value) pairs."""
         for attr_name, attr_value in self.__dict__.items():
             yield attr_name, attr_value
@@ -172,7 +172,7 @@ class Flow(Node):  # pylint: disable=too-many-instance-attributes
     instrumental_component: Optional[float] = None
     temporal_dynamics: Optional[TemporalDynamics] = None  # Change over time
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate flow nature and type combination after initialization."""
         # Only validate if flow_type is a FlowType enum (not string)
         if isinstance(self.flow_type, FlowType):
@@ -220,7 +220,7 @@ class Indicator(Node):
     threshold_values: Dict[str, float] = field(default_factory=dict)
     temporal_dynamics: Optional[TemporalDynamics] = None  # Track changes over time
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate indicator configuration after initialization."""
         # Validate value category context if measurement unit suggests measurement type
         if self.value_category and self.measurement_unit:
@@ -303,7 +303,7 @@ class PolicyInstrument(Node):
     compliance_mechanism: Optional[str] = None
     effectiveness_measure: Optional[float] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate policy instrument configuration after initialization."""
         # Validate instrument type if target behavior is specified
         if self.target_behavior:
@@ -493,7 +493,6 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
     previous_version_id: Optional[uuid.UUID] = None
     model_metadata: Optional[ModelMetadata] = None
     validation_rules: List[ValidationRule] = field(default_factory=list)
-    network_metrics: Dict[uuid.UUID, NetworkMetrics] = field(default_factory=dict)
 
     def add_node(self, node: Node) -> Node:  # pylint: disable=too-many-branches
         """Add a node to the appropriate collection based on its type."""
@@ -584,7 +583,7 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
                 return node
         return None
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Node]:
         """Iterate over all nodes in the SFMGraph."""
         for collection in [
             self.actors,
@@ -639,7 +638,7 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
             + len(self.network_metrics)
         )
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear all nodes and relationships from the graph."""
         self.actors.clear()
         self.institutions.clear()

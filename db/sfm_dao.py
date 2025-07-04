@@ -299,7 +299,7 @@ class NetworkXSFMRepository(SFMRepository):
         self, time_slice: TimeSlice, node_type: Optional[Type[Node]] = None
     ) -> List[Node]:
         """Find nodes associated with a specific time slice."""
-        result = []
+        result: List[Node] = []
 
         for node in self.list_nodes(node_type):
             # Check if node is a Flow and has time attribute
@@ -312,7 +312,7 @@ class NetworkXSFMRepository(SFMRepository):
         self, spatial_unit: SpatialUnit, node_type: Optional[Type[Node]] = None
     ) -> List[Node]:
         """Find nodes associated with a specific spatial unit."""
-        result = []
+        result: List[Node] = []
 
         for node in self.list_nodes(node_type):
             # Check if node is a Flow and has space attribute
