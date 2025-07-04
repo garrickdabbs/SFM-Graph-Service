@@ -23,6 +23,17 @@ from core.sfm_models import (
 )
 from core.sfm_enums import ResourceType, FlowNature
 
+# Public API
+__all__ = [
+    'AnalysisType',
+    'QueryResult',
+    'NodeMetrics',
+    'FlowAnalysis',
+    'SFMQueryEngine',
+    'NetworkXSFMQueryEngine',
+    'SFMQueryFactory',
+]
+
 
 class AnalysisType(Enum):
     """Types of SFM analysis supported."""

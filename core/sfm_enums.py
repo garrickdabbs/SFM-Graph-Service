@@ -2440,7 +2440,8 @@ class EnumValidator:
             )
 
         # Formal rules should typically apply to formal institutions
-        if layer == InstitutionLayer.FORMAL_RULE and institution_type in ['BeliefSystem', 'ValueSystem']:
+        if (layer == InstitutionLayer.FORMAL_RULE and 
+            institution_type in ['BeliefSystem', 'ValueSystem']):
             raise IncompatibleEnumError(
                 f"FORMAL_RULE layer is typically not appropriate for {institution_type}. "
                 f"Consider using CULTURAL_VALUE or KNOWLEDGE_SYSTEM layers for "
@@ -2484,8 +2485,9 @@ class EnumValidator:
 
         if (instrument_type, target_context.lower()) in inappropriate_combinations:
             raise IncompatibleEnumError(
-                f"Policy instrument {instrument_type.name} may not be appropriate for {target_context} context. "
-                f"Consider alternative instrument types that better align with the target context."
+                f"Policy instrument {instrument_type.name} may not be appropriate for "
+                f"{target_context} context. Consider alternative instrument types that "
+                f"better align with the target context."
             )
 
     @staticmethod
@@ -2529,8 +2531,9 @@ class EnumValidator:
 
         if (context_lower == 'quantitative' and category in qualitative_preferred):
             raise IncompatibleEnumError(
-                f"Value category {category.name} is typically difficult to measure quantitatively. "
-                f"Consider qualitative measurement approaches or complementary quantitative indicators."
+                f"Value category {category.name} is typically difficult to measure "
+                f"quantitatively. Consider qualitative measurement approaches or "
+                f"complementary quantitative indicators."
             )
 
         if (context_lower == 'qualitative' and category in quantitative_preferred):

@@ -101,6 +101,33 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=Node)  # Generic type for Node entities
 
+# Public API
+__all__ = [
+    # DTOs
+    'CreateActorRequest',
+    'CreateInstitutionRequest', 
+    'CreatePolicyRequest',
+    'CreateResourceRequest',
+    'CreateRelationshipRequest',
+    'NodeResponse',
+    'RelationshipResponse',
+    'GraphStatistics',
+    'CentralityAnalysis',
+    'PolicyImpactAnalysis',
+    'ServiceStatus',
+    'ServiceHealth',
+    'SFMServiceConfig',
+    'SFMServiceError',
+    'ValidationError',
+    'NotFoundError',
+    'SFMService',
+    'DEFAULT_PAGE_LIMIT',
+    'DEFAULT_PAGE_OFFSET',
+    'MAX_PAGE_LIMIT',
+    'DEFAULT_GRAPH_SIZE_LIMIT',
+    'quick_analysis',
+]
+
 
 # ═══ DATA TRANSFER OBJECTS (DTOs) FOR API ═══
 

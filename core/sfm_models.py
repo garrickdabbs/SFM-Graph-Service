@@ -35,6 +35,42 @@ from core.sfm_enums import (
     EnumValidator,
 )
 
+# Public API
+__all__ = [
+    # Dimensional entities
+    'TimeSlice',
+    'SpatialUnit',
+    'Scenario',
+    'Node',
+    'Actor',
+    'Institution',
+    'Policy',
+    'Resource',
+    'Process',
+    'Flow',
+    'BeliefSystem',
+    'FeedbackLoop',
+    'TechnologySystem',
+    'Indicator',
+    'AnalyticalContext',
+    'SystemProperty',
+    'ValueSystem',
+    'CeremonialBehavior',
+    'InstrumentalBehavior',
+    'PolicyInstrument',
+    'GovernanceStructure',
+    'ValueFlow',
+    'ChangeProcess',
+    'CognitiveFramework',
+    'BehavioralPattern',
+    'TemporalDynamics',
+    'ValidationRule',
+    'ModelMetadata',
+    'Relationship',
+    'SFMGraph',
+    'NetworkMetrics',
+]
+
 
 # ───────────────────────────────────────────────
 # DIMENSIONAL “META” ENTITIES

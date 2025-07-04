@@ -22,6 +22,20 @@ from urllib.parse import urlparse
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# Public API
+__all__ = [
+    'SecurityValidationError',
+    'sanitize_string',
+    'sanitize_description',
+    'validate_metadata',
+    'validate_url',
+    'validate_node_label',
+    'validate_node_description',
+    'validate_and_sanitize_node_data',
+    'MAX_STRING_LENGTH',
+    'MAX_DESCRIPTION_LENGTH',
+]
+
 # Security configuration constants
 MAX_STRING_LENGTH = 1000
 MAX_DESCRIPTION_LENGTH = 2000
