@@ -114,7 +114,7 @@ See Also:
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import Dict, List, Type, Union, Callable, Any
+from typing import Dict, List, Type, Callable, Any
 
 # Module metadata
 __version__ = "1.0.0"
@@ -2260,8 +2260,11 @@ class EnumValidator:
                 ('Policy', 'Institution'),
                 ('Policy', 'Resource')  # Policies can govern resources (regulations)
             ],
-            'description': 'GOVERNS relationship requires entities capable of authority or regulation',
-            'invalid_message': 'GOVERNS relationship requires authority-capable entities (Actors, Institutions, Policies) governing appropriate targets'
+            'description': ('GOVERNS relationship requires entities capable of '
+                           'authority or regulation'),
+            'invalid_message': ('GOVERNS relationship requires authority-capable '
+                               'entities (Actors, Institutions, Policies) '
+                               'governing appropriate targets')
         },
         RelationshipKind.EMPLOYS: {
             'valid_combinations': [
@@ -2269,7 +2272,8 @@ class EnumValidator:
                 ('Institution', 'Actor')  # Organizations can employ people
             ],
             'description': 'EMPLOYS relationship for labor relationships',
-            'invalid_message': 'EMPLOYS relationship requires Actor or Institution employing Actor entities'
+            'invalid_message': ('EMPLOYS relationship requires Actor or Institution '
+                               'employing Actor entities')
         },
         RelationshipKind.OWNS: {
             'valid_combinations': [
@@ -2278,8 +2282,10 @@ class EnumValidator:
                 ('Actor', 'TechnologySystem'),
                 ('Institution', 'TechnologySystem')
             ],
-            'description': 'OWNS relationship requires an entity capable of ownership and an ownable resource',
-            'invalid_message': 'OWNS relationship requires Actor/Institution owning Resource/TechnologySystem'
+            'description': ('OWNS relationship requires an entity capable of ownership '
+                           'and an ownable resource'),
+            'invalid_message': ('OWNS relationship requires Actor/Institution '
+                               'owning Resource/TechnologySystem')
         },
         RelationshipKind.USES: {
             'valid_combinations': [
@@ -2291,7 +2297,8 @@ class EnumValidator:
                 ('Process', 'Institution')
             ],
             'description': 'USES relationship requires a user and a usable entity',
-            'invalid_message': 'USES relationship requires Actor/Process using Resource/TechnologySystem/Institution'
+            'invalid_message': ('USES relationship requires Actor/Process using '
+                               'Resource/TechnologySystem/Institution')
         },
         RelationshipKind.PRODUCES: {
             'valid_combinations': [
@@ -2309,7 +2316,9 @@ class EnumValidator:
                 ('PolicyInstrument', 'Resource')
             ],
             'description': 'PRODUCES relationship requires a producer and a producible output',
-            'invalid_message': 'PRODUCES relationship requires Actor/Process/TechnologySystem/PolicyInstrument producing Resource/Flow/ValueFlow'
+            'invalid_message': ('PRODUCES relationship requires '
+                               'Actor/Process/TechnologySystem/PolicyInstrument '
+                               'producing Resource/Flow/ValueFlow')
         }
     }
 
@@ -2406,8 +2415,8 @@ class EnumValidator:
 
         if (nature, flow_type) in strictly_incompatible:
             raise IncompatibleEnumError(
-                f"Flow nature {nature.name} is semantically incompatible with flow type {flow_type.name}. "
-                f"Consider using compatible combinations."
+                f"Flow nature {nature.name} is semantically incompatible with "
+                f"flow type {flow_type.name}. Consider using compatible combinations."
             )
 
     @staticmethod
@@ -2434,7 +2443,8 @@ class EnumValidator:
         if layer == InstitutionLayer.FORMAL_RULE and institution_type in ['BeliefSystem', 'ValueSystem']:
             raise IncompatibleEnumError(
                 f"FORMAL_RULE layer is typically not appropriate for {institution_type}. "
-                f"Consider using CULTURAL_VALUE or KNOWLEDGE_SYSTEM layers for belief/value systems."
+                f"Consider using CULTURAL_VALUE or KNOWLEDGE_SYSTEM layers for "
+                f"belief/value systems."
             )
 
     @staticmethod

@@ -75,9 +75,6 @@ from core.sfm_query import SFMQueryEngine, NetworkXSFMQueryEngine
 from core.security_validators import (
     validate_and_sanitize_node_data,
     SecurityValidationError,
-    validate_node_label,
-    validate_node_description,
-    validate_metadata,
 )
 from db.sfm_dao import (
     SFMRepositoryFactory,
@@ -465,7 +462,8 @@ class SFMService:
                 data = validate_and_sanitize_node_data(data)
             except SecurityValidationError as e:
                 logger.warning("Security validation failed for actor creation: %s", e.message)
-                raise ValidationError(f"Security validation failed: {e.message}", e.field, e.value) from e
+                raise ValidationError(f"Security validation failed: {e.message}",
+                                      e.field, e.value) from e
 
             if self.config.validation_enabled:
                 if not data.get("name"):
@@ -514,7 +512,8 @@ class SFMService:
                 data = validate_and_sanitize_node_data(data)
             except SecurityValidationError as e:
                 logger.warning("Security validation failed for institution creation: %s", e.message)
-                raise ValidationError(f"Security validation failed: {e.message}", e.field, e.value) from e
+                raise ValidationError(f"Security validation failed: {e.message}",
+                                      e.field, e.value) from e
 
             if self.config.validation_enabled:
                 if not data.get("name"):
@@ -560,7 +559,8 @@ class SFMService:
                 data = validate_and_sanitize_node_data(data)
             except SecurityValidationError as e:
                 logger.warning("Security validation failed for policy creation: %s", e.message)
-                raise ValidationError(f"Security validation failed: {e.message}", e.field, e.value) from e
+                raise ValidationError(f"Security validation failed: {e.message}",
+                                      e.field, e.value) from e
 
             if self.config.validation_enabled:
                 if not data.get("name"):
@@ -609,7 +609,8 @@ class SFMService:
                 data = validate_and_sanitize_node_data(data)
             except SecurityValidationError as e:
                 logger.warning("Security validation failed for resource creation: %s", e.message)
-                raise ValidationError(f"Security validation failed: {e.message}", e.field, e.value) from e
+                raise ValidationError(f"Security validation failed: {e.message}",
+                                      e.field, e.value) from e
 
             if self.config.validation_enabled:
                 if not data.get("name"):
@@ -1291,4 +1292,5 @@ def quick_analysis(service: SFMService) -> Dict[str, Any]:
         }
     except Exception as e:
         logger.error("Quick analysis failed: %s", e, exc_info=True)
-        return {"error": "An internal error occurred. Please try again later.", "analysis_timestamp": datetime.now().isoformat()}
+        return {"error": "An internal error occurred. Please try again later.",
+                "analysis_timestamp": datetime.now().isoformat()}
