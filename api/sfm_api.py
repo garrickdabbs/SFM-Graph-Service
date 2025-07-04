@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
 # Rate limiting configuration
 RATE_LIMIT_REQUESTS = 100  # requests per minute
 RATE_LIMIT_WINDOW = 60     # seconds
-rate_limit_storage = defaultdict(deque)
+rate_limit_storage: defaultdict[str, deque[float]] = defaultdict(deque)
 
 def check_rate_limit(request: Request) -> bool:
     """
