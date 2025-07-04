@@ -13,7 +13,7 @@ for the Social Fabric Matrix Framework experimental service.
 # from .utils import migrate, seed_data
 
 # Define what is available to import from this package
-__all__ = [
+__all__: list[str] = [
     # "get_db_session",
     # "init_db",
     # "Base",

@@ -46,7 +46,7 @@ DANGEROUS_REGEX = re.compile('|'.join(DANGEROUS_PATTERNS), re.IGNORECASE)
 class SecurityValidationError(Exception):
     """Raised when input fails security validation."""
     
-    def __init__(self, message: str, field: str = None, value: Any = None):
+    def __init__(self, message: str, field: Optional[str] = None, value: Optional[Any] = None) -> None:
         self.message = message
         self.field = field
         self.value = value
@@ -147,13 +147,16 @@ def _sanitize_dict(data: Dict[str, Any], depth: int) -> Dict[str, Any]:
     if depth <= 0:
         raise SecurityValidationError("Metadata nesting too deep", field="depth", value=depth)
     
-    sanitized = {}
+    sanitized: Dict[str, Any] = {}
     for key, value in data.items():
         # Sanitize key
+        key_str: str
         if not isinstance(key, str):
-            key = str(key)
+            key_str = str(key)
+        else:
+            key_str = key
         
-        sanitized_key = sanitize_string(key, MAX_METADATA_VALUE_LENGTH)
+        sanitized_key = sanitize_string(key_str, MAX_METADATA_VALUE_LENGTH)
         
         # Sanitize value based on type
         if isinstance(value, str):
@@ -187,7 +190,7 @@ def _sanitize_list(data: List[Any], depth: int) -> List[Any]:
     if depth <= 0:
         raise SecurityValidationError("Metadata nesting too deep", field="depth", value=depth)
     
-    sanitized = []
+    sanitized: List[Any] = []
     for item in data:
         if isinstance(item, str):
             sanitized.append(sanitize_string(item, MAX_METADATA_VALUE_LENGTH))
@@ -280,7 +283,7 @@ def validate_and_sanitize_node_data(data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Sanitized node data dictionary
     """
-    sanitized = {}
+    sanitized: Dict[str, Any] = {}
     
     # Validate required fields
     if "name" in data:
