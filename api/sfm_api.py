@@ -447,7 +447,7 @@ async def create_relationship(
 async def get_relationship(
     relationship_id: str = Path(..., description="UUID of the relationship"),
     service: SFMService = Depends(get_sfm_service_dependency)
-):
+) -> RelationshipResponse:
     """Get a specific relationship by ID."""
     relationship = service.get_relationship(relationship_id)
     if not relationship:
@@ -462,7 +462,7 @@ async def connect_entities(
     weight: float = Body(1.0, description="Strength of the relationship"),
     meta: Optional[Dict[str, str]] = Body(None, description="Additional metadata"),
     service: SFMService = Depends(get_sfm_service_dependency)
-):
+) -> RelationshipResponse:
     """
     Convenience endpoint to connect two entities.
     
@@ -478,7 +478,7 @@ async def list_nodes(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of nodes to return"),
     offset: int = Query(0, ge=0, description="Number of nodes to skip"),
     service: SFMService = Depends(get_sfm_service_dependency)
-):
+) -> List[NodeResponse]:
     """
     List all nodes with optional filtering and pagination.
     
@@ -492,7 +492,7 @@ async def list_relationships(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of relationships to return"),
     offset: int = Query(0, ge=0, description="Number of relationships to skip"),
     service: SFMService = Depends(get_sfm_service_dependency)
-):
+) -> List[RelationshipResponse]:
     """
     List all relationships with optional filtering and pagination.
     
@@ -506,7 +506,7 @@ async def list_relationships(
 async def bulk_create_actors(
     requests: List[CreateActorRequest],
     service: SFMService = Depends(get_sfm_service_dependency)
-):
+) -> List[NodeResponse]:
     """
     Create multiple actors in a single batch operation.
     
@@ -536,7 +536,7 @@ async def clear_all_data(
     return service.clear_all_data()
 
 @app.post("/system/reset", tags=["System Management"])
-async def reset_service():
+async def reset_service() -> Dict[str, str]:
     """
     Reset the service singleton instance.
     
@@ -634,7 +634,7 @@ async def get_api_info() -> Dict[str, Any]:
 # ═══ STARTUP EVENT ═══
 
 @app.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     """Initialize the service on startup."""
     logger.info("SFM API starting up...")
     
@@ -645,7 +645,7 @@ async def startup_event():
     logger.info(f"SFM API ready - Backend: {health.backend}, Status: {health.status.value}")
 
 @app.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     """Cleanup on shutdown."""
     logger.info("SFM API shutting down...")
     # Add any cleanup logic here
