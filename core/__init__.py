@@ -7,4 +7,3 @@ __version__ = "1.0.0"
 from . import sfm_models
 from . import sfm_enums
 from . import sfm_query
-

@@ -23,6 +23,17 @@ from core.sfm_models import (
 )
 from core.sfm_enums import ResourceType, FlowNature
 
+# Public API
+__all__ = [
+    'AnalysisType',
+    'QueryResult',
+    'NodeMetrics',
+    'FlowAnalysis',
+    'SFMQueryEngine',
+    'NetworkXSFMQueryEngine',
+    'SFMQueryFactory',
+]
+
 
 class AnalysisType(Enum):
     """Types of SFM analysis supported."""
@@ -766,7 +777,9 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
 
         return vulnerabilities
 
-    def _calculate_connectivity_impact(self, sim_graph: nx.MultiDiGraph, original_components: int, original_largest: int) -> Dict[str, Any]:
+    def _calculate_connectivity_impact(self, sim_graph: nx.MultiDiGraph,
+                                       original_components: int,
+                                       original_largest: int) -> Dict[str, Any]:
         """Calculate connectivity impact metrics."""
         new_components = nx.number_weakly_connected_components(sim_graph)
         if sim_graph.number_of_nodes() > 0:
@@ -846,7 +859,8 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
                     relevant_flows.append(rel)
         return relevant_flows
 
-    def _analyze_flow_distribution(self, relevant_flows: List[Tuple[Any, Any, Dict[str, Any]]]) -> Dict[str, int]:
+    def _analyze_flow_distribution(
+            self, relevant_flows: List[Tuple[Any, Any, Dict[str, Any]]]) -> Dict[str, int]:
         """Analyze flow distribution by node type."""
         node_flow_counts: Dict[str, int] = {}
         for source, target, _ in relevant_flows:  # Use _ for unused variable
@@ -857,7 +871,8 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
             node_flow_counts[flow_key] = node_flow_counts.get(flow_key, 0) + 1
         return node_flow_counts
 
-    def _identify_major_pathways(self, relevant_flows: List[Tuple[Any, Any, Dict[str, Any]]]) -> List[Tuple[str, float]]:
+    def _identify_major_pathways(
+            self, relevant_flows: List[Tuple[Any, Any, Dict[str, Any]]]) -> List[Tuple[str, float]]:
         """Identify major flow pathways (high-volume routes)."""
         pathway_volumes: Dict[str, float] = {}
         for source, target, data in relevant_flows:

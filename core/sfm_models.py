@@ -35,6 +35,42 @@ from core.sfm_enums import (
     EnumValidator,
 )
 
+# Public API
+__all__ = [
+    # Dimensional entities
+    'TimeSlice',
+    'SpatialUnit',
+    'Scenario',
+    'Node',
+    'Actor',
+    'Institution',
+    'Policy',
+    'Resource',
+    'Process',
+    'Flow',
+    'BeliefSystem',
+    'FeedbackLoop',
+    'TechnologySystem',
+    'Indicator',
+    'AnalyticalContext',
+    'SystemProperty',
+    'ValueSystem',
+    'CeremonialBehavior',
+    'InstrumentalBehavior',
+    'PolicyInstrument',
+    'GovernanceStructure',
+    'ValueFlow',
+    'ChangeProcess',
+    'CognitiveFramework',
+    'BehavioralPattern',
+    'TemporalDynamics',
+    'ValidationRule',
+    'ModelMetadata',
+    'Relationship',
+    'SFMGraph',
+    'NetworkMetrics',
+]
+
 
 # ───────────────────────────────────────────────
 # DIMENSIONAL “META” ENTITIES
@@ -298,7 +334,8 @@ class InstrumentalBehavior(Node):
 class PolicyInstrument(Node):
     """Specific tools used to implement policies."""
 
-    instrument_type: PolicyInstrumentType = PolicyInstrumentType.REGULATORY  # regulatory, economic, voluntary, information
+    # regulatory, economic, voluntary, information
+    instrument_type: PolicyInstrumentType = PolicyInstrumentType.REGULATORY
     target_behavior: Optional[str] = None
     compliance_mechanism: Optional[str] = None
     effectiveness_measure: Optional[float] = None
@@ -357,7 +394,8 @@ class CognitiveFramework(Node):
 class BehavioralPattern(Node):
     """Recurring patterns of behavior in the social fabric."""
 
-    pattern_type: BehaviorPatternType = BehaviorPatternType.HABITUAL  # habitual, strategic, adaptive, resistant
+    # habitual, strategic, adaptive, resistant
+    pattern_type: BehaviorPatternType = BehaviorPatternType.HABITUAL
     frequency: Optional[float] = None
     predictability: Optional[float] = None
     context_dependency: List[str] = field(default_factory=list)
@@ -374,7 +412,8 @@ class TemporalDynamics:
 
     start_time: TimeSlice
     end_time: Optional[TimeSlice] = None
-    function_type: TemporalFunctionType = TemporalFunctionType.LINEAR  # linear, exponential, logistic, etc.
+    # linear, exponential, logistic, etc.
+    function_type: TemporalFunctionType = TemporalFunctionType.LINEAR
     parameters: Dict[str, float] = field(default_factory=dict)
 
 
