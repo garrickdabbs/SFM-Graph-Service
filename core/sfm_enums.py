@@ -114,7 +114,10 @@ See Also:
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import Dict, List, Type, Callable, Any
+from typing import Dict, List, Optional, Set, Union, Type, Callable, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias, Literal
 
 # Module metadata
 __version__ = "1.0.0"
@@ -141,6 +144,8 @@ __all__ = [
     'InstitutionalChangeType',
     'TechnologyReadinessLevel',
     'LegitimacySource',
+    # Type aliases
+    'CoreValueCategory',
     # Exception classes
     'SFMEnumError',
     'IncompatibleEnumError',
@@ -319,6 +324,23 @@ class ValueCategory(Enum):
     FLEXIBILITY = auto()  # Adaptability, responsiveness, agility
     SCALABILITY = auto()  # Growth potential, expansion capability
     INTEROPERABILITY = auto()  # Compatibility, integration, coordination
+
+    @classmethod
+    def get_core_categories(cls) -> Set['ValueCategory']:
+        """Return the six core Hayden framework categories."""
+        return {cls.ECONOMIC, cls.SOCIAL, cls.ENVIRONMENTAL, 
+                cls.CULTURAL, cls.INSTITUTIONAL, cls.TECHNOLOGICAL}
+    
+    @classmethod
+    def get_extended_categories(cls) -> Set['ValueCategory']:
+        """Return extended categories beyond core framework."""
+        return set(cls) - cls.get_core_categories()
+
+
+# Type alias for core value categories
+CoreValueCategory: TypeAlias = Union[
+    ValueCategory,  # Using the full enum type for practical purposes
+]
 
 
 class InstitutionLayer(Enum):
