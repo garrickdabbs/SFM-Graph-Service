@@ -6,7 +6,7 @@ Default implementation uses NetworkX for in-memory graph storage.
 
 from abc import ABC, abstractmethod
 import uuid
-from typing import Dict, List, Optional, TypeVar, Generic, Type, Any, cast, Union
+from typing import Dict, List, Optional, TypeVar, Generic, Type, Any, cast
 import networkx as nx
 from datetime import datetime, timedelta
 
@@ -26,13 +26,11 @@ from core.sfm_models import (
     AnalyticalContext,
     SystemProperty,
     SFMGraph,
-    RelationshipKind,
     TimeSlice,
     SpatialUnit,
-    Scenario,
 )
 
-from core.sfm_enums import ResourceType, InstitutionLayer, ValueCategory
+from core.sfm_enums import ResourceType, InstitutionLayer, ValueCategory,RelationshipKind
 
 T = TypeVar("T", bound=Node)
 

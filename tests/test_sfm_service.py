@@ -46,10 +46,8 @@ from core.sfm_models import (
     Policy,
     Resource,
     Relationship,
-    SFMGraph,
-    RelationshipKind,
 )
-from core.sfm_enums import ResourceType
+from core.sfm_enums import ResourceType,RelationshipKind
 from db.sfm_dao import SFMRepositoryFactory
 
 # Import centralized mock infrastructure

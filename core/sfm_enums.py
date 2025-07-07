@@ -21,7 +21,7 @@ This module implements key concepts from Hayden's Social Fabric Matrix framework
 ### Basic Usage Examples
 
 ```python
-from core.sfm_models import Indicator, Flow, Relationship, Actor, Institution
+# from core.sfm_models import Indicator, Flow, Relationship, Actor, Institution
 from core.sfm_enums import ValueCategory, FlowNature, RelationshipKind, ResourceType
 
 # Create an economic indicator

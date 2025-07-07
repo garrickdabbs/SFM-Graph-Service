@@ -18,9 +18,9 @@ from datetime import datetime
 
 from core.sfm_models import (
     SFMGraph, Actor, Institution, Policy, Resource, Process, Flow,
-    Relationship, Node, RelationshipKind
+    Relationship, Node
 )
-from core.sfm_enums import ResourceType, InstitutionLayer, ValueCategory
+from core.sfm_enums import ResourceType, InstitutionLayer, ValueCategory, RelationshipKind
 
 
 def create_mock_graph() -> SFMGraph:

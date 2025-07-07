@@ -12,14 +12,16 @@ from datetime import datetime
 
 from core.sfm_models import (
     Node, Actor, Institution, Policy, Resource, Process, Flow, 
-    Relationship, SFMGraph, RelationshipKind
+    Relationship, SFMGraph, 
 )
 from db.sfm_dao import (
-    SFMRepository, NetworkXSFMRepository, TypedSFMRepository,
+    SFMRepository, TypedSFMRepository,
     ActorRepository, InstitutionRepository, PolicyRepository,
     ResourceRepository, ProcessRepository, FlowRepository,
     RelationshipRepository
 )
+
+from core.sfm_enums import RelationshipKind
 
 T = TypeVar("T", bound=Node)
 

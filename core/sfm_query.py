@@ -19,9 +19,8 @@ from core.sfm_models import (
     Resource,
     Relationship,
     SFMGraph,
-    RelationshipKind,
 )
-from core.sfm_enums import ResourceType, FlowNature
+from core.sfm_enums import ResourceType, FlowNature, RelationshipKind
 
 # Public API
 __all__ = [
@@ -777,7 +776,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
 
         return vulnerabilities
 
-    def _calculate_connectivity_impact(self, sim_graph: nx.MultiDiGraph,
+    def _calculate_connectivity_impact(self, sim_graph: nx.Graph,
                                        original_components: int,
                                        original_largest: int) -> Dict[str, Any]:
         """Calculate connectivity impact metrics."""
@@ -798,7 +797,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
             )
         }
 
-    def _simulate_cascade_failures(self, sim_graph: nx.MultiDiGraph) -> List[Any]:
+    def _simulate_cascade_failures(self, sim_graph: nx.Graph) -> List[Any]:
         """Simulate cascading node failures."""
         cascade_nodes = []
         # Simple cascade model: remove nodes that lose significant connections

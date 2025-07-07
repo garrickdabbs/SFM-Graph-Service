@@ -68,9 +68,8 @@ from core.sfm_models import (
     Relationship,
     Policy,
     SFMGraph,
-    RelationshipKind,
 )
-from core.sfm_enums import ResourceType
+from core.sfm_enums import ResourceType, RelationshipKind
 from core.sfm_query import SFMQueryEngine, NetworkXSFMQueryEngine
 from core.security_validators import (
     validate_and_sanitize_node_data,

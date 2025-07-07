@@ -18,9 +18,9 @@ from core.sfm_models import (
     Flow,
     Relationship,
     Node,
-    RelationshipKind,
+    
 )
-from core.sfm_enums import ResourceType, FlowNature
+from core.sfm_enums import ResourceType, FlowNature,RelationshipKind
 from core.sfm_query import (
     SFMQueryEngine,
     NetworkXSFMQueryEngine,

@@ -2,19 +2,78 @@
 
 This directory contains the fundamental data structures and analysis tools for the Social Fabric Matrix (SFM) framework.
 
-## Files Overview
+## Module Structure Overview
 
-### `sfm_models.py`
-Defines the core data classes for representing SFM entities and their relationships. These classes form the building blocks of any SFM analysis.
+The core module has been refactored into a modular structure for better organization and maintainability:
 
-### `enums.py`
+### **Data Model Modules**
+
+#### `sfm_models.py` - **Unified Import Module**
+Provides a single entry point for all SFM model classes. Imports everything from the specialized modules below while maintaining backward compatibility.
+
+#### `meta_entities.py` - **Dimensional Meta Entities**
+- `TimeSlice` - Discrete time periods for SFM accounting
+- `SpatialUnit` - Hierarchical spatial identifiers  
+- `Scenario` - Counterfactual or policy scenarios
+
+#### `base_nodes.py` - **Base Infrastructure**
+- `Node` - Generic graph node base class with UUID, metadata, versioning
+- `ValueSystem` - Base value system infrastructure
+
+#### `core_nodes.py` - **Primary SFM Entities**
+- `Actor` - Individuals, firms, agencies, communities
+- `Institution` - Rules-in-use, organizations, informal norms
+- `Policy` - Specific policy interventions (inherits from Institution)
+- `Resource` - Stocks or assets available for transformation
+- `Process` - Transformation activities (production, consumption)
+- `Flow` - Quantified transfers of resources or value
+- `ValueFlow` - Specialized flows tracking value creation/distribution
+- `GovernanceStructure` - Formal/informal governance arrangements
+
+#### `specialized_nodes.py` - **Specialized SFM Components**
+- `BeliefSystem` - Cultural myths, ideology, worldviews
+- `TechnologySystem` - Coherent systems of techniques and tools
+- `Indicator` - Measurable proxies for system performance
+- `FeedbackLoop` - Feedback loops in the social fabric
+- `SystemProperty` - System-level properties and metrics
+- `AnalyticalContext` - Analysis metadata and configuration
+- `PolicyInstrument` - Specific tools for policy implementation
+
+#### `behavioral_nodes.py` - **Behavioral and Cognitive Components**
+- `CeremonialBehavior` - Hayden's ceremonial behaviors (resist change)
+- `InstrumentalBehavior` - Problem-solving, adaptive behaviors
+- `ChangeProcess` - Models of institutional/technological change
+- `CognitiveFramework` - Mental models and worldviews
+- `BehavioralPattern` - Recurring behavioral patterns
+
+#### `metadata_models.py` - **Support Classes**
+- `TemporalDynamics` - Models change over time
+- `ValidationRule` - Data integrity validation rules
+- `ModelMetadata` - Documentation about models
+
+#### `relationships.py` - **Graph Connections**
+- `Relationship` - Typed edges connecting SFM nodes
+
+#### `graph.py` - **Graph Structure**
+- `SFMGraph` - Complete Social Fabric Matrix representation
+- `NetworkMetrics` - Network analysis metrics
+
+### **Analysis and Service Modules**
+
+#### `sfm_enums.py`
 Contains enumeration definitions that provide controlled vocabularies for categorizing entities and relationships. These ensure consistent data classification across different analyses.
 
-### `sfm_query.py`
+#### `sfm_query.py`
 Provides the query engine abstraction and NetworkX implementation for analyzing SFM graphs. This enables complex network analysis and policy impact assessment.
 
-### `sfm_service.py`
+#### `sfm_service.py`
 Provides a unified facade service that simplifies interaction with the SFM framework. This is the recommended entry point for most users, offering high-level operations without requiring direct manipulation of repositories or query engines.
+
+#### `sfm_persistence.py`
+Handles data persistence and storage operations for SFM graphs and entities.
+
+#### `security_validators.py`
+Contains validation logic for ensuring data integrity and security across the SFM framework.
 
 ## Core Data Model
 
@@ -70,15 +129,44 @@ Subsidy    0.5     0.8      -       -      -
 
 Where values represent relationship weights (e.g., influence strength, flow volume).
 
+## Usage Patterns
+
+The modular structure supports multiple import patterns:
+
+### **Recommended: Import Everything**
+```python
+from core.sfm_models import *
+
+# All classes are available
+actor = Actor(label="Test Actor", sector="Government")
+graph = SFMGraph(name="Example")
+graph.add_node(actor)
+```
+
+### **Selective Imports**
+```python
+from core.sfm_models import Actor, Institution, SFMGraph
+from core.meta_entities import TimeSlice
+from core.specialized_nodes import Indicator
+```
+
+### **Module-Specific Imports**
+```python
+from core.core_nodes import Actor, Institution
+from core.behavioral_nodes import ValueSystem
+from core.graph import SFMGraph
+from core.sfm_enums import RelationshipKind, ResourceType
+```
+
 ## Basic Usage Example
 
 ```python
 from core.sfm_models import SFMGraph, Actor, Resource, Relationship
-from core.enums import RelationshipKind, ResourceType
+from core.sfm_enums import RelationshipKind, ResourceType
 
 # Create entities
 government = Actor(label="Government", sector="Public")
-grain = Resource(label="Wheat", rtype=ResourceType.PRODUCED)
+grain = Resource(label="Wheat", rtype=ResourceType.BIOLOGICAL)
 
 # Create relationship
 regulation = Relationship(
@@ -94,6 +182,16 @@ graph.add_node(government)
 graph.add_node(grain)
 graph.add_relationship(regulation)
 ```
+
+## Benefits of the Modular Structure
+
+1. **Better Organization** - Related classes are grouped together in focused modules
+2. **Reduced Complexity** - Smaller, focused modules are easier to understand and maintain
+3. **Improved Maintainability** - Changes can be made to specific areas without affecting others
+4. **Clear Separation of Concerns** - Each module has a specific responsibility
+5. **Backward Compatibility** - Existing code using `from core.sfm_models import *` continues to work
+6. **Type Safety** - Improved type hints and reduced circular dependencies
+7. **Selective Imports** - Import only what you need for better performance
 
 ## Quick Start with SFM Service
 
@@ -157,7 +255,7 @@ print(f"Graph has {stats['total_nodes']} nodes and {stats['total_relationships']
 
 ## Relationship Types (Key Examples)
 
-From `enums.py`, relationships are categorized by function:
+From `sfm_enums.py`, relationships are categorized by function:
 
 - **Governance**: GOVERNS, REGULATES, AUTHORIZES
 - **Economic**: FUNDS, PAYS, TRADES, PRODUCES
