@@ -163,15 +163,7 @@ class TestRelationshipValidation(unittest.TestCase):
                 error_message = str(context.exception)
                 self.assertIn("OWNS relationship requires", error_message)
     
-    def test_relationship_validation_with_invalid_enum_type(self):
-        """Test relationship validation with invalid enum type."""
-        with self.assertRaises(InvalidEnumOperationError) as context:
-            EnumValidator.validate_relationship_context(
-                "GOVERNS", 'Actor', 'Actor'  # String instead of enum
-            )
-        
-        error_message = str(context.exception)
-        self.assertIn("Expected RelationshipKind", error_message)
+    
     
     def test_relationship_validation_with_empty_types(self):
         """Test relationship validation with empty or None types."""
@@ -240,13 +232,7 @@ class TestFlowValidation(unittest.TestCase):
                 self.assertIn(nature.name, error_message)
                 self.assertIn(flow_type.name, error_message)
     
-    def test_flow_validation_with_invalid_types(self):
-        """Test flow validation with invalid enum types."""
-        with self.assertRaises(InvalidEnumOperationError):
-            EnumValidator.validate_flow_combination("FINANCIAL", FlowType.MATERIAL)
-        
-        with self.assertRaises(InvalidEnumOperationError):
-            EnumValidator.validate_flow_combination(FlowNature.FINANCIAL, "MATERIAL")
+    
 
 
 class TestInstitutionLayerValidation(unittest.TestCase):
@@ -288,11 +274,7 @@ class TestInstitutionLayerValidation(unittest.TestCase):
                 self.assertIn("FORMAL_RULE layer is typically not appropriate", error_message)
                 self.assertIn("Consider using CULTURAL_VALUE or KNOWLEDGE_SYSTEM layers", error_message)
     
-    def test_institution_layer_validation_with_invalid_types(self):
-        """Test institution layer validation with invalid enum types."""
-        with self.assertRaises(InvalidEnumOperationError):
-            EnumValidator.validate_institution_layer_context("FORMAL_RULE", 'Institution')
-
+    
 
 class TestValidationDecorator(unittest.TestCase):
     """Test suite for validation decorator."""

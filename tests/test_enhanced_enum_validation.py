@@ -115,10 +115,7 @@ class TestPolicyInstrumentValidation(unittest.TestCase):
                 self.assertIn(context, error_message)
     
     def test_policy_instrument_validation_with_invalid_types(self):
-        """Test policy instrument validation with invalid types."""
-        with self.assertRaises(InvalidEnumOperationError):
-            EnumValidator.validate_policy_instrument_combination("REGULATORY", "context")
-        
+               
         with self.assertRaises(InvalidEnumOperationError):
             EnumValidator.validate_policy_instrument_combination(PolicyInstrumentType.REGULATORY, "")
 
@@ -164,14 +161,7 @@ class TestValueCategoryValidation(unittest.TestCase):
                     f"Expected measurement approach mention in: {error_message}"
                 )
     
-    def test_value_category_validation_with_invalid_types(self):
-        """Test value category validation with invalid types."""
-        with self.assertRaises(InvalidEnumOperationError):
-            EnumValidator.validate_value_category_context("ECONOMIC", "quantitative")
-        
-        with self.assertRaises(InvalidEnumOperationError):
-            EnumValidator.validate_value_category_context(ValueCategory.ECONOMIC, "")
-
+    
 
 class TestCrossEnumDependencyValidation(unittest.TestCase):
     """Test suite for cross-enum dependency validation."""

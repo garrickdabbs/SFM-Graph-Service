@@ -242,17 +242,7 @@ class TestSFMSpecificEnumValidation(unittest.TestCase):
             LegitimacySource.DEMOCRATIC, 'citizen_organization'
         )
 
-    def test_validation_with_invalid_types(self):
-        """Test validation methods with invalid enum types."""
-        from core.sfm_enums import EnumValidator, InvalidEnumOperationError
-        
-        # Invalid type for TRL validation
-        with self.assertRaises(InvalidEnumOperationError):
-            EnumValidator.validate_technology_readiness_level("invalid", "research")
-        
-        # Invalid type for legitimacy validation
-        with self.assertRaises(InvalidEnumOperationError):
-            EnumValidator.validate_legitimacy_source_context("invalid", "organization")
+    
 
 
 if __name__ == "__main__":

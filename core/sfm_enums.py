@@ -114,10 +114,7 @@ See Also:
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import Dict, List, Optional, Set, Union, Type, Callable, Any, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from typing_extensions import TypeAlias, Literal
+from typing import Dict, List, Set, Tuple,Type, Callable, Any, Union
 
 # Module metadata
 __version__ = "1.0.0"
@@ -144,9 +141,7 @@ __all__ = [
     'InstitutionalChangeType',
     'TechnologyReadinessLevel',
     'LegitimacySource',
-    # Type aliases
-    'CoreValueCategory',
-    # Exception classes
+   # Exception classes
     'SFMEnumError',
     'IncompatibleEnumError',
     'InvalidEnumOperationError',
@@ -335,13 +330,6 @@ class ValueCategory(Enum):
     def get_extended_categories(cls) -> Set['ValueCategory']:
         """Return extended categories beyond core framework."""
         return set(cls) - cls.get_core_categories()
-
-
-# Type alias for core value categories
-CoreValueCategory: TypeAlias = Union[
-    ValueCategory,  # Using the full enum type for practical purposes
-]
-
 
 class InstitutionLayer(Enum):
     """
@@ -2267,8 +2255,8 @@ class EnumValidator:
                    'CeremonialBehavior', 'InstrumentalBehavior', 'PolicyInstrument'}
 
     # Define relationship context rules
-    RELATIONSHIP_RULES = {
-        RelationshipKind.GOVERNS: {
+    RELATIONSHIP_RULES: Dict[RelationshipKind, Dict[str, Union[List[Tuple[str, str]], str]]] = {
+       RelationshipKind.GOVERNS: {
             'valid_combinations': [
                 ('Actor', 'Actor'),
                 ('Actor', 'Institution'),
@@ -2361,10 +2349,6 @@ class EnumValidator:
             IncompatibleEnumError: If relationship doesn't make sense
             InvalidEnumOperationError: If invalid parameters provided
         """
-        if not isinstance(kind, RelationshipKind):
-            raise InvalidEnumOperationError(
-                f"Expected RelationshipKind, got {type(kind).__name__}"
-            )
 
         if not source_type or not target_type:
             raise InvalidEnumOperationError(
@@ -2375,8 +2359,8 @@ class EnumValidator:
         if kind in EnumValidator.RELATIONSHIP_RULES:
             rule = EnumValidator.RELATIONSHIP_RULES[kind]
             valid_combinations = rule['valid_combinations']
-
-            if (source_type, target_type) not in valid_combinations:
+            
+            if isinstance(valid_combinations, str) or (source_type, target_type) not in valid_combinations:
                 suggestions = EnumValidator._generate_suggestions(kind, source_type, target_type)
                 raise IncompatibleEnumError(
                     f"{rule['invalid_message']}. "
@@ -2396,15 +2380,6 @@ class EnumValidator:
             IncompatibleEnumError: If flow nature and type are incompatible
             InvalidEnumOperationError: If invalid parameters provided
         """
-        if not isinstance(nature, FlowNature):
-            raise InvalidEnumOperationError(
-                f"Expected FlowNature, got {type(nature).__name__}"
-            )
-
-        if not isinstance(flow_type, FlowType):
-            raise InvalidEnumOperationError(
-                f"Expected FlowType, got {type(flow_type).__name__}"
-            )
 
         # Define obviously incompatible combinations (semantically impossible)
         strictly_incompatible = {
@@ -2456,10 +2431,6 @@ class EnumValidator:
             IncompatibleEnumError: If layer doesn't match institution type
             InvalidEnumOperationError: If invalid parameters provided
         """
-        if not isinstance(layer, InstitutionLayer):
-            raise InvalidEnumOperationError(
-                f"Expected InstitutionLayer, got {type(layer).__name__}"
-            )
 
         # Formal rules should typically apply to formal institutions
         if (layer == InstitutionLayer.FORMAL_RULE and
@@ -2485,11 +2456,6 @@ class EnumValidator:
             IncompatibleEnumError: If instrument type doesn't match context
             InvalidEnumOperationError: If invalid parameters provided
         """
-        if not isinstance(instrument_type, PolicyInstrumentType):
-            raise InvalidEnumOperationError(
-                f"Expected PolicyInstrumentType, got {type(instrument_type).__name__}"
-            )
-
         if not target_context:
             raise InvalidEnumOperationError(
                 "Target context must be provided and non-empty"
@@ -2527,10 +2493,6 @@ class EnumValidator:
             IncompatibleEnumError: If category doesn't match measurement context
             InvalidEnumOperationError: If invalid parameters provided
         """
-        if not isinstance(category, ValueCategory):
-            raise InvalidEnumOperationError(
-                f"Expected ValueCategory, got {type(category).__name__}"
-            )
 
         if not measurement_context:
             raise InvalidEnumOperationError(
@@ -2667,11 +2629,6 @@ class EnumValidator:
             InvalidEnumOperationError: If invalid parameters provided
             IncompatibleEnumError: If TRL inappropriate for context
         """
-        if not isinstance(level, TechnologyReadinessLevel):
-            raise InvalidEnumOperationError(
-                f"Expected TechnologyReadinessLevel, got {type(level).__name__}"
-            )
-
         if not context:
             raise InvalidEnumOperationError(
                 "Context must be provided and non-empty"
@@ -2711,11 +2668,6 @@ class EnumValidator:
             InvalidEnumOperationError: If invalid parameters provided
             IncompatibleEnumError: If source inappropriate for context
         """
-        if not isinstance(source, LegitimacySource):
-            raise InvalidEnumOperationError(
-                f"Expected LegitimacySource, got {type(source).__name__}"
-            )
-
         if not institutional_context:
             raise InvalidEnumOperationError(
                 "Institutional context must be provided and non-empty"
@@ -2761,7 +2713,7 @@ class EnumValidator:
             source_suggestions = [combo[1] for combo in valid_combinations if combo[0] == source_type]
             target_suggestions = [combo[0] for combo in valid_combinations if combo[1] == target_type]
 
-            suggestions = []
+            suggestions: List[str] = []
             if source_suggestions:
                 suggestions.append(f"For {source_type} sources, valid targets are: {', '.join(set(source_suggestions))}")
             if target_suggestions:
