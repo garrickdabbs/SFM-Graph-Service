@@ -16,7 +16,7 @@ Security measures implemented:
 import re
 import html
 import logging
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, List, cast
 from urllib.parse import urlparse
 
 # Configure logging
@@ -82,8 +82,8 @@ def sanitize_string(value: str, max_length: int = MAX_STRING_LENGTH) -> str:
     Raises:
         SecurityValidationError: If string is too long or contains dangerous patterns
     """
-    if not isinstance(value, str):
-        return str(value)
+    # Ensure the input is treated as a string
+    value = str(value)
 
     # Check length
     if len(value) > max_length:
@@ -136,10 +136,6 @@ def validate_metadata(metadata: Dict[str, Any],
     Raises:
         SecurityValidationError: If metadata fails validation
     """
-    if not isinstance(metadata, dict):
-        raise SecurityValidationError("Metadata must be a dictionary", field="type",
-                                      value=type(metadata))
-
     if len(metadata) > MAX_METADATA_KEYS:
         raise SecurityValidationError(
             f"Too many metadata keys: {len(metadata)} > {MAX_METADATA_KEYS}",
@@ -150,7 +146,7 @@ def validate_metadata(metadata: Dict[str, Any],
     return _sanitize_dict(metadata, max_depth)
 
 
-def _sanitize_dict(data: Dict[str, Any], depth: int) -> Dict[str, Any]:
+def _sanitize_dict(data: Dict[Any, Any], depth: int) -> Dict[str, Any]:
     """
     Recursively sanitize dictionary values.
 
@@ -167,21 +163,16 @@ def _sanitize_dict(data: Dict[str, Any], depth: int) -> Dict[str, Any]:
     sanitized: Dict[str, Any] = {}
     for key, value in data.items():
         # Sanitize key
-        key_str: str
-        if not isinstance(key, str):
-            key_str = str(key)
-        else:
-            key_str = key
-
+        key_str: str = str(key)
         sanitized_key = sanitize_string(key_str, MAX_METADATA_VALUE_LENGTH)
 
         # Sanitize value based on type
         if isinstance(value, str):
             sanitized[sanitized_key] = sanitize_string(value, MAX_METADATA_VALUE_LENGTH)
         elif isinstance(value, dict):
-            sanitized[sanitized_key] = _sanitize_dict(value, depth - 1)
+            sanitized[sanitized_key] = _sanitize_dict(cast(Dict[Any, Any], value), depth - 1)
         elif isinstance(value, list):
-            sanitized[sanitized_key] = _sanitize_list(value, depth - 1)
+            sanitized[sanitized_key] = _sanitize_list(cast(List[Any], value), depth - 1)
         elif isinstance(value, (int, float, bool)):
             sanitized[sanitized_key] = value
         elif value is None:
@@ -212,9 +203,9 @@ def _sanitize_list(data: List[Any], depth: int) -> List[Any]:
         if isinstance(item, str):
             sanitized.append(sanitize_string(item, MAX_METADATA_VALUE_LENGTH))
         elif isinstance(item, dict):
-            sanitized.append(_sanitize_dict(item, depth - 1))
+            sanitized.append(_sanitize_dict(cast(Dict[Any, Any], item), depth - 1))
         elif isinstance(item, list):
-            sanitized.append(_sanitize_list(item, depth - 1))
+            sanitized.append(_sanitize_list(cast(List[Any], item), depth - 1))
         elif isinstance(item, (int, float, bool)):
             sanitized.append(item)
         elif item is None:
@@ -238,8 +229,8 @@ def validate_url(url: str) -> bool:
     Raises:
         SecurityValidationError: If URL is invalid or unsafe
     """
-    if not isinstance(url, str):
-        raise SecurityValidationError("URL must be a string", field="type", value=type(url))
+    if not url:
+        raise SecurityValidationError("URL must be a non-empty string", field="type", value=url)
 
     # Check for dangerous URL schemes
     if url.lower().startswith(('javascript:', 'vbscript:', 'data:')):
@@ -266,7 +257,7 @@ def validate_node_label(label: str) -> str:
     Returns:
         Sanitized label
     """
-    if not label or not isinstance(label, str):
+    if not label:
         raise SecurityValidationError("Label must be a non-empty string", field="label",
                                       value=label)
 
@@ -286,8 +277,7 @@ def validate_node_description(description: Optional[str]) -> Optional[str]:
     if description is None:
         return None
 
-    if not isinstance(description, str):
-        description = str(description)
+    description = str(description)
 
     return sanitize_description(description.strip())
 
