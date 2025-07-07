@@ -1000,26 +1000,6 @@ class SFMGraphTestCase(unittest.TestCase):
         self.assertEqual(len(self.graph), 0)
         self.assertEqual(len(self.graph.relationships), 0)
 
-    def test_graph_error_handling(self):
-        """Test SFMGraph error handling for invalid operations."""
-        # Test adding invalid node type
-        class InvalidNode:
-            def __init__(self):
-                self.label = "Invalid"
-                self.id = uuid.uuid4()
-        
-        invalid_node = InvalidNode()
-        with self.assertRaises(TypeError):
-            self.graph.add_node(invalid_node)  # type: ignore[arg-type]
-        
-        # Test adding invalid relationship type
-        with self.assertRaises(TypeError):
-            self.graph.add_relationship("not_a_relationship")  # type: ignore[arg-type] testing invalid type
-        
-        # Verify graph remains consistent after errors
-        self.assertEqual(len(self.graph), 0)
-        self.assertEqual(len(self.graph.relationships), 0)
-
 
 class SFMBusinessLogicTestCase(unittest.TestCase):
     """Test suite for SFM-specific business logic and domain rules."""

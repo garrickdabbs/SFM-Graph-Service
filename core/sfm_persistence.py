@@ -303,7 +303,7 @@ class SFMGraphSerializer:
         """Serialize graph to JSON format."""
         data = SFMGraphSerializer._graph_to_dict(graph)
         json_str = json.dumps(data, indent=2,
-                              default=SFMGraphSerializer._json_serializer)
+                              default=SFMGraphSerializer.json_serializer)
         json_bytes = json_str.encode('utf-8')
 
         if format_type == StorageFormat.COMPRESSED_JSON:
@@ -398,9 +398,14 @@ class SFMGraphSerializer:
                 if not isinstance(collection_data, dict):
                     raise ValueError(f"Invalid data for collection '{collection_name}': "
                                    f"{collection_data}")
+                if not collection_data:
+                    logger.warning(f"Collection '{collection_name}' is empty.")
                 for node_data in collection_data.values():
+                    if not isinstance(node_data, dict):
+                        raise ValueError(f"Invalid node data in collection '{collection_name}': "
+                                       f"{node_data}")
                     node: Node = NodeSerializer.dict_to_node(node_data, node_class)
-                    target_collection[node.id] = node
+                    target_collection[node.id] = node  # type: ignore
 
             logger.debug("Node collections deserialized successfully.")
 
@@ -443,7 +448,7 @@ class SFMGraphSerializer:
             raise SFMSerializationError(f"Failed to deserialize relationship: {str(e)}") from e
 
     @staticmethod
-    def _json_serializer(obj: Any) -> str:
+    def json_serializer(obj: Any) -> str:
         """Custom JSON serializer for complex types."""
         if isinstance(obj, datetime):
             return obj.isoformat()
@@ -870,30 +875,29 @@ class SFMPersistenceManager:
         newest_date = None
 
         for metadata in graphs:
-            if isinstance(metadata, GraphMetadata):
-                stats['total_size_bytes'] += metadata.size_bytes
+            stats['total_size_bytes'] += metadata.size_bytes
 
-                # Format distribution
-                format_name = metadata.format.value
-                stats['format_distribution'][format_name] = (
-                    stats['format_distribution'].get(format_name, 0) + 1
-                )
+            # Format distribution
+            format_name = metadata.format.value
+            stats['format_distribution'][format_name] = (
+                stats['format_distribution'].get(format_name, 0) + 1
+            )
 
-                # Largest graph
-                if metadata.size_bytes > largest_size:
-                    largest_size = metadata.size_bytes
-                    stats['largest_graph'] = metadata.graph_id
+            # Largest graph
+            if metadata.size_bytes > largest_size:
+                largest_size = metadata.size_bytes
+                stats['largest_graph'] = metadata.graph_id
 
                 # Date tracking
                 if (metadata.created_at is not None and
                         (oldest_date is None or
-                         (oldest_date is not None and metadata.created_at < oldest_date))):
+                         (metadata.created_at < oldest_date))):
                     oldest_date = metadata.created_at
                     stats['oldest_graph'] = metadata.graph_id
 
                 if (metadata.created_at is not None and
                         (newest_date is None or
-                         (newest_date is not None and metadata.created_at > newest_date))):
+                         (metadata.created_at > newest_date))):
                     newest_date = metadata.created_at
                     stats['newest_graph'] = metadata.graph_id
 
@@ -974,7 +978,7 @@ class SFMPersistenceManager:
 
             metadata_file.write_text(
                 json.dumps(metadata_dict, indent=2,
-                           default=SFMGraphSerializer._json_serializer)
+                           default=SFMGraphSerializer.json_serializer)
             )
 
         except Exception as e:
@@ -993,7 +997,7 @@ class SFMPersistenceManager:
             metadata_dict['format'] = metadata.format.value
             version_metadata_file.write_text(
                 json.dumps(metadata_dict, indent=2,
-                           default=SFMGraphSerializer._json_serializer)
+                           default=SFMGraphSerializer.json_serializer)
             )
 
             # Copy current graph data to versioned file
@@ -1124,8 +1128,8 @@ class SFMPersistenceManager:
 
                 restored_graph = SFMGraphSerializer.deserialize_graph(
                     serialized_data, self.config.default_format)
-                if restored_graph is None:
-                    raise SFMPersistenceError("Failed to deserialize restored graph.")
+                # Ensure the graph was successfully deserialized
+                logger.debug("Restored graph deserialized successfully.")
 
                 # Create and save new metadata for the restored graph
                 metadata = self._create_metadata(

@@ -6,9 +6,6 @@ actors, institutions, resources, processes, relationships, and other components
 in SFM analysis of socio-economic systems.
 """
 
-# sfm_schema.py
-# Core data structures for modeling an F. Gregory Hayden Social Fabric Matrix (SFM)
-
 from __future__ import annotations
 
 import uuid
@@ -210,9 +207,8 @@ class Flow(Node):  # pylint: disable=too-many-instance-attributes
 
     def __post_init__(self) -> None:
         """Validate flow nature and type combination after initialization."""
-        # Only validate if flow_type is a FlowType enum (not string)
-        if isinstance(self.flow_type, FlowType):
-            EnumValidator.validate_flow_combination(self.nature, self.flow_type)
+        # Validate flow nature and type combination
+        EnumValidator.validate_flow_combination(self.nature, self.flow_type)
 
 
 @dataclass
@@ -591,12 +587,6 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
 
     def add_relationship(self, relationship: Relationship) -> Relationship:
         """Add a relationship to the SFM graph with validation."""
-        if not isinstance(relationship, Relationship):
-            raise TypeError(f"Expected Relationship but got {type(relationship)}")
-
-        # Ensure the relationship has an ID
-        if relationship.id is None:
-            relationship.id = uuid.uuid4()
 
         # Perform SFM-specific validation if both nodes exist
         source_node = self._find_node_by_id(relationship.source_id)

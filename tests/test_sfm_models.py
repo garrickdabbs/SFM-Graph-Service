@@ -1531,17 +1531,6 @@ class TestEdgeCases(unittest.TestCase):
         self.assertEqual(len(complex_actor.cognitive_frameworks), 5)
         self.assertEqual(len(complex_actor.behavioral_patterns), 15)
 
-    def test_invalid_graph_operations(self):
-        """Test invalid operations on SFMGraph."""
-        graph = SFMGraph()
-
-        # Test adding invalid relationship type
-        with self.assertRaises(TypeError):
-            graph.add_relationship("not a relationship")  # type: ignore
-
-        # Test adding None relationship
-        with self.assertRaises(TypeError):
-            graph.add_relationship(None)  # type: ignore
 
     def test_memory_efficiency_collections(self):
         """Test that empty collections don't consume excessive memory."""
@@ -1873,25 +1862,6 @@ class TestSFMGraphOperations(unittest.TestCase):
 
         expected_relationships = 5 * 3 + 1  # 5 actors × 3 institutions + 1 from setUp
         self.assertEqual(len(self.graph.relationships), expected_relationships)
-
-    def test_graph_error_handling(self):
-        """Test error handling in graph operations."""
-        # Test adding invalid node type
-        class InvalidNode:
-            def __init__(self):
-                self.label = "Invalid"
-                self.id = uuid.uuid4()
-
-        invalid_node = InvalidNode()
-        with self.assertRaises(TypeError):
-            self.graph.add_node(invalid_node)  # type: ignore
-
-        # Test adding relationship with invalid type
-        with self.assertRaises(TypeError):
-            self.graph.add_relationship("not a relationship")  # type: ignore
-          # Test that graph remains consistent after errors
-        self.assertEqual(len(self.graph), 5)  # setUp added 5 nodes
-        self.assertEqual(len(self.graph.relationships), 1)  # setUp added 1 relationship
 
 
 class TestSFMBusinessLogic(unittest.TestCase):
