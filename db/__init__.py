@@ -11,9 +11,10 @@ for the Social Fabric Matrix Framework experimental service.
 # from .connection import get_db_session, init_db
 # from .models import Base, User, Relationship
 # from .utils import migrate, seed_data
+from typing import List
 
 # Define what is available to import from this package
-__all__: list[str] = [
+__all__: List[str] = [
     # "get_db_session",
     # "init_db",
     # "Base",
