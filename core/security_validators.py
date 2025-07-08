@@ -16,11 +16,27 @@ Security measures implemented:
 import re
 import html
 import logging
-from typing import Any, Dict, Optional, List, cast
+import time
+from functools import wraps
+from collections import defaultdict, deque
+from typing import Any, Dict, Optional, List, cast, Callable
 from urllib.parse import urlparse
+import bleach
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+# Rate limiting configuration for validation operations
+VALIDATION_RATE_LIMIT = 50  # requests per minute per IP
+VALIDATION_RATE_WINDOW = 60  # seconds
+VALIDATION_RATE_LIMITING_ENABLED = True  # Can be disabled for testing
+validation_rate_storage: defaultdict[str, deque[float]] = defaultdict(deque)
+_current_caller_context: Optional[str] = None  # Global context for current caller
+
+# Bleach configuration for advanced HTML sanitization
+ALLOWED_TAGS = ['b', 'i', 'em', 'strong', 'u', 'br', 'p']
+ALLOWED_ATTRIBUTES = {}
+ALLOWED_PROTOCOLS = ['http', 'https', 'mailto']
 
 # Public API
 __all__ = [
@@ -32,8 +48,15 @@ __all__ = [
     'validate_node_label',
     'validate_node_description',
     'validate_and_sanitize_node_data',
+    'set_validation_caller_context',
+    'get_validation_rate_limit_status',
+    'disable_validation_rate_limiting',
+    'enable_validation_rate_limiting',
+    'clear_validation_rate_limit_storage',
     'MAX_STRING_LENGTH',
     'MAX_DESCRIPTION_LENGTH',
+    'VALIDATION_RATE_LIMIT',
+    'VALIDATION_RATE_WINDOW',
 ]
 
 # Security configuration constants
@@ -57,17 +80,79 @@ DANGEROUS_PATTERNS = [
 DANGEROUS_REGEX = re.compile('|'.join(DANGEROUS_PATTERNS), re.IGNORECASE)
 
 
+def rate_limit_validation(func: Callable) -> Callable:
+    """
+    Decorator to apply rate limiting to validation functions.
+    
+    Args:
+        func: Function to rate limit
+        
+    Returns:
+        Decorated function with rate limiting
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Skip rate limiting if disabled
+        if not VALIDATION_RATE_LIMITING_ENABLED:
+            return func(*args, **kwargs)
+            
+        # Get caller ID from global context or use default
+        caller_id = _current_caller_context or 'direct_call'
+        
+        current_time = time.time()
+        
+        # Clean old entries
+        caller_requests = validation_rate_storage[caller_id]
+        while caller_requests and current_time - caller_requests[0] > VALIDATION_RATE_WINDOW:
+            caller_requests.popleft()
+        
+        # Check if limit exceeded
+        if len(caller_requests) >= VALIDATION_RATE_LIMIT:
+            logger.warning(
+                "Validation rate limit exceeded for %s. Function: %s",
+                caller_id, func.__name__
+            )
+            raise SecurityValidationError(
+                f"Validation rate limit exceeded. Maximum {VALIDATION_RATE_LIMIT} "
+                f"validation requests per minute allowed.",
+                field="rate_limit",
+                value=len(caller_requests)
+            )
+        
+        # Add current request
+        caller_requests.append(current_time)
+        
+        # Call the original function
+        return func(*args, **kwargs)
+    
+    return wrapper
+
+
 class SecurityValidationError(Exception):
     """Raised when input fails security validation."""
 
     def __init__(self, message: str, field: Optional[str] = None,
-                 value: Optional[Any] = None) -> None:
+                 value: Optional[Any] = None, context: Optional[Dict[str, Any]] = None) -> None:
         self.message = message
         self.field = field
         self.value = value
+        self.context = context or {}
+        self.timestamp = time.time()
         super().__init__(message)
 
+    def log_failure(self, logger_instance: logging.Logger) -> None:
+        """Log the security validation failure with full context."""
+        logger_instance.error(
+            "Security validation failed: %s | Field: %s | Value: %s | Context: %s | Timestamp: %s",
+            self.message,
+            self.field,
+            str(self.value)[:100] if self.value else None,
+            self.context,
+            self.timestamp
+        )
 
+
+@rate_limit_validation
 def sanitize_string(value: str, max_length: int = MAX_STRING_LENGTH) -> str:
     """
     Sanitize a string input by removing dangerous content and limiting length.
@@ -84,28 +169,62 @@ def sanitize_string(value: str, max_length: int = MAX_STRING_LENGTH) -> str:
     """
     # Ensure the input is treated as a string
     value = str(value)
+    original_value = value
 
     # Check length
     if len(value) > max_length:
-        raise SecurityValidationError(
+        error = SecurityValidationError(
             f"String too long: {len(value)} > {max_length}",
             field="length",
-            value=value[:50] + "..." if len(value) > 50 else value
+            value=value[:50] + "..." if len(value) > 50 else value,
+            context={"max_length": max_length, "actual_length": len(value)}
         )
+        error.log_failure(logger)
+        raise error
 
-    # HTML escape to prevent XSS
-    sanitized = html.escape(value, quote=True)
-
-    # Check for dangerous patterns
+    # Check for dangerous patterns first
     if DANGEROUS_REGEX.search(value):
-        logger.warning("Dangerous pattern detected in input: %s", value[:100])
-        raise SecurityValidationError(
+        error = SecurityValidationError(
             "Input contains potentially dangerous content",
             field="content",
-            value=value[:50] + "..." if len(value) > 50 else value
+            value=value[:50] + "..." if len(value) > 50 else value,
+            context={"patterns_detected": True}
         )
+        error.log_failure(logger)
+        raise error
 
-    return sanitized
+    # Use bleach for advanced HTML sanitization
+    try:
+        # First pass: Clean with bleach
+        cleaned = bleach.clean(
+            value,
+            tags=ALLOWED_TAGS,
+            attributes=ALLOWED_ATTRIBUTES,
+            protocols=ALLOWED_PROTOCOLS,
+            strip=True
+        )
+        
+        # Second pass: HTML escape any remaining content
+        sanitized = html.escape(cleaned, quote=True)
+        
+        # Log if content was modified during sanitization
+        if sanitized != original_value:
+            logger.info(
+                "Content sanitized: original length=%d, sanitized length=%d",
+                len(original_value), len(sanitized)
+            )
+        
+        return sanitized
+        
+    except Exception as e:
+        error = SecurityValidationError(
+            f"Sanitization failed: {str(e)}",
+            field="sanitization",
+            value=value[:50] + "..." if len(value) > 50 else value,
+            context={"exception": str(e)}
+        )
+        error.log_failure(logger)
+        raise error
 
 
 def sanitize_description(value: str) -> str:
@@ -121,6 +240,7 @@ def sanitize_description(value: str) -> str:
     return sanitize_string(value, MAX_DESCRIPTION_LENGTH)
 
 
+@rate_limit_validation
 def validate_metadata(metadata: Dict[str, Any],
                       max_depth: int = MAX_METADATA_DEPTH) -> Dict[str, Any]:
     """
@@ -137,13 +257,26 @@ def validate_metadata(metadata: Dict[str, Any],
         SecurityValidationError: If metadata fails validation
     """
     if len(metadata) > MAX_METADATA_KEYS:
-        raise SecurityValidationError(
+        error = SecurityValidationError(
             f"Too many metadata keys: {len(metadata)} > {MAX_METADATA_KEYS}",
             field="keys",
-            value=len(metadata)
+            value=len(metadata),
+            context={"max_keys": MAX_METADATA_KEYS, "actual_keys": len(metadata)}
         )
+        error.log_failure(logger)
+        raise error
 
-    return _sanitize_dict(metadata, max_depth)
+    try:
+        return _sanitize_dict(metadata, max_depth)
+    except Exception as e:
+        error = SecurityValidationError(
+            f"Metadata validation failed: {str(e)}",
+            field="metadata",
+            value=str(metadata)[:100],
+            context={"exception": str(e)}
+        )
+        error.log_failure(logger)
+        raise error
 
 
 def _sanitize_dict(data: Dict[Any, Any], depth: int) -> Dict[str, Any]:
@@ -158,7 +291,14 @@ def _sanitize_dict(data: Dict[Any, Any], depth: int) -> Dict[str, Any]:
         Sanitized dictionary
     """
     if depth <= 0:
-        raise SecurityValidationError("Metadata nesting too deep", field="depth", value=depth)
+        error = SecurityValidationError(
+            "Metadata nesting too deep",
+            field="depth",
+            value=depth,
+            context={"max_depth": MAX_METADATA_DEPTH}
+        )
+        error.log_failure(logger)
+        raise error
 
     sanitized: Dict[str, Any] = {}
     for key, value in data.items():
@@ -196,7 +336,14 @@ def _sanitize_list(data: List[Any], depth: int) -> List[Any]:
         Sanitized list
     """
     if depth <= 0:
-        raise SecurityValidationError("Metadata nesting too deep", field="depth", value=depth)
+        error = SecurityValidationError(
+            "Metadata nesting too deep",
+            field="depth",
+            value=depth,
+            context={"max_depth": MAX_METADATA_DEPTH}
+        )
+        error.log_failure(logger)
+        raise error
 
     sanitized: List[Any] = []
     for item in data:
@@ -216,6 +363,7 @@ def _sanitize_list(data: List[Any], depth: int) -> List[Any]:
     return sanitized
 
 
+@rate_limit_validation
 def validate_url(url: str) -> bool:
     """
     Validate that a URL is safe and properly formatted.
@@ -230,23 +378,51 @@ def validate_url(url: str) -> bool:
         SecurityValidationError: If URL is invalid or unsafe
     """
     if not url:
-        raise SecurityValidationError("URL must be a non-empty string", field="type", value=url)
+        error = SecurityValidationError(
+            "URL must be a non-empty string",
+            field="type",
+            value=url,
+            context={"url_empty": True}
+        )
+        error.log_failure(logger)
+        raise error
 
     # Check for dangerous URL schemes
     if url.lower().startswith(('javascript:', 'vbscript:', 'data:')):
-        raise SecurityValidationError("Dangerous URL scheme detected", field="scheme", value=url)
+        error = SecurityValidationError(
+            "Dangerous URL scheme detected",
+            field="scheme",
+            value=url,
+            context={"dangerous_scheme": True}
+        )
+        error.log_failure(logger)
+        raise error
 
     try:
         parsed = urlparse(url)
         if not parsed.scheme or not parsed.netloc:
-            raise SecurityValidationError("Invalid URL format", field="format", value=url)
+            error = SecurityValidationError(
+                "Invalid URL format",
+                field="format",
+                value=url,
+                context={"scheme": parsed.scheme, "netloc": parsed.netloc}
+            )
+            error.log_failure(logger)
+            raise error
     except Exception as e:
-        raise SecurityValidationError(f"URL parsing failed: {str(e)}", field="parsing",
-                                      value=url) from e
+        error = SecurityValidationError(
+            f"URL parsing failed: {str(e)}",
+            field="parsing",
+            value=url,
+            context={"exception": str(e)}
+        )
+        error.log_failure(logger)
+        raise error
 
     return True
 
 
+@rate_limit_validation
 def validate_node_label(label: str) -> str:
     """
     Validate and sanitize a node label.
@@ -258,12 +434,29 @@ def validate_node_label(label: str) -> str:
         Sanitized label
     """
     if not label:
-        raise SecurityValidationError("Label must be a non-empty string", field="label",
-                                      value=label)
+        error = SecurityValidationError(
+            "Label must be a non-empty string",
+            field="label",
+            value=label,
+            context={"empty_label": True}
+        )
+        error.log_failure(logger)
+        raise error
 
-    return sanitize_string(label.strip())
+    try:
+        return sanitize_string(label.strip())
+    except Exception as e:
+        error = SecurityValidationError(
+            f"Label validation failed: {str(e)}",
+            field="label",
+            value=label,
+            context={"exception": str(e)}
+        )
+        error.log_failure(logger)
+        raise error
 
 
+@rate_limit_validation
 def validate_node_description(description: Optional[str]) -> Optional[str]:
     """
     Validate and sanitize a node description.
@@ -279,9 +472,20 @@ def validate_node_description(description: Optional[str]) -> Optional[str]:
 
     description = str(description)
 
-    return sanitize_description(description.strip())
+    try:
+        return sanitize_description(description.strip())
+    except Exception as e:
+        error = SecurityValidationError(
+            f"Description validation failed: {str(e)}",
+            field="description",
+            value=description,
+            context={"exception": str(e)}
+        )
+        error.log_failure(logger)
+        raise error
 
 
+@rate_limit_validation
 def validate_and_sanitize_node_data(data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Comprehensive validation and sanitization of node data.
@@ -294,28 +498,109 @@ def validate_and_sanitize_node_data(data: Dict[str, Any]) -> Dict[str, Any]:
     """
     sanitized: Dict[str, Any] = {}
 
-    # Validate required fields
-    if "name" in data:
-        sanitized["name"] = validate_node_label(data["name"])
+    try:
+        # Validate required fields
+        if "name" in data:
+            sanitized["name"] = validate_node_label(data["name"])
 
-    if "label" in data:
-        sanitized["label"] = validate_node_label(data["label"])
+        if "label" in data:
+            sanitized["label"] = validate_node_label(data["label"])
 
-    if "description" in data:
-        sanitized["description"] = validate_node_description(data["description"])
+        if "description" in data:
+            sanitized["description"] = validate_node_description(data["description"])
 
-    # Validate metadata
-    if "meta" in data and data["meta"]:
-        sanitized["meta"] = validate_metadata(data["meta"])
-    elif "meta" in data:
-        sanitized["meta"] = {}
+        # Validate metadata
+        if "meta" in data and data["meta"]:
+            sanitized["meta"] = validate_metadata(data["meta"])
+        elif "meta" in data:
+            sanitized["meta"] = {}
 
-    # Copy other fields with basic validation
-    for key, value in data.items():
-        if key not in ["name", "label", "description", "meta"]:
-            if isinstance(value, str):
-                sanitized[key] = sanitize_string(value)
-            else:
-                sanitized[key] = value
+        # Copy other fields with basic validation
+        for key, value in data.items():
+            if key not in ["name", "label", "description", "meta"]:
+                if isinstance(value, str):
+                    sanitized[key] = sanitize_string(value)
+                else:
+                    sanitized[key] = value
 
-    return sanitized
+        logger.info("Node data validated successfully with %d fields", len(sanitized))
+        return sanitized
+        
+    except Exception as e:
+        error = SecurityValidationError(
+            f"Node data validation failed: {str(e)}",
+            field="node_data",
+            value=str(data)[:100],
+            context={"exception": str(e), "data_keys": list(data.keys())}
+        )
+        error.log_failure(logger)
+        raise error
+
+
+def set_validation_caller_context(caller_id: str) -> None:
+    """
+    Set caller context for rate limiting validation operations.
+    
+    Args:
+        caller_id: Identifier for the caller (e.g., IP address)
+    """
+    global _current_caller_context
+    _current_caller_context = caller_id
+
+
+def get_validation_rate_limit_status(caller_id: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Get current rate limit status for a caller.
+    
+    Args:
+        caller_id: Identifier for the caller (uses current context if not provided)
+        
+    Returns:
+        Dictionary with rate limit status information
+    """
+    # Use provided caller_id or current context
+    if caller_id is None:
+        caller_id = _current_caller_context or 'direct_call'
+    
+    current_time = time.time()
+    caller_requests = validation_rate_storage[caller_id]
+    
+    # Clean old entries
+    while caller_requests and current_time - caller_requests[0] > VALIDATION_RATE_WINDOW:
+        caller_requests.popleft()
+    
+    return {
+        "caller_id": caller_id,
+        "current_requests": len(caller_requests),
+        "limit": VALIDATION_RATE_LIMIT,
+        "window_seconds": VALIDATION_RATE_WINDOW,
+        "remaining_requests": max(0, VALIDATION_RATE_LIMIT - len(caller_requests)),
+        "window_reset_time": current_time + VALIDATION_RATE_WINDOW if caller_requests else None
+    }
+
+
+def disable_validation_rate_limiting() -> None:
+    """
+    Disable rate limiting for validation operations.
+    Useful for testing environments.
+    """
+    global VALIDATION_RATE_LIMITING_ENABLED
+    VALIDATION_RATE_LIMITING_ENABLED = False
+
+
+def enable_validation_rate_limiting() -> None:
+    """
+    Enable rate limiting for validation operations.
+    """
+    global VALIDATION_RATE_LIMITING_ENABLED
+    VALIDATION_RATE_LIMITING_ENABLED = True
+
+
+def clear_validation_rate_limit_storage() -> None:
+    """
+    Clear all rate limiting storage.
+    Useful for testing environments.
+    """
+    validation_rate_storage.clear()
+    global _current_caller_context
+    _current_caller_context = None
