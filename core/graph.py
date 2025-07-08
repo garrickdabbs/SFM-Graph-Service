@@ -74,6 +74,16 @@ class NodeTypeRegistry:
                 return collection_name
         raise TypeError(f"Unsupported node type: {type(node)}")
 
+    def get_all_collection_names(self) -> List[str]:
+        """Get all collection names in the registry."""
+        return [collection_name for _, collection_name in self._type_handlers]
+
+    def iter_collections(self, graph: 'SFMGraph') -> Iterator[Dict[uuid.UUID, Node]]:
+        """Iterate over all collections in the graph."""
+        for collection_name in self.get_all_collection_names():
+            collection = getattr(graph, collection_name)
+            yield collection
+
 
 @dataclass
 class NetworkMetrics(Node):
@@ -173,79 +183,17 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
 
     def __iter__(self) -> Iterator[Node]:
         """Iterate over all nodes in the SFMGraph."""
-        yield from self.actors.values()
-        yield from self.institutions.values()
-        yield from self.resources.values()
-        yield from self.processes.values()
-        yield from self.flows.values()
-        yield from self.belief_systems.values()
-        yield from self.technology_systems.values()
-        yield from self.indicators.values()
-        yield from self.policies.values()
-        yield from self.feedback_loops.values()
-        yield from self.system_properties.values()
-        yield from self.analytical_contexts.values()
-        yield from self.policy_instruments.values()
-        yield from self.governance_structures.values()
-        yield from self.value_systems.values()
-        yield from self.ceremonial_behaviors.values()
-        yield from self.instrumental_behaviors.values()
-        yield from self.change_processes.values()
-        yield from self.cognitive_frameworks.values()
-        yield from self.behavioral_patterns.values()
-        yield from self.value_flows.values()
-        yield from self.network_metrics.values()
+        for collection in self._node_registry.iter_collections(self):
+            yield from collection.values()
 
     def __len__(self) -> int:
         """Return the total number of nodes in the graph."""
-        return (
-            len(self.actors)
-            + len(self.institutions)
-            + len(self.resources)
-            + len(self.processes)
-            + len(self.flows)
-            + len(self.belief_systems)
-            + len(self.technology_systems)
-            + len(self.indicators)
-            + len(self.policies)
-            + len(self.feedback_loops)
-            + len(self.system_properties)
-            + len(self.analytical_contexts)
-            + len(self.policy_instruments)
-            + len(self.governance_structures)
-            + len(self.value_systems)
-            + len(self.ceremonial_behaviors)
-            + len(self.instrumental_behaviors)
-            + len(self.change_processes)
-            + len(self.cognitive_frameworks)
-            + len(self.behavioral_patterns)
-            + len(self.value_flows)
-            + len(self.network_metrics)
+        return sum(
+            len(collection) for collection in self._node_registry.iter_collections(self)
         )
 
     def clear(self) -> None:
         """Clear all nodes and relationships from the graph."""
-        self.actors.clear()
-        self.institutions.clear()
-        self.resources.clear()
-        self.processes.clear()
-        self.flows.clear()
-        self.belief_systems.clear()
-        self.technology_systems.clear()
-        self.indicators.clear()
-        self.policies.clear()
-        self.feedback_loops.clear()
-        self.system_properties.clear()
-        self.analytical_contexts.clear()
-        self.policy_instruments.clear()
-        self.governance_structures.clear()
-        self.value_systems.clear()
-        self.ceremonial_behaviors.clear()
-        self.instrumental_behaviors.clear()
-        self.change_processes.clear()
-        self.cognitive_frameworks.clear()
-        self.behavioral_patterns.clear()
-        self.value_flows.clear()
-        self.network_metrics.clear()
+        for collection in self._node_registry.iter_collections(self):
+            collection.clear()
         self.relationships.clear()
-        self.network_metrics.clear()
