@@ -1332,12 +1332,22 @@ class TestSFMServicePerformance(unittest.TestCase):
 
     def setUp(self):
         """Set up performance test fixtures."""
+        # Disable rate limiting for performance tests
+        from core.security_validators import disable_validation_rate_limiting
+        disable_validation_rate_limiting()
+        
         config = SFMServiceConfig(
             storage_backend="test",
             max_graph_size=10000,  # Higher limit for performance tests
             enable_logging=False
         )
         self.service = SFMService(config)
+
+    def tearDown(self):
+        """Clean up after performance tests."""
+        # Re-enable rate limiting after performance tests
+        from core.security_validators import enable_validation_rate_limiting
+        enable_validation_rate_limiting()
 
     def test_large_graph_performance(self):
         """Test performance with larger graphs."""

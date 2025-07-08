@@ -34,10 +34,15 @@ jobs:
           pylint core/ api/ db/ --output-format=parseable --score=yes --exit-zero | tee pylint-report.txt
           PYLINT_SCORE=$(tail -2 pylint-report.txt | grep -o '[0-9]\+\.[0-9]\+' | head -1)
           echo "Pylint score: $PYLINT_SCORE"
-          if (( $(echo "$PYLINT_SCORE < 8.0" | bc -l) )); then
-            echo "Pylint score is below 8.0, failing build"
-            exit 1
-          fi
+          python -c "
+          import sys
+          score = float('$PYLINT_SCORE')
+          if score < 8.0:
+              print('Pylint score is below 8.0, failing build')
+              sys.exit(1)
+          else:
+              print(f'Pylint score {score} is acceptable')
+          "
 
       - name: Run Flake8
         run: |
