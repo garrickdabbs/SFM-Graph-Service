@@ -58,6 +58,11 @@ from tests.mocks import (
     create_sample_nodes
 )
 
+# Disable rate limiting globally for all tests
+from core.security_validators import disable_validation_rate_limiting, clear_validation_rate_limit_storage
+disable_validation_rate_limiting()
+clear_validation_rate_limit_storage()
+
 
 class TestDataTransferObjects(unittest.TestCase):
     """Test data transfer objects (DTOs) and request/response models."""
@@ -1108,9 +1113,6 @@ class TestSFMServiceAdvanced(unittest.TestCase):
     """Advanced test cases for SFM Service functionality."""
 
     def setUp(self):
-        # Disable rate limiting for performance tests
-        from core.security_validators import disable_validation_rate_limiting
-        disable_validation_rate_limiting()
         """Set up test fixtures."""
         config = SFMServiceConfig(
             storage_backend="test",
@@ -1335,10 +1337,6 @@ class TestSFMServicePerformance(unittest.TestCase):
 
     def setUp(self):
         """Set up performance test fixtures."""
-        # Disable rate limiting for performance tests
-        from core.security_validators import disable_validation_rate_limiting
-        disable_validation_rate_limiting()
-        
         config = SFMServiceConfig(
             storage_backend="test",
             max_graph_size=10000,  # Higher limit for performance tests
@@ -1348,9 +1346,7 @@ class TestSFMServicePerformance(unittest.TestCase):
 
     def tearDown(self):
         """Clean up after performance tests."""
-        # Re-enable rate limiting after performance tests
-        from core.security_validators import enable_validation_rate_limiting
-        enable_validation_rate_limiting()
+        pass
 
     def test_large_graph_performance(self):
         """Test performance with larger graphs."""
