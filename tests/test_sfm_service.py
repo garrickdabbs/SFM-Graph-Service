@@ -1108,6 +1108,9 @@ class TestSFMServiceAdvanced(unittest.TestCase):
     """Advanced test cases for SFM Service functionality."""
 
     def setUp(self):
+        # Disable rate limiting for performance tests
+        from core.security_validators import disable_validation_rate_limiting
+        disable_validation_rate_limiting()
         """Set up test fixtures."""
         config = SFMServiceConfig(
             storage_backend="test",
