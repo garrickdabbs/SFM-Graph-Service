@@ -10,6 +10,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Iterator
+from datetime import datetime
 
 from core.base_nodes import Node
 from core.core_nodes import (
@@ -26,7 +27,62 @@ from core.behavioral_nodes import (
 from core.relationships import Relationship
 from core.metadata_models import ModelMetadata, ValidationRule
 from core.sfm_enums import EnumValidator
-from datetime import datetime
+
+
+class NodeTypeRegistry:
+    """Registry pattern for mapping node types to their collections in SFMGraph."""
+
+    def __init__(self):
+        """Initialize the registry with ordered type mappings."""
+        # Order matters for inheritance - most specific types first
+        self._type_handlers = [
+            # Core nodes with inheritance considerations
+            (ValueFlow, 'value_flows'),  # Before Flow
+            (GovernanceStructure, 'governance_structures'),
+            (Policy, 'policies'),  # Before Institution
+            (Institution, 'institutions'),  # After Policy
+            (Actor, 'actors'),
+            (Resource, 'resources'),
+            (Process, 'processes'),
+            (Flow, 'flows'),  # After ValueFlow
+
+            # Specialized nodes
+            (BeliefSystem, 'belief_systems'),
+            (TechnologySystem, 'technology_systems'),
+            (Indicator, 'indicators'),
+            (FeedbackLoop, 'feedback_loops'),
+            (SystemProperty, 'system_properties'),
+            (AnalyticalContext, 'analytical_contexts'),
+            (PolicyInstrument, 'policy_instruments'),
+
+            # Behavioral nodes
+            (ValueSystem, 'value_systems'),
+            (CeremonialBehavior, 'ceremonial_behaviors'),
+            (InstrumentalBehavior, 'instrumental_behaviors'),
+            (ChangeProcess, 'change_processes'),
+            (CognitiveFramework, 'cognitive_frameworks'),
+            (BehavioralPattern, 'behavioral_patterns'),
+
+            # Graph nodes
+            (NetworkMetrics, 'network_metrics'),
+        ]
+
+    def get_collection_name(self, node: Node) -> str:
+        """Get the collection name for a given node type."""
+        for node_type, collection_name in self._type_handlers:
+            if isinstance(node, node_type):
+                return collection_name
+        raise TypeError(f"Unsupported node type: {type(node)}")
+
+    def get_all_collection_names(self) -> List[str]:
+        """Get all collection names in the registry."""
+        return [collection_name for _, collection_name in self._type_handlers]
+
+    def iter_collections(self, graph: 'SFMGraph') -> Iterator[Dict[uuid.UUID, Node]]:
+        """Iterate over all collections in the graph."""
+        for collection_name in self.get_all_collection_names():
+            collection = getattr(graph, collection_name)
+            yield collection
 
 
 @dataclass
@@ -68,7 +124,9 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
     # Hayden's enhanced SFM components
     value_systems: Dict[uuid.UUID, ValueSystem] = field(default_factory=lambda: {})
     ceremonial_behaviors: Dict[uuid.UUID, CeremonialBehavior] = field(default_factory=lambda: {})
-    instrumental_behaviors: Dict[uuid.UUID, InstrumentalBehavior] = field(default_factory=lambda: {})
+    instrumental_behaviors: Dict[uuid.UUID, InstrumentalBehavior] = field(
+        default_factory=lambda: {}
+    )
     change_processes: Dict[uuid.UUID, ChangeProcess] = field(default_factory=lambda: {})
     cognitive_frameworks: Dict[uuid.UUID, CognitiveFramework] = field(default_factory=lambda: {})
     behavioral_patterns: Dict[uuid.UUID, BehavioralPattern] = field(default_factory=lambda: {})
@@ -84,60 +142,16 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
     model_metadata: Optional[ModelMetadata] = None
     validation_rules: List[ValidationRule] = field(default_factory=lambda: [])
 
-    def add_node(self, node: Node) -> Node:  # pylint: disable=too-many-branches
-        """Add a node to the appropriate collection based on its type."""
-        # Handle most specific types first to avoid inheritance conflicts
-        if isinstance(node, ValueFlow):
-            self.value_flows[node.id] = node
-        elif isinstance(node, GovernanceStructure):
-            self.governance_structures[node.id] = node
-        elif isinstance(node, Policy):
-            self.policies[node.id] = node
-        elif isinstance(
-            node, Institution
-        ):  # Check Institution after Policy since Policy inherits from Institution
-            self.institutions[node.id] = node
-        elif isinstance(node, Actor):
-            self.actors[node.id] = node
-        elif isinstance(node, Resource):
-            self.resources[node.id] = node
-        elif isinstance(node, Process):
-            self.processes[node.id] = node
-        elif isinstance(
-            node, Flow
-        ):  # Check Flow after ValueFlow since ValueFlow inherits from Flow
-            self.flows[node.id] = node
-        elif isinstance(node, BeliefSystem):
-            self.belief_systems[node.id] = node
-        elif isinstance(node, TechnologySystem):
-            self.technology_systems[node.id] = node
-        elif isinstance(node, Indicator):
-            self.indicators[node.id] = node
-        elif isinstance(node, FeedbackLoop):
-            self.feedback_loops[node.id] = node
-        elif isinstance(node, SystemProperty):
-            self.system_properties[node.id] = node
-        elif isinstance(node, AnalyticalContext):
-            self.analytical_contexts[node.id] = node
-        elif isinstance(node, ValueSystem):
-            self.value_systems[node.id] = node
-        elif isinstance(node, CeremonialBehavior):
-            self.ceremonial_behaviors[node.id] = node
-        elif isinstance(node, InstrumentalBehavior):
-            self.instrumental_behaviors[node.id] = node
-        elif isinstance(node, PolicyInstrument):
-            self.policy_instruments[node.id] = node
-        elif isinstance(node, ChangeProcess):
-            self.change_processes[node.id] = node
-        elif isinstance(node, CognitiveFramework):
-            self.cognitive_frameworks[node.id] = node
-        elif isinstance(node, BehavioralPattern):
-            self.behavioral_patterns[node.id] = node
-        elif isinstance(node, NetworkMetrics):
-            self.network_metrics[node.id] = node
-        else:
-            raise TypeError(f"Unsupported node type: {type(node)}")
+    # Node type registry for dispatch
+    _node_registry: NodeTypeRegistry = field(
+        default_factory=NodeTypeRegistry, init=False
+    )
 
+    def add_node(self, node: Node) -> Node:
+        """Add a node to the appropriate collection based on its type."""
+        collection_name = self._node_registry.get_collection_name(node)
+        collection = getattr(self, collection_name)
+        collection[node.id] = node
         return node
 
     def add_relationship(self, relationship: Relationship) -> Relationship:
@@ -169,79 +183,17 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
 
     def __iter__(self) -> Iterator[Node]:
         """Iterate over all nodes in the SFMGraph."""
-        yield from self.actors.values()
-        yield from self.institutions.values()
-        yield from self.resources.values()
-        yield from self.processes.values()
-        yield from self.flows.values()
-        yield from self.belief_systems.values()
-        yield from self.technology_systems.values()
-        yield from self.indicators.values()
-        yield from self.policies.values()
-        yield from self.feedback_loops.values()
-        yield from self.system_properties.values()
-        yield from self.analytical_contexts.values()
-        yield from self.policy_instruments.values()
-        yield from self.governance_structures.values()
-        yield from self.value_systems.values()
-        yield from self.ceremonial_behaviors.values()
-        yield from self.instrumental_behaviors.values()
-        yield from self.change_processes.values()
-        yield from self.cognitive_frameworks.values()
-        yield from self.behavioral_patterns.values()
-        yield from self.value_flows.values()
-        yield from self.network_metrics.values()
+        for collection in self._node_registry.iter_collections(self):
+            yield from collection.values()
 
     def __len__(self) -> int:
         """Return the total number of nodes in the graph."""
-        return (
-            len(self.actors)
-            + len(self.institutions)
-            + len(self.resources)
-            + len(self.processes)
-            + len(self.flows)
-            + len(self.belief_systems)
-            + len(self.technology_systems)
-            + len(self.indicators)
-            + len(self.policies)
-            + len(self.feedback_loops)
-            + len(self.system_properties)
-            + len(self.analytical_contexts)
-            + len(self.policy_instruments)
-            + len(self.governance_structures)
-            + len(self.value_systems)
-            + len(self.ceremonial_behaviors)
-            + len(self.instrumental_behaviors)
-            + len(self.change_processes)
-            + len(self.cognitive_frameworks)
-            + len(self.behavioral_patterns)
-            + len(self.value_flows)
-            + len(self.network_metrics)
+        return sum(
+            len(collection) for collection in self._node_registry.iter_collections(self)
         )
 
     def clear(self) -> None:
         """Clear all nodes and relationships from the graph."""
-        self.actors.clear()
-        self.institutions.clear()
-        self.resources.clear()
-        self.processes.clear()
-        self.flows.clear()
-        self.belief_systems.clear()
-        self.technology_systems.clear()
-        self.indicators.clear()
-        self.policies.clear()
-        self.feedback_loops.clear()
-        self.system_properties.clear()
-        self.analytical_contexts.clear()
-        self.policy_instruments.clear()
-        self.governance_structures.clear()
-        self.value_systems.clear()
-        self.ceremonial_behaviors.clear()
-        self.instrumental_behaviors.clear()
-        self.change_processes.clear()
-        self.cognitive_frameworks.clear()
-        self.behavioral_patterns.clear()
-        self.value_flows.clear()
-        self.network_metrics.clear()
+        for collection in self._node_registry.iter_collections(self):
+            collection.clear()
         self.relationships.clear()
-        self.network_metrics.clear()
