@@ -1,4 +1,4 @@
-name: Run Pytest with Coverage
+name: Test Suite
 
 permissions:
   contents: read
@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+      - develop
       - 'feature/**'
       - 'bugfix/**'
   pull_request:
@@ -15,7 +16,7 @@ on:
 
 jobs:
   test:
-    name: "Pytest with Coverage"
+    name: "Test Suite with Coverage"
     runs-on: ubuntu-latest
 
     steps:
@@ -27,17 +28,36 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov pytest-xdist
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run tests with coverage
-        run: pytest --cov --cov-report=xml
+        run: |
+          pytest --cov=core --cov=api --cov=db \
+                 --cov-report=xml --cov-report=term-missing \
+                 --junit-xml=test-results.xml \
+                 -v -n auto
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results.xml

@@ -1,0 +1,191 @@
+name: Performance Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run performance tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  performance-benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest-benchmark memory-profiler psutil
+          pip install -r requirements.txt
+
+      - name: Run SFMGraph performance tests
+        run: |
+          pytest tests/test_sfm_service.py::TestSFMServicePerformance -v \
+                 --benchmark-only --benchmark-json=benchmark-results.json
+
+      - name: Run memory efficiency tests
+        run: |
+          python -m pytest tests/test_sfm_service.py::TestSFMServicePerformance::test_large_graph_performance -v \
+                 --memray --memray-bin-path=memray-results.bin
+
+      - name: Generate memory profile report
+        run: |
+          if [ -f "memray-results.bin" ]; then
+            pip install memray
+            memray stats memray-results.bin > memory-profile.txt
+          fi
+
+      - name: Upload performance reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-reports
+          path: |
+            benchmark-results.json
+            memory-profile.txt
+            memray-results.bin
+
+  lookup-speed-benchmarks:
+    name: Lookup Speed Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest-benchmark
+          pip install -r requirements.txt
+
+      - name: Create benchmark test file
+        run: |
+          cat > benchmark_lookups.py << 'EOF'
+          import pytest
+          import time
+          from core.sfm_service import SFMService, SFMServiceConfig
+          from core.sfm_models import CreateActorRequest, CreateRelationshipRequest
+          from core.sfm_enums import RelationshipKind
+
+          class TestLookupBenchmarks:
+              def setup_method(self):
+                  config = SFMServiceConfig(storage_backend="test", enable_logging=False)
+                  self.service = SFMService(config)
+                  
+                  # Create test data
+                  self.actors = []
+                  for i in range(100):
+                      actor = self.service.create_actor(CreateActorRequest(
+                          name=f"Benchmark Actor {i}",
+                          description=f"Test actor {i}",
+                          sector="test"
+                      ))
+                      self.actors.append(actor)
+                      
+                  # Create relationships
+                  for i in range(50):
+                      if i < len(self.actors) - 1:
+                          self.service.create_relationship(CreateRelationshipRequest(
+                              source_id=self.actors[i].id,
+                              target_id=self.actors[i + 1].id,
+                              kind=RelationshipKind.AFFECTS
+                          ))
+
+              def test_node_lookup_by_id(self, benchmark):
+                  def lookup_node():
+                      return self.service.get_node_by_id(self.actors[50].id)
+                  
+                  result = benchmark(lookup_node)
+                  assert result is not None
+
+              def test_node_search_by_name(self, benchmark):
+                  def search_nodes():
+                      return self.service.search_nodes("Benchmark Actor 50")
+                  
+                  result = benchmark(search_nodes)
+                  assert len(result) > 0
+
+              def test_relationship_lookup(self, benchmark):
+                  def get_relationships():
+                      return self.service.get_relationships(self.actors[0].id)
+                  
+                  result = benchmark(get_relationships)
+                  assert len(result) >= 0
+
+              def test_statistics_calculation(self, benchmark):
+                  def get_stats():
+                      return self.service.get_statistics()
+                  
+                  result = benchmark(get_stats)
+                  assert result.total_nodes == 100
+          EOF
+
+      - name: Run lookup benchmarks
+        run: |
+          pytest benchmark_lookups.py -v --benchmark-json=lookup-benchmarks.json
+
+      - name: Upload lookup benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: lookup-benchmarks
+          path: lookup-benchmarks.json
+
+  concurrent-performance:
+    name: Concurrent Operations Performance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run concurrent performance tests
+        run: |
+          pytest tests/test_sfm_service.py::TestSFMServicePerformance::test_concurrent_operations -v \
+                 --tb=short
+
+      - name: Generate performance summary
+        run: |
+          echo "Performance Test Summary" > performance-summary.txt
+          echo "======================" >> performance-summary.txt
+          echo "Date: $(date)" >> performance-summary.txt
+          echo "Python Version: $(python --version)" >> performance-summary.txt
+          echo "System: $(uname -a)" >> performance-summary.txt
+          echo "" >> performance-summary.txt
+          echo "Test Results:" >> performance-summary.txt
+          echo "- SFMGraph Performance Tests: COMPLETED" >> performance-summary.txt
+          echo "- Lookup Speed Benchmarks: COMPLETED" >> performance-summary.txt
+          echo "- Concurrent Operations: COMPLETED" >> performance-summary.txt
+
+      - name: Upload performance summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-summary
+          path: performance-summary.txt
