@@ -19,9 +19,10 @@ import logging
 import time
 from functools import wraps
 from collections import defaultdict, deque
-from typing import Any, Dict, Optional, List, cast, Callable
+from typing import Any, Deque, DefaultDict, Dict, Optional, List, cast, Callable
 from urllib.parse import urlparse
 import bleach
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ logger = logging.getLogger(__name__)
 VALIDATION_RATE_LIMIT = 50  # requests per minute per IP
 VALIDATION_RATE_WINDOW = 60  # seconds
 VALIDATION_RATE_LIMITING_ENABLED = True  # Can be disabled for testing
-validation_rate_storage: defaultdict[str, deque[float]] = defaultdict(deque)
+validation_rate_storage: DefaultDict[str, Deque[float]] = defaultdict(deque)
 _current_caller_context: Optional[str] = None  # Global context for current caller
 
 # Bleach configuration for advanced HTML sanitization
