@@ -1,5 +1,11 @@
 # Social Fabric Matrix Graph Service
 
+[![CI](https://github.com/SFM-Graph-Service/alpha/actions/workflows/ci.yml/badge.svg)](https://github.com/SFM-Graph-Service/alpha/actions/workflows/ci.yml)
+[![Code Quality](https://github.com/SFM-Graph-Service/alpha/actions/workflows/code-quality.yml/badge.svg)](https://github.com/SFM-Graph-Service/alpha/actions/workflows/code-quality.yml)
+[![Security](https://github.com/SFM-Graph-Service/alpha/actions/workflows/security.yml/badge.svg)](https://github.com/SFM-Graph-Service/alpha/actions/workflows/security.yml)
+[![Performance](https://github.com/SFM-Graph-Service/alpha/actions/workflows/performance.yml/badge.svg)](https://github.com/SFM-Graph-Service/alpha/actions/workflows/performance.yml)
+[![Documentation](https://github.com/SFM-Graph-Service/alpha/actions/workflows/documentation.yml/badge.svg)](https://github.com/SFM-Graph-Service/alpha/actions/workflows/documentation.yml)
+
 An experimental Python framework implementing F. Gregory Hayden's Social Fabric Matrix (SFM) methodology for modeling, analyzing, and querying complex socio-economic systems through graph-based data structures and sophisticated analysis tools.
 
 ## Overview
@@ -616,6 +622,59 @@ open http://localhost:8000/docs
 - `GET /analysis/policy/{policy_id}`: Get policy impact analysis
 - `GET /graph`: Export complete graph structure
 - `GET /health`: Service health and status information
+
+## Automated Workflows
+
+This project includes comprehensive GitHub Actions workflows for automated testing, validation, and quality assurance:
+
+### 🔄 **Continuous Integration** (`ci.yml`)
+- **Multi-Version Testing**: Automated testing across Python 3.8-3.12
+- **Build Validation**: Package building and installation verification
+- **Code Complexity Analysis**: Automated complexity assessment with Radon
+- **Coverage Reporting**: Test coverage analysis and artifact generation
+- **Parallel Execution**: Optimized testing with parallel test runners
+
+### 🔍 **Code Quality Checks** (`code-quality.yml`)
+- **Linting**: PyLint and Flake8 code quality analysis
+- **Type Checking**: MyPy static type analysis with gradual adoption support
+- **Formatting**: Black and isort code formatting validation
+- **Pre-commit Hooks**: Comprehensive pre-commit hook execution
+- **Quality Gates**: Automated quality thresholds and reporting
+
+### ⚡ **Performance Testing** (`performance.yml`)
+- **Benchmark Testing**: Automated performance benchmarking
+- **Memory Profiling**: Memory efficiency analysis and reporting
+- **Lookup Speed Tests**: Database and query performance validation
+- **Concurrent Operations**: Thread safety and concurrency testing
+- **Performance Regression Detection**: Automated performance monitoring
+
+### 🔒 **Security Validation** (`security.yml`)
+- **Vulnerability Scanning**: Dependency vulnerability analysis
+- **Static Security Analysis**: Code security pattern detection
+- **Input Validation Testing**: Security validation logic verification
+- **Penetration Testing**: Automated security testing execution
+- **Security Reporting**: Comprehensive security assessment reports
+
+### 📚 **Documentation Validation** (`documentation.yml`)
+- **Docstring Validation**: Automated docstring quality and consistency checks
+- **Markdown Validation**: Documentation syntax and link validation
+- **API Documentation**: Endpoint documentation consistency verification
+- **Sphinx Documentation**: Automated documentation building and testing
+- **Documentation Coverage**: Documentation completeness analysis
+
+### 📊 **Workflow Status**
+All workflows are configured to run on:
+- **Push to main/develop**: Full validation suite
+- **Pull Requests**: Comprehensive testing and validation
+- **Scheduled Runs**: Daily security and performance monitoring
+- **Manual Dispatch**: On-demand workflow execution
+
+### 📈 **Quality Metrics**
+- **Test Coverage**: 100% target with comprehensive test suite
+- **Code Quality**: Pylint score > 8.0 minimum requirement
+- **Type Safety**: MyPy validation with gradual adoption (≤50 errors)
+- **Security**: Zero high-severity vulnerabilities
+- **Performance**: Automated benchmark regression detection
 
 ## Documentation
 
