@@ -40,18 +40,18 @@ jobs:
           
           # Check score threshold using Python for better reliability
           python3 -c "
-import sys
-try:
-    score = float('$PYLINT_SCORE')
-    print(f'Pylint score: {score}')
-    if score < 8.0:
-        print('Warning: Pylint score is below 8.0')
-        # Don't fail the build, just warn
-    else:
-        print(f'Pylint score {score} is acceptable')
-except ValueError:
-    print('Could not parse Pylint score, continuing...')
-"
+          import sys
+          try:
+              score = float('$PYLINT_SCORE')
+              print(f'Pylint score: {score}')
+              if score < 8.0:
+                  print('Warning: Pylint score is below 8.0')
+                  # Don't fail the build, just warn
+              else:
+                  print(f'Pylint score {score} is acceptable')
+          except ValueError:
+              print('Could not parse Pylint score, continuing...')
+          "
 
       - name: Run Flake8
         run: |
