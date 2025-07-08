@@ -10,6 +10,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Iterator
+from datetime import datetime
 
 from core.base_nodes import Node
 from core.core_nodes import (
@@ -26,7 +27,52 @@ from core.behavioral_nodes import (
 from core.relationships import Relationship
 from core.metadata_models import ModelMetadata, ValidationRule
 from core.sfm_enums import EnumValidator
-from datetime import datetime
+
+
+class NodeTypeRegistry:
+    """Registry pattern for mapping node types to their collections in SFMGraph."""
+
+    def __init__(self):
+        """Initialize the registry with ordered type mappings."""
+        # Order matters for inheritance - most specific types first
+        self._type_handlers = [
+            # Core nodes with inheritance considerations
+            (ValueFlow, 'value_flows'),  # Before Flow
+            (GovernanceStructure, 'governance_structures'),
+            (Policy, 'policies'),  # Before Institution
+            (Institution, 'institutions'),  # After Policy
+            (Actor, 'actors'),
+            (Resource, 'resources'),
+            (Process, 'processes'),
+            (Flow, 'flows'),  # After ValueFlow
+
+            # Specialized nodes
+            (BeliefSystem, 'belief_systems'),
+            (TechnologySystem, 'technology_systems'),
+            (Indicator, 'indicators'),
+            (FeedbackLoop, 'feedback_loops'),
+            (SystemProperty, 'system_properties'),
+            (AnalyticalContext, 'analytical_contexts'),
+            (PolicyInstrument, 'policy_instruments'),
+
+            # Behavioral nodes
+            (ValueSystem, 'value_systems'),
+            (CeremonialBehavior, 'ceremonial_behaviors'),
+            (InstrumentalBehavior, 'instrumental_behaviors'),
+            (ChangeProcess, 'change_processes'),
+            (CognitiveFramework, 'cognitive_frameworks'),
+            (BehavioralPattern, 'behavioral_patterns'),
+
+            # Graph nodes
+            (NetworkMetrics, 'network_metrics'),
+        ]
+
+    def get_collection_name(self, node: Node) -> str:
+        """Get the collection name for a given node type."""
+        for node_type, collection_name in self._type_handlers:
+            if isinstance(node, node_type):
+                return collection_name
+        raise TypeError(f"Unsupported node type: {type(node)}")
 
 
 @dataclass
@@ -68,7 +114,9 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
     # Hayden's enhanced SFM components
     value_systems: Dict[uuid.UUID, ValueSystem] = field(default_factory=lambda: {})
     ceremonial_behaviors: Dict[uuid.UUID, CeremonialBehavior] = field(default_factory=lambda: {})
-    instrumental_behaviors: Dict[uuid.UUID, InstrumentalBehavior] = field(default_factory=lambda: {})
+    instrumental_behaviors: Dict[uuid.UUID, InstrumentalBehavior] = field(
+        default_factory=lambda: {}
+    )
     change_processes: Dict[uuid.UUID, ChangeProcess] = field(default_factory=lambda: {})
     cognitive_frameworks: Dict[uuid.UUID, CognitiveFramework] = field(default_factory=lambda: {})
     behavioral_patterns: Dict[uuid.UUID, BehavioralPattern] = field(default_factory=lambda: {})
@@ -84,60 +132,16 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
     model_metadata: Optional[ModelMetadata] = None
     validation_rules: List[ValidationRule] = field(default_factory=lambda: [])
 
-    def add_node(self, node: Node) -> Node:  # pylint: disable=too-many-branches
-        """Add a node to the appropriate collection based on its type."""
-        # Handle most specific types first to avoid inheritance conflicts
-        if isinstance(node, ValueFlow):
-            self.value_flows[node.id] = node
-        elif isinstance(node, GovernanceStructure):
-            self.governance_structures[node.id] = node
-        elif isinstance(node, Policy):
-            self.policies[node.id] = node
-        elif isinstance(
-            node, Institution
-        ):  # Check Institution after Policy since Policy inherits from Institution
-            self.institutions[node.id] = node
-        elif isinstance(node, Actor):
-            self.actors[node.id] = node
-        elif isinstance(node, Resource):
-            self.resources[node.id] = node
-        elif isinstance(node, Process):
-            self.processes[node.id] = node
-        elif isinstance(
-            node, Flow
-        ):  # Check Flow after ValueFlow since ValueFlow inherits from Flow
-            self.flows[node.id] = node
-        elif isinstance(node, BeliefSystem):
-            self.belief_systems[node.id] = node
-        elif isinstance(node, TechnologySystem):
-            self.technology_systems[node.id] = node
-        elif isinstance(node, Indicator):
-            self.indicators[node.id] = node
-        elif isinstance(node, FeedbackLoop):
-            self.feedback_loops[node.id] = node
-        elif isinstance(node, SystemProperty):
-            self.system_properties[node.id] = node
-        elif isinstance(node, AnalyticalContext):
-            self.analytical_contexts[node.id] = node
-        elif isinstance(node, ValueSystem):
-            self.value_systems[node.id] = node
-        elif isinstance(node, CeremonialBehavior):
-            self.ceremonial_behaviors[node.id] = node
-        elif isinstance(node, InstrumentalBehavior):
-            self.instrumental_behaviors[node.id] = node
-        elif isinstance(node, PolicyInstrument):
-            self.policy_instruments[node.id] = node
-        elif isinstance(node, ChangeProcess):
-            self.change_processes[node.id] = node
-        elif isinstance(node, CognitiveFramework):
-            self.cognitive_frameworks[node.id] = node
-        elif isinstance(node, BehavioralPattern):
-            self.behavioral_patterns[node.id] = node
-        elif isinstance(node, NetworkMetrics):
-            self.network_metrics[node.id] = node
-        else:
-            raise TypeError(f"Unsupported node type: {type(node)}")
+    # Node type registry for dispatch
+    _node_registry: NodeTypeRegistry = field(
+        default_factory=NodeTypeRegistry, init=False
+    )
 
+    def add_node(self, node: Node) -> Node:
+        """Add a node to the appropriate collection based on its type."""
+        collection_name = self._node_registry.get_collection_name(node)
+        collection = getattr(self, collection_name)
+        collection[node.id] = node
         return node
 
     def add_relationship(self, relationship: Relationship) -> Relationship:
