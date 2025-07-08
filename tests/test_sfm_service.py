@@ -58,6 +58,11 @@ from tests.mocks import (
     create_sample_nodes
 )
 
+# Disable rate limiting globally for all tests
+from core.security_validators import disable_validation_rate_limiting, clear_validation_rate_limit_storage
+disable_validation_rate_limiting()
+clear_validation_rate_limit_storage()
+
 
 class TestDataTransferObjects(unittest.TestCase):
     """Test data transfer objects (DTOs) and request/response models."""
@@ -1338,6 +1343,10 @@ class TestSFMServicePerformance(unittest.TestCase):
             enable_logging=False
         )
         self.service = SFMService(config)
+
+    def tearDown(self):
+        """Clean up after performance tests."""
+        pass
 
     def test_large_graph_performance(self):
         """Test performance with larger graphs."""
