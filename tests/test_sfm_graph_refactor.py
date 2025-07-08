@@ -127,6 +127,54 @@ class TestSFMGraphRefactor(unittest.TestCase):
         self.assertEqual(len(self.graph.actors), 2)
         self.assertIn(actor1.id, self.graph.actors)
         self.assertIn(actor2.id, self.graph.actors)
+    
+    def test_iter_functionality(self):
+        """Test that __iter__ works correctly with the registry."""
+        actor = Actor(label="Test Actor")
+        resource = Resource(label="Test Resource", rtype=ResourceType.NATURAL)
+        belief = BeliefSystem(label="Test Belief")
+        
+        self.graph.add_node(actor)
+        self.graph.add_node(resource)
+        self.graph.add_node(belief)
+        
+        nodes = list(self.graph)
+        self.assertEqual(len(nodes), 3)
+        self.assertIn(actor, nodes)
+        self.assertIn(resource, nodes)
+        self.assertIn(belief, nodes)
+    
+    def test_len_functionality(self):
+        """Test that __len__ works correctly with the registry."""
+        self.assertEqual(len(self.graph), 0)
+        
+        actor = Actor(label="Test Actor")
+        resource = Resource(label="Test Resource", rtype=ResourceType.NATURAL)
+        
+        self.graph.add_node(actor)
+        self.assertEqual(len(self.graph), 1)
+        
+        self.graph.add_node(resource)
+        self.assertEqual(len(self.graph), 2)
+    
+    def test_clear_functionality(self):
+        """Test that clear() works correctly with the registry."""
+        actor = Actor(label="Test Actor")
+        resource = Resource(label="Test Resource", rtype=ResourceType.NATURAL)
+        belief = BeliefSystem(label="Test Belief")
+        
+        self.graph.add_node(actor)
+        self.graph.add_node(resource)
+        self.graph.add_node(belief)
+        
+        self.assertEqual(len(self.graph), 3)
+        
+        self.graph.clear()
+        
+        self.assertEqual(len(self.graph), 0)
+        self.assertEqual(len(self.graph.actors), 0)
+        self.assertEqual(len(self.graph.resources), 0)
+        self.assertEqual(len(self.graph.belief_systems), 0)
 
 
 if __name__ == '__main__':
