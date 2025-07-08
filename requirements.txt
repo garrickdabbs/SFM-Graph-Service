@@ -12,3 +12,4 @@ httpx
 requests
 pylint
 coverage
+bleach

@@ -18,6 +18,8 @@ from core.security_validators import (
     validate_node_description,
     validate_and_sanitize_node_data,
     SecurityValidationError,
+    disable_validation_rate_limiting,
+    clear_validation_rate_limit_storage,
     MAX_STRING_LENGTH,
     MAX_DESCRIPTION_LENGTH,
     MAX_METADATA_KEYS,
@@ -28,6 +30,12 @@ from core.sfm_service import SFMService, ValidationError, SFMServiceError
 
 class TestSecurityValidators(unittest.TestCase):
     """Test suite for security validation functions."""
+    
+    def setUp(self):
+        """Set up test environment."""
+        # Disable rate limiting for tests to avoid interference
+        disable_validation_rate_limiting()
+        clear_validation_rate_limit_storage()
 
     def test_sanitize_string_basic(self):
         """Test basic string sanitization."""
@@ -200,6 +208,9 @@ class TestSFMServiceSecurityIntegration(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
+        # Disable rate limiting for tests to avoid interference
+        disable_validation_rate_limiting()
+        clear_validation_rate_limit_storage()
         self.service = SFMService()
 
     def test_create_actor_with_dangerous_input(self):
@@ -311,6 +322,12 @@ class TestSFMServiceSecurityIntegration(unittest.TestCase):
 
 class TestSecurityValidationEdgeCases(unittest.TestCase):
     """Test edge cases in security validation."""
+    
+    def setUp(self):
+        """Set up test environment."""
+        # Disable rate limiting for tests to avoid interference
+        disable_validation_rate_limiting()
+        clear_validation_rate_limit_storage()
 
     def test_empty_string_handling(self):
         """Test handling of empty strings."""
