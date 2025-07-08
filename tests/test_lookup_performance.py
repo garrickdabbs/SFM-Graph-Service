@@ -5,15 +5,11 @@ This module contains performance tests specifically for lookup operations
 including node retrieval, search, and relationship queries.
 """
 
-import pytest
 import time
 import uuid
 from typing import List
 from core.sfm_service import SFMService, SFMServiceConfig, CreateActorRequest, CreateRelationshipRequest, NodeResponse
-from core.sfm_enums import RelationshipKind
 from core.security_validators import disable_validation_rate_limiting, clear_validation_rate_limit_storage
-from core.sfm_models import Actor
-
 
 class TestLookupPerformance:
     """Test class for lookup performance benchmarks."""
