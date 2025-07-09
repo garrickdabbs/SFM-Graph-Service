@@ -574,14 +574,48 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
         self, scenario_graphs: List[SFMGraph]
     ) -> Dict[str, Any]:
         """Compare multiple policy scenarios."""
-        # This would require more sophisticated scenario comparison logic
+        if len(scenario_graphs) < 2:
+            return {"error": "Need at least 2 scenarios for comparison"}
+        
         comparison = {
             "scenario_count": len(scenario_graphs),
-            "node_count_comparison": [len(g) for g in scenario_graphs],
-            "relationship_count_comparison": [
-                len(g.relationships) for g in scenario_graphs
-            ],
+            "basic_metrics": {
+                "node_counts": [],
+                "relationship_counts": [],
+                "density_scores": []
+            },
+            "structural_comparison": {},
+            "policy_impact_analysis": {},
+            "similarity_matrix": [],
+            "key_differences": []
         }
+        
+        # Build NetworkX graphs for each scenario
+        scenario_nx_graphs = []
+        for graph in scenario_graphs:
+            nx_graph = self._build_networkx_from_graph(graph)
+            scenario_nx_graphs.append(nx_graph)
+        
+        # Basic metrics comparison
+        for nx_graph in scenario_nx_graphs:
+            comparison["basic_metrics"]["node_counts"].append(nx_graph.number_of_nodes())
+            comparison["basic_metrics"]["relationship_counts"].append(nx_graph.number_of_edges())
+            comparison["basic_metrics"]["density_scores"].append(
+                nx.density(nx_graph) if nx_graph.number_of_nodes() > 0 else 0.0
+            )
+        
+        # Structural comparison between scenarios
+        comparison["structural_comparison"] = self._compare_scenario_structures(scenario_nx_graphs)
+        
+        # Policy impact analysis (if policy nodes exist)
+        comparison["policy_impact_analysis"] = self._analyze_scenario_policy_impacts(scenario_graphs)
+        
+        # Calculate similarity matrix between scenarios
+        comparison["similarity_matrix"] = self._calculate_scenario_similarity_matrix(scenario_nx_graphs)
+        
+        # Identify key differences
+        comparison["key_differences"] = self._identify_key_scenario_differences(scenario_nx_graphs)
+        
         return comparison
 
     def get_network_density(self) -> float:
@@ -592,9 +626,36 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
         self, algorithm: str = "louvain"
     ) -> Dict[int, List[uuid.UUID]]:
         """Identify communities/clusters in the network."""
-        # This would require community detection algorithms
-        # For now, return a simple placeholder
-        return {0: list(self.nx_graph.nodes())}
+        if self.nx_graph.number_of_nodes() == 0:
+            return {}
+        
+        try:
+            # Convert to undirected graph for community detection
+            undirected_graph = self.nx_graph.to_undirected()
+            
+            if algorithm.lower() == "louvain":
+                # Use Louvain algorithm for community detection
+                communities = nx.algorithms.community.louvain_communities(undirected_graph)
+            elif algorithm.lower() == "label_propagation":
+                # Use label propagation algorithm
+                communities = nx.algorithms.community.label_propagation_communities(undirected_graph)
+            elif algorithm.lower() == "greedy_modularity":
+                # Use greedy modularity maximization
+                communities = nx.algorithms.community.greedy_modularity_communities(undirected_graph)
+            else:
+                # Default to Louvain if unknown algorithm specified
+                communities = nx.algorithms.community.louvain_communities(undirected_graph)
+            
+            # Convert to the expected format: Dict[int, List[uuid.UUID]]
+            community_dict = {}
+            for i, community in enumerate(communities):
+                community_dict[i] = list(community)
+            
+            return community_dict
+            
+        except (nx.NetworkXError, AttributeError):
+            # Fallback to single community containing all nodes
+            return {0: list(self.nx_graph.nodes())}
 
     def get_structural_holes(self) -> List[uuid.UUID]:
         """Identify nodes that bridge structural holes."""
@@ -975,6 +1036,133 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
             )
 
         return nx_graph
+
+    def _compare_scenario_structures(self, scenario_graphs: List[nx.MultiDiGraph]) -> Dict[str, Any]:
+        """Compare structural properties across scenarios."""
+        structural_metrics = {
+            "centrality_differences": [],
+            "clustering_differences": [],
+            "connectivity_differences": []
+        }
+        
+        if len(scenario_graphs) < 2:
+            return structural_metrics
+        
+        # Compare centrality measures
+        base_centrality = nx.betweenness_centrality(scenario_graphs[0])
+        for i, graph in enumerate(scenario_graphs[1:], 1):
+            current_centrality = nx.betweenness_centrality(graph)
+            
+            # Find common nodes
+            common_nodes = set(base_centrality.keys()) & set(current_centrality.keys())
+            if common_nodes:
+                centrality_diff = sum(
+                    abs(current_centrality.get(node, 0) - base_centrality.get(node, 0))
+                    for node in common_nodes
+                ) / len(common_nodes)
+                structural_metrics["centrality_differences"].append({
+                    "scenario_pair": f"0_vs_{i}",
+                    "avg_centrality_difference": centrality_diff
+                })
+        
+        # Compare clustering coefficients
+        for i, graph in enumerate(scenario_graphs):
+            try:
+                simple_graph = nx.Graph(graph.to_undirected())
+                clustering = nx.average_clustering(simple_graph) if simple_graph.number_of_nodes() > 0 else 0.0
+                structural_metrics["clustering_differences"].append({
+                    "scenario": i,
+                    "clustering_coefficient": clustering
+                })
+            except nx.NetworkXError:
+                structural_metrics["clustering_differences"].append({
+                    "scenario": i,
+                    "clustering_coefficient": 0.0
+                })
+        
+        return structural_metrics
+
+    def _analyze_scenario_policy_impacts(self, scenario_graphs: List[SFMGraph]) -> Dict[str, Any]:
+        """Analyze policy impact differences across scenarios."""
+        policy_analysis = {
+            "policy_nodes_per_scenario": [],
+            "impact_radius_comparison": [],
+            "policy_target_overlap": []
+        }
+        
+        # Import Policy here to avoid circular import
+        from core.sfm_models import Policy
+        
+        for i, graph in enumerate(scenario_graphs):
+            # Count policy nodes in each scenario
+            policy_count = sum(1 for node in graph if isinstance(node, Policy))
+            policy_analysis["policy_nodes_per_scenario"].append({
+                "scenario": i,
+                "policy_count": policy_count
+            })
+        
+        return policy_analysis
+
+    def _calculate_scenario_similarity_matrix(self, scenario_graphs: List[nx.MultiDiGraph]) -> List[List[float]]:
+        """Calculate similarity matrix between all scenario pairs."""
+        n_scenarios = len(scenario_graphs)
+        similarity_matrix = [[0.0 for _ in range(n_scenarios)] for _ in range(n_scenarios)]
+        
+        for i in range(n_scenarios):
+            for j in range(n_scenarios):
+                if i == j:
+                    similarity_matrix[i][j] = 1.0
+                else:
+                    # Calculate Jaccard similarity based on node overlap
+                    nodes_i = set(scenario_graphs[i].nodes())
+                    nodes_j = set(scenario_graphs[j].nodes())
+                    
+                    if len(nodes_i) == 0 and len(nodes_j) == 0:
+                        similarity_matrix[i][j] = 1.0
+                    elif len(nodes_i) == 0 or len(nodes_j) == 0:
+                        similarity_matrix[i][j] = 0.0
+                    else:
+                        intersection = len(nodes_i & nodes_j)
+                        union = len(nodes_i | nodes_j)
+                        similarity_matrix[i][j] = intersection / union if union > 0 else 0.0
+        
+        return similarity_matrix
+
+    def _identify_key_scenario_differences(self, scenario_graphs: List[nx.MultiDiGraph]) -> List[Dict[str, Any]]:
+        """Identify key structural differences between scenarios."""
+        differences = []
+        
+        if len(scenario_graphs) < 2:
+            return differences
+        
+        base_graph = scenario_graphs[0]
+        base_nodes = set(base_graph.nodes())
+        base_edges = set(base_graph.edges())
+        
+        for i, graph in enumerate(scenario_graphs[1:], 1):
+            current_nodes = set(graph.nodes())
+            current_edges = set(graph.edges())
+            
+            # Node differences
+            added_nodes = current_nodes - base_nodes
+            removed_nodes = base_nodes - current_nodes
+            
+            # Edge differences
+            added_edges = current_edges - base_edges
+            removed_edges = base_edges - current_edges
+            
+            differences.append({
+                "comparison": f"scenario_0_vs_scenario_{i}",
+                "nodes_added": len(added_nodes),
+                "nodes_removed": len(removed_nodes),
+                "edges_added": len(added_edges),
+                "edges_removed": len(removed_edges),
+                "structural_change_magnitude": (
+                    len(added_nodes) + len(removed_nodes) + len(added_edges) + len(removed_edges)
+                ) / max(1, len(base_nodes) + len(base_edges))
+            })
+        
+        return differences
 
 
 class SFMQueryFactory:
