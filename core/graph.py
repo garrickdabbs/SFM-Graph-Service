@@ -187,10 +187,35 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
         if self._enable_advanced_caching:
             self._setup_cache_invalidation_rules()
     
+    def __getstate__(self):
+        """Custom pickle serialization to handle non-serializable objects."""
+        state = self.__dict__.copy()
+        # Remove non-serializable objects before pickling
+        non_serializable = ['_memory_monitor', '_query_cache']
+        for key in non_serializable:
+            if key in state:
+                del state[key]
+        return state
+    
+    def __setstate__(self, state):
+        """Custom pickle deserialization to restore non-serializable objects."""
+        self.__dict__.update(state)
+        # Restore non-serializable objects after unpickling
+        if getattr(self, '_enable_memory_management', True):
+            self._memory_monitor = MemoryMonitor(
+                memory_limit_mb=getattr(self, '_memory_limit_mb', 1000.0),
+                warning_threshold=0.8,
+                critical_threshold=0.95
+            )
+        
+        if getattr(self, '_enable_advanced_caching', True):
+            self._query_cache = QueryCache()
+            self._setup_cache_invalidation_rules()
+    
     def _setup_cache_invalidation_rules(self):
         """Set up cache invalidation rules for different events."""
-        if not self._query_cache:
-            return
+        if not hasattr(self, '_query_cache') or not self._query_cache:
+            self._query_cache = QueryCache()
             
         # Node-related invalidations
         self._query_cache.register_invalidation_rule(
@@ -233,7 +258,7 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
                     logger.info(f"Evicted {evicted} nodes after adding new node")
 
         # Cache invalidation
-        if self._enable_advanced_caching:
+        if self._enable_advanced_caching and hasattr(self, '_query_cache') and self._query_cache:
             self._query_cache.invalidate_on_event('node_added', node_id=node.id)
 
         return node
@@ -262,7 +287,7 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
         self._clear_relationship_cache()
 
         # Cache invalidation
-        if self._enable_advanced_caching:
+        if self._enable_advanced_caching and hasattr(self, '_query_cache') and self._query_cache:
             self._query_cache.invalidate_on_event('relationship_added', 
                                                source_id=relationship.source_id,
                                                target_id=relationship.target_id)
@@ -314,7 +339,8 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
     def get_node_relationships(self, node_id: uuid.UUID) -> List[Relationship]:
         """Get all relationships for a node with caching for performance."""
         # Try advanced cache first
-        if self._enable_advanced_caching:
+        if (self._enable_advanced_caching and 
+            hasattr(self, '_query_cache') and self._query_cache):
             cached_result = self._query_cache.get_cached_result("get_node_relationships", node_id)
             if cached_result is not None:
                 return cached_result
@@ -323,7 +349,8 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
         if node_id in self._relationship_cache:
             relationships = self._relationship_cache[node_id]
             # Cache in advanced cache too
-            if self._enable_advanced_caching:
+            if (self._enable_advanced_caching and 
+                hasattr(self, '_query_cache') and self._query_cache):
                 self._query_cache.cache_result("get_node_relationships", relationships, node_id=node_id)
             return relationships
 
@@ -342,7 +369,8 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
         self._relationship_cache[node_id] = relationships
         
         # Cache in advanced cache
-        if self._enable_advanced_caching:
+        if (self._enable_advanced_caching and 
+            hasattr(self, '_query_cache') and self._query_cache):
             self._query_cache.cache_result("get_node_relationships", relationships, ttl=1800, node_id=node_id)
         
         return relationships
@@ -404,7 +432,8 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
             
             # Clear related caches
             self._relationship_cache.pop(node_id, None)
-            if self._enable_advanced_caching:
+            if (self._enable_advanced_caching and 
+                hasattr(self, '_query_cache') and self._query_cache):
                 self._query_cache.invalidate_on_event('node_removed', node_id=node_id)
             
             logger.debug(f"Evicted node {node_id} from memory")
@@ -471,7 +500,7 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
         if self._memory_monitor:
             stats.update(self._memory_monitor.get_eviction_stats())
             
-        if self._enable_advanced_caching:
+        if self._enable_advanced_caching and hasattr(self, '_query_cache') and self._query_cache:
             stats["query_cache_stats"] = self._query_cache.get_stats()
             
         return stats
@@ -480,13 +509,14 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
     def enable_advanced_caching(self, enable: bool = True) -> None:
         """Enable or disable advanced caching."""
         self._enable_advanced_caching = enable
-        if not enable and self._query_cache:
+        if not enable and hasattr(self, '_query_cache') and self._query_cache:
             self._query_cache.clear()
 
     def clear_all_caches(self) -> None:
         """Clear all caches."""
         self._relationship_cache.clear()
-        if self._enable_advanced_caching:
+        if (self._enable_advanced_caching and 
+            hasattr(self, '_query_cache') and self._query_cache):
             self._query_cache.clear()
 
     def get_cache_stats(self) -> Dict[str, Any]:
@@ -496,7 +526,8 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
             "relationship_cache_max_size": self._relationship_cache_max_size,
         }
         
-        if self._enable_advanced_caching:
+        if (self._enable_advanced_caching and 
+            hasattr(self, '_query_cache') and self._query_cache):
             stats["query_cache"] = self._query_cache.get_stats()
             
         return stats
