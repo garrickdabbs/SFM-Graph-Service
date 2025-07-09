@@ -764,8 +764,19 @@ class TestNetworkXSFMQueryEngineUnit(unittest.TestCase):
 
         self.assertIsInstance(comparison, dict)
         self.assertEqual(comparison["scenario_count"], 2)
-        self.assertIn("node_count_comparison", comparison)
-        self.assertIn("relationship_count_comparison", comparison)
+        self.assertIn("basic_metrics", comparison)
+        self.assertIn("structural_comparison", comparison)
+        self.assertIn("policy_impact_analysis", comparison)
+        self.assertIn("similarity_matrix", comparison)
+        self.assertIn("key_differences", comparison)
+        
+        # Check basic metrics structure
+        basic_metrics = comparison["basic_metrics"]
+        self.assertIn("node_counts", basic_metrics)
+        self.assertIn("relationship_counts", basic_metrics)
+        self.assertIn("density_scores", basic_metrics)
+        self.assertEqual(len(basic_metrics["node_counts"]), 2)
+        self.assertEqual(len(basic_metrics["relationship_counts"]), 2)
 
     @patch("networkx.density")
     def test_get_network_density(self, mock_density):
@@ -779,12 +790,23 @@ class TestNetworkXSFMQueryEngineUnit(unittest.TestCase):
         mock_density.assert_called_once()
 
     def test_identify_communities(self):
-        """Test community identification (placeholder implementation)."""
+        """Test community identification with improved implementation."""
         communities = self.query_engine.identify_communities()
 
         self.assertIsInstance(communities, dict)
-        # Placeholder implementation should return all nodes in community 0
-        self.assertIn(0, communities)
+        # Should return a dictionary of communities
+        self.assertTrue(len(communities) >= 1)
+        
+        # Test different algorithms
+        communities_louvain = self.query_engine.identify_communities("louvain")
+        self.assertIsInstance(communities_louvain, dict)
+        
+        communities_label_prop = self.query_engine.identify_communities("label_propagation")
+        self.assertIsInstance(communities_label_prop, dict)
+        
+        # Test fallback with unknown algorithm
+        communities_unknown = self.query_engine.identify_communities("unknown_algorithm")
+        self.assertIsInstance(communities_unknown, dict)
 
     @patch("networkx.betweenness_centrality")
     def test_get_structural_holes(self, mock_centrality):
