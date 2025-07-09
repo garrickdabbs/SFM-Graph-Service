@@ -333,6 +333,10 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
         self, node_id: uuid.UUID, relationship_kinds: Optional[List[RelationshipKind]] = None
     ) -> List[uuid.UUID]:
         """Get direct neighbors of a node."""
+        # Check if node exists in graph
+        if node_id not in self.nx_graph.nodes():
+            return []
+            
         if relationship_kinds:
             neighbors = []
             for neighbor in self.nx_graph.neighbors(node_id):
@@ -347,6 +351,10 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
         self, node_id: uuid.UUID, relationship_kinds: List[RelationshipKind], distance: int
     ) -> List[uuid.UUID]:
         """Get multi-hop neighbors with relationship kind filtering."""
+        # Check if node exists in graph
+        if node_id not in self.nx_graph.nodes():
+            return []
+            
         # Create subgraph with only desired relationship types
         edges_to_keep = []
         for u, v, key, data in self.nx_graph.edges(keys=True, data=True):
@@ -362,18 +370,22 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
                         path_length = nx.shortest_path_length(subgraph, node_id, target)
                         if path_length <= distance:
                             neighbors.add(target)
-                    except nx.NetworkXNoPath:
+                    except (nx.NetworkXNoPath, nx.NodeNotFound):
                         continue
             return list(neighbors)
-        except nx.NetworkXError:
+        except (nx.NetworkXError, nx.NodeNotFound):
             return []
 
     def _get_multihop_neighbors_all(self, node_id: uuid.UUID, distance: int) -> List[uuid.UUID]:
         """Get multi-hop neighbors for all relationship types."""
         try:
+            # Check if node exists in graph
+            if node_id not in self.nx_graph.nodes():
+                return []
+            
             ego_graph = nx.ego_graph(self.nx_graph, node_id, radius=distance)
             return [n for n in ego_graph.nodes() if n != node_id]
-        except nx.NetworkXError:
+        except (nx.NetworkXError, nx.NodeNotFound):
             return []
 
     def get_node_neighbors(
@@ -399,6 +411,10 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
     ) -> Optional[List[uuid.UUID]]:
         """Find shortest path between two nodes."""
         try:
+            # Check if both nodes exist in graph
+            if source_id not in self.nx_graph.nodes() or target_id not in self.nx_graph.nodes():
+                return None
+                
             if relationship_kinds:
                 # Create subgraph with only desired relationship types
                 edges_to_keep = []
@@ -412,7 +428,7 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
 
             path = nx.shortest_path(self.nx_graph, source_id, target_id)
             return path if isinstance(path, list) else None
-        except nx.NetworkXNoPath:
+        except (nx.NetworkXNoPath, nx.NodeNotFound):
             return None
 
     def get_relationship_strength(
@@ -488,8 +504,16 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
 
     def identify_bottlenecks(self, flow_type: FlowNature) -> List[uuid.UUID]:
         """Identify bottleneck nodes in flow networks."""
+        # Handle empty or single-node graphs
+        if self.nx_graph.number_of_nodes() <= 1:
+            return []
+        
         # Use betweenness centrality as a proxy for bottlenecks
         centrality = nx.betweenness_centrality(self.nx_graph)
+        
+        # Handle case where no centrality values exist
+        if not centrality:
+            return []
 
         # Get top 10% of nodes by centrality
         threshold = sorted(centrality.values())[-max(1, len(centrality) // 10)]
@@ -519,6 +543,10 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
         self, policy_id: uuid.UUID, impact_radius: int = 3
     ) -> Dict[str, Any]:
         """Analyze the network impact of a policy intervention."""
+        # Check if policy node exists in graph
+        if policy_id not in self.nx_graph.nodes():
+            return {"error": "Policy node not found in graph"}
+        
         # Get nodes within impact radius
         try:
             ego_graph = nx.ego_graph(self.nx_graph, policy_id, radius=impact_radius)
@@ -659,8 +687,16 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
 
     def get_structural_holes(self) -> List[uuid.UUID]:
         """Identify nodes that bridge structural holes."""
+        # Handle empty or single-node graphs
+        if self.nx_graph.number_of_nodes() <= 1:
+            return []
+        
         # Use betweenness centrality as a proxy for structural holes
         centrality = nx.betweenness_centrality(self.nx_graph)
+        
+        # Handle case where no centrality values exist
+        if not centrality:
+            return []
 
         # Nodes with high betweenness centrality often bridge structural holes
         threshold = sorted(centrality.values())[
@@ -674,6 +710,17 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
 
     def comprehensive_node_analysis(self, node_id: uuid.UUID) -> NodeMetrics:
         """Comprehensive analysis of a single node."""
+        # Check if node exists in graph
+        if node_id not in self.nx_graph.nodes():
+            return NodeMetrics(
+                node_id=node_id,
+                centrality_scores={"betweenness": 0.0, "closeness": 0.0, "degree": 0.0},
+                influence_score=0.0,
+                dependency_score=0.0,
+                connectivity=0,
+                node_type="Unknown"
+            )
+        
         centrality_scores = {
             "betweenness": self.get_node_centrality(node_id, "betweenness"),
             "closeness": self.get_node_centrality(node_id, "closeness"),

@@ -1185,10 +1185,10 @@ class TestEdgeCases(unittest.TestCase):
         centrality = engine.get_node_centrality(fake_id)
         self.assertEqual(centrality, 0.0)
 
-        with self.assertRaises(NetworkXError):
-            engine.get_node_neighbors(
-                fake_id
-            )  # Should raise Error for non-existent node
+        # Updated: get_node_neighbors should return empty list for non-existent nodes
+        # to be more robust in production environments
+        neighbors = engine.get_node_neighbors(fake_id)
+        self.assertEqual(neighbors, [])
 
     def test_invalid_parameters(self):
         """Test handling of invalid parameters."""
@@ -1346,6 +1346,93 @@ class TestPerformance(unittest.TestCase):
 
         # Should complete reasonably quickly
         self.assertLess(execution_time, 15.0)  # 15 seconds max
+
+
+class TestQueryEngineEdgeCaseRobustness(unittest.TestCase):
+    """Test suite for edge case robustness improvements in NetworkXSFMQueryEngine."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.empty_graph = SFMGraph()
+        self.empty_engine = NetworkXSFMQueryEngine(self.empty_graph)
+        
+        # Single node graph
+        self.single_graph = SFMGraph()
+        self.single_actor = Actor(label="Single Actor")
+        self.single_graph.add_node(self.single_actor)
+        self.single_engine = NetworkXSFMQueryEngine(self.single_graph)
+
+    def test_empty_graph_robustness(self):
+        """Test that all methods handle empty graphs gracefully."""
+        # Test structural analysis methods
+        structural_holes = self.empty_engine.get_structural_holes()
+        self.assertEqual(structural_holes, [])
+        
+        bottlenecks = self.empty_engine.identify_bottlenecks(FlowNature.TRANSFER)
+        self.assertEqual(bottlenecks, [])
+        
+        # Test vulnerability analysis
+        vulnerability = self.empty_engine.system_vulnerability_analysis()
+        self.assertIsInstance(vulnerability, dict)
+        self.assertIn("network_density", vulnerability)
+        self.assertEqual(vulnerability["network_density"], 0)
+        
+        # Test community detection
+        communities = self.empty_engine.identify_communities()
+        self.assertEqual(communities, {})
+
+    def test_nonexistent_node_robustness(self):
+        """Test that methods handle non-existent nodes gracefully."""
+        fake_id = uuid.uuid4()
+        
+        # Test policy analysis
+        impact = self.empty_engine.analyze_policy_impact(fake_id)
+        self.assertIn("error", impact)
+        
+        targets = self.empty_engine.identify_policy_targets(fake_id)
+        self.assertEqual(targets, [])
+        
+        # Test node analysis
+        analysis = self.empty_engine.comprehensive_node_analysis(fake_id)
+        self.assertEqual(analysis.node_type, "Unknown")
+        self.assertEqual(analysis.connectivity, 0)
+        
+        # Test neighbors
+        neighbors = self.empty_engine.get_node_neighbors(fake_id)
+        self.assertEqual(neighbors, [])
+
+    def test_single_node_graph_robustness(self):
+        """Test that methods handle single-node graphs gracefully."""
+        # Test structural analysis
+        structural_holes = self.single_engine.get_structural_holes()
+        self.assertEqual(structural_holes, [])
+        
+        bottlenecks = self.single_engine.identify_bottlenecks(FlowNature.TRANSFER)
+        self.assertEqual(bottlenecks, [])
+        
+        # Test vulnerability analysis
+        vulnerability = self.single_engine.system_vulnerability_analysis()
+        self.assertIsInstance(vulnerability, dict)
+        self.assertIn("network_density", vulnerability)
+        
+        # Test community detection
+        communities = self.single_engine.identify_communities()
+        self.assertIsInstance(communities, dict)
+
+    def test_flow_efficiency_edge_cases(self):
+        """Test flow efficiency calculation edge cases."""
+        fake_id1 = uuid.uuid4()
+        fake_id2 = uuid.uuid4()
+        
+        # Test with non-existent nodes
+        efficiency = self.empty_engine.calculate_flow_efficiency(fake_id1, fake_id2)
+        self.assertEqual(efficiency, 0.0)
+        
+        # Test with single node (no path possible)
+        efficiency = self.single_engine.calculate_flow_efficiency(
+            self.single_actor.id, fake_id1
+        )
+        self.assertEqual(efficiency, 0.0)
 
 
 if __name__ == "__main__":
