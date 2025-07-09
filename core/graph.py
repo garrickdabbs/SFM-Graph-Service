@@ -8,6 +8,7 @@ and the NetworkMetrics class for network analysis.
 from __future__ import annotations
 
 import uuid
+import logging
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Iterator, Callable
 from datetime import datetime
@@ -27,6 +28,9 @@ from core.behavioral_nodes import (
 from core.relationships import Relationship
 from core.metadata_models import ModelMetadata, ValidationRule
 from core.sfm_enums import EnumValidator
+
+# Set up logger for lazy loading operations
+logger = logging.getLogger(__name__)
 
 
 class NodeTypeRegistry:
@@ -272,9 +276,12 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
         
         # If not found and lazy loading is enabled, try to load it
         if node is None and self._lazy_loading_enabled and self._node_loader:
-            node = self._node_loader(node_id)
-            if node is not None:
-                # Add the lazy-loaded node to the graph
-                self.add_node(node)
+            try:
+                node = self._node_loader(node_id)
+                if node is not None:
+                    # Add the lazy-loaded node to the graph
+                    self.add_node(node)
+            except Exception as e:
+                logger.warning(f"Failed to lazy load node {node_id}: {e}")
         
         return node

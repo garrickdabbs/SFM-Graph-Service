@@ -196,6 +196,51 @@ class TestPerformanceOptimizations(unittest.TestCase):
         disabled_node = lazy_graph.get_node_by_id(another_test_id)
         self.assertIsNone(disabled_node)  # Should not be found since lazy loading is disabled
 
+    def test_lazy_loading_error_handling(self):
+        """Test lazy loading error handling for failed node loader operations."""
+        import logging
+        
+        # Create a separate graph for error handling test
+        lazy_graph = SFMGraph()
+        
+        # Capture log messages
+        log_messages = []
+        
+        class TestLogHandler(logging.Handler):
+            def emit(self, record):
+                log_messages.append(record.getMessage())
+        
+        # Set up logging to capture warnings
+        logger = logging.getLogger('core.graph')
+        test_handler = TestLogHandler()
+        logger.addHandler(test_handler)
+        logger.setLevel(logging.WARNING)
+        
+        try:
+            # Create a mock loader that raises an exception
+            def failing_node_loader(node_id: uuid.UUID) -> Actor:
+                raise ValueError(f"Simulated database error for {node_id}")
+            
+            # Enable lazy loading with failing loader
+            lazy_graph.enable_lazy_loading(failing_node_loader)
+            
+            # Try to find a node that will trigger the failing loader
+            test_id = uuid.UUID('33333333-0000-0000-0000-000000000001')
+            node = lazy_graph.get_node_by_id(test_id)
+            
+            # Verify that the node is None (loader failed)
+            self.assertIsNone(node)
+            
+            # Verify that a warning was logged
+            self.assertEqual(len(log_messages), 1)
+            self.assertIn("Failed to lazy load node", log_messages[0])
+            self.assertIn("33333333-0000-0000-0000-000000000001", log_messages[0])
+            self.assertIn("Simulated database error", log_messages[0])
+            
+        finally:
+            # Clean up logging handler
+            logger.removeHandler(test_handler)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
