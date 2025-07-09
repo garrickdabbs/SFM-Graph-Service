@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import uuid
 import logging
+import sys
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Iterator, Callable
+from typing import Dict, List, Optional, Iterator, Callable, Set
 from datetime import datetime
 
 from core.base_nodes import Node
@@ -28,6 +29,9 @@ from core.behavioral_nodes import (
 from core.relationships import Relationship
 from core.metadata_models import ModelMetadata, ValidationRule
 from core.sfm_enums import EnumValidator
+from core.memory_management import MemoryMonitor, MemoryUsageStats, EvictionStrategy, EvictableGraph
+from core.advanced_caching import QueryCache, cached_operation
+from core.performance_metrics import get_metrics_collector, timed_operation
 
 # Set up logger for lazy loading operations
 logger = logging.getLogger(__name__)
@@ -100,8 +104,8 @@ class NetworkMetrics(Node):
 
 
 @dataclass
-class SFMGraph:  # pylint: disable=too-many-instance-attributes
-    """A complete Social Fabric Matrix representation."""
+class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
+    """A complete Social Fabric Matrix representation with advanced performance optimizations."""
 
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     name: str = ""
@@ -164,6 +168,53 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
     _lazy_loading_enabled: bool = field(default=False, init=False)
     _node_loader: Optional[Callable[[uuid.UUID], Optional[Node]]] = field(default=None, init=False)
 
+    # Memory management and advanced caching
+    _memory_monitor: Optional[MemoryMonitor] = field(default=None, init=False)
+    _query_cache: QueryCache = field(default_factory=QueryCache, init=False)
+    _memory_limit_mb: float = field(default=1000.0, init=False)
+    _enable_memory_management: bool = field(default=True, init=False)
+    _enable_advanced_caching: bool = field(default=True, init=False)
+
+    def __post_init__(self):
+        """Initialize performance optimizations after dataclass initialization."""
+        if self._enable_memory_management:
+            self._memory_monitor = MemoryMonitor(
+                memory_limit_mb=self._memory_limit_mb,
+                warning_threshold=0.8,
+                critical_threshold=0.95
+            )
+        
+        if self._enable_advanced_caching:
+            self._setup_cache_invalidation_rules()
+    
+    def _setup_cache_invalidation_rules(self):
+        """Set up cache invalidation rules for different events."""
+        if not self._query_cache:
+            return
+            
+        # Node-related invalidations
+        self._query_cache.register_invalidation_rule(
+            'node_added', 
+            ['get_node_relationships:{node_id}:*', 'get_nodes_by_type:*', 'count_nodes:*']
+        )
+        
+        self._query_cache.register_invalidation_rule(
+            'node_removed',
+            ['get_node_relationships:{node_id}:*', 'get_nodes_by_type:*', 'count_nodes:*']
+        )
+        
+        # Relationship-related invalidations
+        self._query_cache.register_invalidation_rule(
+            'relationship_added',
+            ['get_node_relationships:*', 'find_paths:*', 'analyze_network:*']
+        )
+        
+        self._query_cache.register_invalidation_rule(
+            'relationship_removed', 
+            ['get_node_relationships:*', 'find_paths:*', 'analyze_network:*']
+        )
+
+    @timed_operation("add_node")
     def add_node(self, node: Node) -> Node:
         """Add a node to the appropriate collection based on its type."""
         collection_name = self._node_registry.get_collection_name(node)
@@ -173,8 +224,21 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
         # Performance optimization: Maintain central index for O(1) lookups
         self._node_index[node.id] = node
 
+        # Memory management: Record node access and check memory limits
+        if self._memory_monitor:
+            self._memory_monitor.record_node_access(node.id)
+            if self._memory_monitor.should_evict_nodes():
+                evicted = self._memory_monitor.evict_nodes(self)
+                if evicted > 0:
+                    logger.info(f"Evicted {evicted} nodes after adding new node")
+
+        # Cache invalidation
+        if self._enable_advanced_caching:
+            self._query_cache.invalidate_on_event('node_added', node_id=node.id)
+
         return node
 
+    @timed_operation("add_relationship")
     def add_relationship(self, relationship: Relationship) -> Relationship:
         """Add a relationship to the SFM graph with validation."""
 
@@ -197,14 +261,26 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
         # Performance optimization: Clear relationship cache when relationships change
         self._clear_relationship_cache()
 
+        # Cache invalidation
+        if self._enable_advanced_caching:
+            self._query_cache.invalidate_on_event('relationship_added', 
+                                               source_id=relationship.source_id,
+                                               target_id=relationship.target_id)
+
         return relationship
 
     def _find_node_by_id(self, node_id: uuid.UUID) -> Optional[Node]:
         """Find a node by its ID using central index for O(1) lookup."""
         if self._lazy_loading_enabled:
             return self._find_node_by_id_with_lazy_loading(node_id)
+        
+        # Record access for memory management
+        if self._memory_monitor:
+            self._memory_monitor.record_node_access(node_id)
+            
         return self._node_index.get(node_id)
 
+    @timed_operation("get_node_by_id")
     def get_node_by_id(self, node_id: uuid.UUID) -> Optional[Node]:
         """Public method to retrieve a node by its ID."""
         return self._find_node_by_id(node_id)
@@ -234,11 +310,22 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
         """Clear the relationship cache when relationships change."""
         self._relationship_cache.clear()
 
+    @timed_operation("get_node_relationships")
     def get_node_relationships(self, node_id: uuid.UUID) -> List[Relationship]:
         """Get all relationships for a node with caching for performance."""
-        # Check cache first
+        # Try advanced cache first
+        if self._enable_advanced_caching:
+            cached_result = self._query_cache.get_cached_result("get_node_relationships", node_id)
+            if cached_result is not None:
+                return cached_result
+
+        # Check basic cache
         if node_id in self._relationship_cache:
-            return self._relationship_cache[node_id]
+            relationships = self._relationship_cache[node_id]
+            # Cache in advanced cache too
+            if self._enable_advanced_caching:
+                self._query_cache.cache_result("get_node_relationships", relationships, node_id=node_id)
+            return relationships
 
         # Compute relationships for this node
         relationships = []
@@ -253,6 +340,11 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
             del self._relationship_cache[oldest_key]
 
         self._relationship_cache[node_id] = relationships
+        
+        # Cache in advanced cache
+        if self._enable_advanced_caching:
+            self._query_cache.cache_result("get_node_relationships", relationships, ttl=1800, node_id=node_id)
+        
         return relationships
 
     def enable_lazy_loading(self, node_loader: Callable[[uuid.UUID], Optional[Node]]) -> None:
@@ -284,4 +376,127 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
             except Exception as e:
                 logger.warning("Failed to lazy load node %s: %s", node_id, e)
 
+        # Record access for memory management
+        if node and self._memory_monitor:
+            self._memory_monitor.record_node_access(node_id)
+
         return node
+
+    # EvictableGraph protocol implementation
+    def get_all_node_ids(self) -> Set[uuid.UUID]:
+        """Get all node IDs in the graph."""
+        return set(self._node_index.keys())
+
+    def remove_node_from_memory(self, node_id: uuid.UUID) -> bool:
+        """Remove a node from memory (but not from persistent storage)."""
+        if node_id not in self._node_index:
+            return False
+
+        try:
+            # Get the node to determine its collection
+            node = self._node_index[node_id]
+            collection_name = self._node_registry.get_collection_name(node)
+            collection = getattr(self, collection_name)
+            
+            # Remove from collection and index
+            del collection[node_id]
+            del self._node_index[node_id]
+            
+            # Clear related caches
+            self._relationship_cache.pop(node_id, None)
+            if self._enable_advanced_caching:
+                self._query_cache.invalidate_on_event('node_removed', node_id=node_id)
+            
+            logger.debug(f"Evicted node {node_id} from memory")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to remove node {node_id} from memory: {e}")
+            return False
+
+    def get_node_size_estimate(self, node_id: uuid.UUID) -> int:
+        """Get estimated memory size of a node in bytes."""
+        node = self._node_index.get(node_id)
+        if not node:
+            return 0
+        
+        try:
+            # Basic size estimation
+            size = sys.getsizeof(node)
+            
+            # Add size of string attributes
+            if hasattr(node, 'label') and node.label:
+                size += sys.getsizeof(node.label)
+            if hasattr(node, 'description') and node.description:
+                size += sys.getsizeof(node.description)
+                
+            return size
+        except Exception:
+            return 128  # Default estimate
+
+    # Memory management methods
+    def set_memory_limit(self, limit_mb: float) -> None:
+        """Set the memory limit for the graph."""
+        self._memory_limit_mb = limit_mb
+        if self._memory_monitor:
+            self._memory_monitor.memory_limit_mb = limit_mb
+
+    def get_memory_usage(self) -> MemoryUsageStats:
+        """Get current memory usage statistics."""
+        if self._memory_monitor:
+            return self._memory_monitor.check_memory_usage()
+        return MemoryUsageStats.capture_current()
+
+    def force_memory_cleanup(self) -> int:
+        """Force memory cleanup by evicting nodes."""
+        if self._memory_monitor:
+            return self._memory_monitor.evict_nodes(self, force=True)
+        return 0
+
+    def set_eviction_strategy(self, strategy: EvictionStrategy) -> None:
+        """Set the node eviction strategy."""
+        if self._memory_monitor:
+            self._memory_monitor.current_strategy = strategy
+
+    def get_memory_stats(self) -> Dict[str, any]:
+        """Get memory management statistics."""
+        stats = {
+            "memory_limit_mb": self._memory_limit_mb,
+            "total_nodes": len(self._node_index),
+            "total_relationships": len(self.relationships),
+            "relationship_cache_size": len(self._relationship_cache),
+            "memory_management_enabled": self._enable_memory_management
+        }
+        
+        if self._memory_monitor:
+            stats.update(self._memory_monitor.get_eviction_stats())
+            
+        if self._enable_advanced_caching:
+            stats["query_cache_stats"] = self._query_cache.get_stats()
+            
+        return stats
+
+    # Advanced caching methods
+    def enable_advanced_caching(self, enable: bool = True) -> None:
+        """Enable or disable advanced caching."""
+        self._enable_advanced_caching = enable
+        if not enable and self._query_cache:
+            self._query_cache.clear()
+
+    def clear_all_caches(self) -> None:
+        """Clear all caches."""
+        self._relationship_cache.clear()
+        if self._enable_advanced_caching:
+            self._query_cache.clear()
+
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get comprehensive cache statistics."""
+        stats = {
+            "relationship_cache_size": len(self._relationship_cache),
+            "relationship_cache_max_size": self._relationship_cache_max_size,
+        }
+        
+        if self._enable_advanced_caching:
+            stats["query_cache"] = self._query_cache.get_stats()
+            
+        return stats
