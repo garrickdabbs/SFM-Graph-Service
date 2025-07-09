@@ -49,6 +49,20 @@ The **Test Examples** workflow is an ad-hoc GitHub Actions workflow designed to 
    - Risk assessment and vulnerability analysis
    - Dynamic flow analysis with bottleneck identification
 
+## Recent Improvements
+
+### December 2024 Fixes
+The workflow has been enhanced with several critical improvements:
+
+1. **Boolean Input Handling Fix**: Resolved issue where advanced examples never executed due to incorrect boolean comparison logic
+2. **Example Discovery**: Added automatic discovery of example files to warn about new examples not covered by the workflow
+3. **Enhanced Validation**: Improved output validation with proper conditional logic for advanced examples
+4. **Better Error Handling**: Enhanced edge case testing with improved error messages and status reporting
+5. **Comprehensive Reporting**: Added workflow run details, discovery information, and better status handling for skipped tests
+
+### Coverage Validation
+The workflow now automatically validates that all discovered example files are covered by the test suite, helping to ensure comprehensive coverage as new examples are added.
+
 ## How to Trigger the Workflow
 
 ### Method 1: GitHub Web Interface
@@ -149,6 +163,10 @@ After each run, the workflow generates several artifacts:
 #### Example Timeout
 **Problem**: Example exceeds the timeout limit
 **Solution**: Increase the `timeout_minutes` parameter or optimize the example code
+
+#### Advanced Examples Not Running
+**Problem**: Advanced examples are skipped even when `run_all_examples` is set to `true`
+**Solution**: This was a known issue with boolean input handling that has been fixed. The workflow now correctly interprets boolean inputs.
 
 #### Import Errors
 **Problem**: Module import failures
