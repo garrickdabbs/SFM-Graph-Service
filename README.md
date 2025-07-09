@@ -662,6 +662,13 @@ This project includes comprehensive GitHub Actions workflows for automated testi
 - **Sphinx Documentation**: Automated documentation building and testing
 - **Documentation Coverage**: Documentation completeness analysis
 
+### 🧪 **Example Testing** (`test-examples.yml`)
+- **Example Validation**: Automated testing of all repository examples
+- **Output Verification**: Validation of expected example outputs and patterns
+- **Edge Case Testing**: Error scenario testing and memory constraint validation
+- **Manual Triggering**: On-demand example testing with configurable parameters
+- **Comprehensive Reporting**: Detailed test results and debugging artifacts
+
 ### 📊 **Workflow Status**
 All workflows are configured to run on:
 - **Push to main/develop**: Full validation suite
