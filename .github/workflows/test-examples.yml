@@ -188,25 +188,25 @@ jobs:
           # Test memory constraints (create a large graph scenario)
           echo "Testing memory constraints..."
           python -c "
-import sys
-from pathlib import Path
-workspace_root = Path('.')
-sys.path.insert(0, str(workspace_root))
-from core.sfm_models import Actor, SFMGraph
-from db.sfm_dao import NetworkXSFMRepository
+          import sys
+          from pathlib import Path
+          workspace_root = Path('.')
+          sys.path.insert(0, str(workspace_root))
+          from core.sfm_models import Actor, SFMGraph
+          from db.sfm_dao import NetworkXSFMRepository
 
-# Create a large graph to test memory usage
-repo = NetworkXSFMRepository()
-graph = SFMGraph()
+          # Create a large graph to test memory usage
+          repo = NetworkXSFMRepository()
+          graph = SFMGraph()
 
-# Add many actors to test memory constraints
-for i in range(100):
-    actor = Actor(label=f'Actor_{i}', sector='Test')
-    repo.create_node(actor)
-    graph.add_node(actor)
+          # Add many actors to test memory constraints
+          for i in range(100):
+              actor = Actor(label=f'Actor_{i}', sector='Test')
+              repo.create_node(actor)
+              graph.add_node(actor)
 
-print(f'Created large graph with {len(graph)} nodes')
-" > example-test-results/edge_case_memory.txt 2>&1
+          print(f'Created large graph with {len(graph)} nodes')
+          " > example-test-results/edge_case_memory.txt 2>&1
 
       - name: Generate Test Summary Report
         run: |
