@@ -74,6 +74,8 @@ def enable_lazy_loading(self, node_loader: Callable[[uuid.UUID], Optional[Node]]
 - Load nodes on-demand for large datasets
 - Reduces initial memory footprint
 - Configurable with custom loader functions
+- **Robust error handling**: Failed loads are logged with warnings
+- **Exception safety**: Loader exceptions don't crash the graph operations
 
 ## Usage Examples
 
@@ -105,6 +107,31 @@ graph.enable_lazy_loading(load_from_database)
 
 # Nodes will be loaded on-demand
 node = graph._find_node_by_id(some_id)  # May trigger loading
+```
+
+### Robust Lazy Loading with Error Handling
+```python
+import logging
+
+# Set up logging to see warnings
+logging.basicConfig(level=logging.WARNING)
+
+graph = SFMGraph()
+
+# Define a robust loader function with potential error scenarios
+def robust_database_loader(node_id: uuid.UUID) -> Optional[Node]:
+    try:
+        # Your database connection and loading logic
+        return database.load_node(node_id)
+    except DatabaseConnectionError:
+        # Let the SFMGraph handle the exception and logging
+        raise  # Re-raise to be caught by SFMGraph's error handling
+
+# Enable lazy loading
+graph.enable_lazy_loading(robust_database_loader)
+
+# Failed loads will be logged automatically
+node = graph.get_node_by_id(some_id)  # Returns None if loading fails
 ```
 
 ## Performance Benchmarks
