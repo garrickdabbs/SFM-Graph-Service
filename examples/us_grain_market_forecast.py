@@ -1,3 +1,11 @@
+import sys
+import os
+from pathlib import Path
+
+# Add the workspace root to Python path
+workspace_root = Path(__file__).parent.parent
+sys.path.insert(0, str(workspace_root))
+
 from core.sfm_models import (
     Actor,
     Institution,
