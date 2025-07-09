@@ -11,7 +11,7 @@ import unittest
 from typing import List
 
 from core.graph import SFMGraph
-from core.core_nodes import Actor, Institution
+from core.core_nodes import Actor
 from core.relationships import Relationship
 
 

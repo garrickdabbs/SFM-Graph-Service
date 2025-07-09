@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Iterator, Callable, Any
+from typing import Dict, List, Optional, Iterator, Callable
 from datetime import datetime
 
 from core.base_nodes import Node
