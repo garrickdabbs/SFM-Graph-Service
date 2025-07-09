@@ -2366,7 +2366,13 @@ class EnumValidator:
                 ('Flow', 'Institution'),
                 ('TechnologySystem', 'Actor'),
                 ('TechnologySystem', 'Institution'),
-                ('TechnologySystem', 'Policy')
+                ('TechnologySystem', 'Policy'),
+                ('Actor', 'InstrumentalBehavior'),  # Actors can influence behaviors
+                ('Actor', 'CeremonialBehavior'),   # Actors can influence behaviors
+                ('Institution', 'InstrumentalBehavior'),  # Institutions can influence behaviors
+                ('Institution', 'CeremonialBehavior'),    # Institutions can influence behaviors
+                ('PolicyInstrument', 'InstrumentalBehavior'),  # Policy instruments can influence behaviors
+                ('PolicyInstrument', 'CeremonialBehavior')     # Policy instruments can influence behaviors
             ],
             'description': 'INFLUENCES relationship for impact and effect patterns',
             'invalid_message': ('INFLUENCES relationship requires influence-capable entities '
@@ -2419,7 +2425,8 @@ class EnumValidator:
                 ('Institution', 'Institution'),
                 ('Process', 'Policy'),
                 ('TechnologySystem', 'Policy'),
-                ('PolicyInstrument', 'Policy')
+                ('PolicyInstrument', 'Policy'),
+                ('Policy', 'PolicyInstrument')  # Policies implement through policy instruments
             ],
             'description': 'IMPLEMENTS relationship for policy and institutional execution',
             'invalid_message': ('IMPLEMENTS relationship requires implementing entities '
