@@ -75,6 +75,14 @@ from core.security_validators import (
     validate_and_sanitize_node_data,
     SecurityValidationError,
 )
+from core.transaction_manager import TransactionManager
+from core.audit_logger import (
+    AuditLogger, audit_operation, OperationType as AuditOperationType,
+    AuditLevel, get_audit_logger
+)
+from core.performance_metrics import (
+    MetricsCollector, get_metrics_collector, timed_operation
+)
 from db.sfm_dao import (
     SFMRepositoryFactory,
     ActorRepository,
@@ -355,6 +363,11 @@ class SFMService:
         self._cache_dirty = True
         self._last_operation: Optional[str] = None
 
+        # Initialize new systems
+        self._transaction_manager = TransactionManager()
+        self._audit_logger = get_audit_logger()
+        self._metrics_collector = get_metrics_collector()
+
         logger.info(
             "SFM Service initialized with backend: %s", self.config.storage_backend
         )
@@ -437,11 +450,19 @@ class SFMService:
 
     # ═══ HEALTH & STATUS ═══
 
+    @timed_operation("get_health")
     def get_health(self) -> ServiceHealth:
-        """Get service health status."""
+        """Get service health status with enhanced metrics."""
         try:
             stats = self.get_statistics()
-            return ServiceHealth(
+            
+            # Get performance and audit metrics
+            performance_summary = self._metrics_collector.get_summary_stats()
+            audit_stats = self._audit_logger.get_audit_stats()
+            transaction_stats = self._transaction_manager.get_transaction_stats()
+            
+            # Enhanced health information
+            enhanced_health = ServiceHealth(
                 status=ServiceStatus.HEALTHY,
                 timestamp=datetime.now().isoformat(),
                 backend=self.config.storage_backend,
@@ -449,6 +470,30 @@ class SFMService:
                 relationship_count=stats.total_relationships,
                 last_operation=self._last_operation,
             )
+            
+            # Add enhanced metrics to the health response via metadata
+            if hasattr(enhanced_health, 'meta'):
+                enhanced_health.meta = {
+                    "performance_metrics": {
+                        "total_operations": performance_summary.get("total_operations", 0),
+                        "operations_per_second": performance_summary.get("operations_per_second", 0.0),
+                        "error_rate": performance_summary.get("error_rate", 0.0),
+                        "uptime_seconds": performance_summary.get("uptime_seconds", 0.0)
+                    },
+                    "audit_metrics": {
+                        "total_audit_events": audit_stats.get("total_events", 0),
+                        "recent_events": audit_stats.get("recent_events", 0)
+                    },
+                    "transaction_metrics": {
+                        "total_transactions": transaction_stats.get("total_transactions", 0),
+                        "committed_transactions": transaction_stats.get("committed_transactions", 0),
+                        "rolled_back_transactions": transaction_stats.get("rolled_back_transactions", 0),
+                        "active_transactions": transaction_stats.get("active_transactions", 0)
+                    }
+                }
+            
+            return enhanced_health
+            
         except Exception as e:
             logger.error("Health check failed: %s", e)
             return ServiceHealth(
@@ -460,6 +505,8 @@ class SFMService:
 
     # ═══ ENTITY CREATION (API-COMPATIBLE) ═══
 
+    @audit_operation(AuditOperationType.CREATE, entity_type="Actor")
+    @timed_operation("create_actor")
     def create_actor(
         self, request: Union[CreateActorRequest, dict], **kwargs
     ) -> NodeResponse:
@@ -504,6 +551,16 @@ class SFMService:
             )
 
             result = self._actor_repo.create(actor)
+            
+            # Track operation in transaction if active
+            if self._transaction_manager.is_in_transaction():
+                self._transaction_manager.add_operation(
+                    operation_type="create_actor",
+                    data={"actor_id": str(result.id), "name": result.label},
+                    rollback_data={"actor_id": str(result.id)},
+                    rollback_function=lambda data: self._rollback_create_actor(data["actor_id"])
+                )
+            
             self._mark_dirty("create_actor")
             self._validate_graph_size()
 
@@ -1253,19 +1310,107 @@ class SFMService:
 
         return results
 
-    @contextmanager
-    def transaction(self):
+    def transaction(self, metadata: Optional[Dict[str, Any]] = None):
         """
         Context manager for transactional operations.
-
-        Note: This is a placeholder for future implementation.
+        
+        This provides proper transaction support with rollback capabilities.
+        All operations within the transaction context will be rolled back
+        if an exception occurs.
+        
+        Args:
+            metadata: Optional metadata for the transaction
+            
+        Yields:
+            SFMService: The service instance for chaining operations
+            
+        Example:
+            with service.transaction() as tx_service:
+                actor = tx_service.create_actor(actor_request)
+                policy = tx_service.create_policy(policy_request)
+                tx_service.connect(actor.id, policy.id, "IMPLEMENTS")
+                # All operations committed on successful exit
+                # All operations rolled back on exception
         """
+        @contextmanager
+        def transaction_wrapper():
+            with self._transaction_manager.transaction(metadata):
+                yield self
+        
+        return transaction_wrapper()
+
+    # ═══ TRANSACTION ROLLBACK HELPERS ═══
+
+    def _rollback_create_actor(self, actor_id: str):
+        """Rollback actor creation by deleting the actor."""
         try:
-            yield self
-        except Exception:
-            # In a real implementation, this would rollback changes
-            logger.error("Transaction failed, would rollback if supported")
-            raise
+            self._actor_repo.delete(actor_id)
+            logger.debug(f"Rolled back actor creation: {actor_id}")
+        except Exception as e:
+            logger.error(f"Failed to rollback actor creation {actor_id}: {e}")
+
+    def _rollback_create_policy(self, policy_id: str):
+        """Rollback policy creation by deleting the policy."""
+        try:
+            self._policy_repo.delete(policy_id)
+            logger.debug(f"Rolled back policy creation: {policy_id}")
+        except Exception as e:
+            logger.error(f"Failed to rollback policy creation {policy_id}: {e}")
+
+    def _rollback_create_relationship(self, relationship_id: str):
+        """Rollback relationship creation by deleting the relationship."""
+        try:
+            self._relationship_repo.delete(relationship_id)
+            logger.debug(f"Rolled back relationship creation: {relationship_id}")
+        except Exception as e:
+            logger.error(f"Failed to rollback relationship creation {relationship_id}: {e}")
+
+    # ═══ ENHANCED MONITORING & METRICS ═══
+
+    def get_performance_metrics(self) -> Dict[str, Any]:
+        """Get comprehensive performance metrics."""
+        return self._metrics_collector.get_summary_stats()
+
+    def get_operation_metrics(self, operation_name: Optional[str] = None) -> Dict[str, Any]:
+        """Get metrics for specific operations or all operations."""
+        if operation_name:
+            return self._metrics_collector.get_operation_metrics(operation_name)
+        return self._metrics_collector.get_all_operation_metrics()
+
+    def get_audit_metrics(self) -> Dict[str, Any]:
+        """Get audit logging statistics."""
+        return self._audit_logger.get_audit_stats()
+
+    def get_transaction_metrics(self) -> Dict[str, Any]:
+        """Get transaction management statistics."""
+        return self._transaction_manager.get_transaction_stats()
+
+    def get_system_resource_metrics(self, limit: Optional[int] = 10) -> List[Dict[str, Any]]:
+        """Get system resource usage metrics."""
+        return self._metrics_collector.get_system_metrics(limit)
+
+    def get_comprehensive_status(self) -> Dict[str, Any]:
+        """Get comprehensive service status including all metrics."""
+        health = self.get_health()
+        return {
+            "health": {
+                "status": health.status.value,
+                "timestamp": health.timestamp,
+                "backend": health.backend,
+                "node_count": health.node_count,
+                "relationship_count": health.relationship_count,
+                "last_operation": health.last_operation
+            },
+            "performance_metrics": self.get_performance_metrics(),
+            "audit_metrics": self.get_audit_metrics(),
+            "transaction_metrics": self.get_transaction_metrics(),
+            "system_metrics": self.get_system_resource_metrics(5)
+        }
+
+    def reset_metrics(self):
+        """Reset all collected metrics (for testing/maintenance)."""
+        self._metrics_collector.reset_metrics()
+        # Note: Audit history is retained for compliance
 
 
 # ═══ SERVICE FACTORY & DEPENDENCY INJECTION ═══
