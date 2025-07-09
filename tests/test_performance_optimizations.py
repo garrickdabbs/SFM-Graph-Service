@@ -38,7 +38,7 @@ class TestPerformanceOptimizations(unittest.TestCase):
             node_id = self.nodes[idx].id
             
             start_time = time.time()
-            found_node = self.graph._find_node_by_id(node_id)
+            found_node = self.graph.get_node_by_id(node_id)
             lookup_time = time.time() - start_time
             
             # Verify correct node is found
@@ -175,7 +175,7 @@ class TestPerformanceOptimizations(unittest.TestCase):
         
         # Try to find a node that should be lazy-loaded
         test_id = uuid.UUID('11111111-0000-0000-0000-000000000001')
-        node = lazy_graph._find_node_by_id(test_id)
+        node = lazy_graph.get_node_by_id(test_id)
         
         # Verify lazy loading worked
         self.assertIsNotNone(node)
@@ -187,13 +187,13 @@ class TestPerformanceOptimizations(unittest.TestCase):
         
         # Try to find a node that shouldn't be lazy-loaded
         invalid_id = uuid.UUID('22222222-0000-0000-0000-000000000001')
-        invalid_node = lazy_graph._find_node_by_id(invalid_id)
+        invalid_node = lazy_graph.get_node_by_id(invalid_id)
         self.assertIsNone(invalid_node)
         
         # Disable lazy loading and test
         lazy_graph.disable_lazy_loading()
         another_test_id = uuid.UUID('11111111-0000-0000-0000-000000000002')
-        disabled_node = lazy_graph._find_node_by_id(another_test_id)
+        disabled_node = lazy_graph.get_node_by_id(another_test_id)
         self.assertIsNone(disabled_node)  # Should not be found since lazy loading is disabled
 
 

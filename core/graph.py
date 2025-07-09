@@ -201,6 +201,10 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
             return self._find_node_by_id_with_lazy_loading(node_id)
         return self._node_index.get(node_id)
 
+    def get_node_by_id(self, node_id: uuid.UUID) -> Optional[Node]:
+        """Public method to retrieve a node by its ID."""
+        return self._find_node_by_id(node_id)
+
     def __iter__(self) -> Iterator[Node]:
         """Iterate over all nodes in the SFMGraph."""
         for collection in self._node_registry.iter_collections(self):
