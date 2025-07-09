@@ -528,15 +528,26 @@ class NetworkXSFMQueryEngine(SFMQueryEngine):  # pylint: disable=too-many-public
     ) -> float:
         """Calculate efficiency of flows between nodes."""
         try:
-            shortest_path_length = (
-                len(self.find_shortest_path(source_id, target_id) or []) - 1
-            )
+            path = self.find_shortest_path(source_id, target_id)
+            
+            # Handle cases where no path exists or path is too short
+            if not path or len(path) <= 1:
+                return 0.0
+                
+            shortest_path_length = len(path) - 1
+            
+            # Double-check for zero or negative path length
             if shortest_path_length <= 0:
                 return 0.0
 
             # Simple efficiency metric: inverse of path length
-            return 1.0 / shortest_path_length
-        except (nx.NetworkXError, ZeroDivisionError, TypeError):
+            # Explicit ZeroDivisionError protection for Python 3.8 compatibility
+            try:
+                return 1.0 / shortest_path_length
+            except ZeroDivisionError:
+                return 0.0
+                
+        except (nx.NetworkXError, TypeError):
             return 0.0
 
     def analyze_policy_impact(
