@@ -2329,6 +2329,165 @@ class EnumValidator:
             'invalid_message': ('PRODUCES relationship requires '
                                'Actor/Process/TechnologySystem/PolicyInstrument '
                                'producing Resource/Flow/ValueFlow')
+        },
+        
+        # Enhanced governance relationships
+        RelationshipKind.REGULATES: {
+            'valid_combinations': [
+                ('Actor', 'Actor'),
+                ('Institution', 'Actor'),
+                ('Policy', 'Actor'),
+                ('Actor', 'Institution'),
+                ('Institution', 'Institution'),
+                ('Policy', 'Institution'),
+                ('Actor', 'Resource'),
+                ('Institution', 'Resource'),
+                ('Policy', 'Resource'),
+                ('Actor', 'TechnologySystem'),
+                ('Institution', 'TechnologySystem'),
+                ('Policy', 'TechnologySystem')
+            ],
+            'description': 'REGULATES relationship requires regulatory authority',
+            'invalid_message': ('REGULATES relationship requires authority entities '
+                               '(Actor/Institution/Policy) regulating appropriate targets')
+        },
+        
+        RelationshipKind.INFLUENCES: {
+            'valid_combinations': [
+                ('Actor', 'Actor'),
+                ('Actor', 'Institution'),
+                ('Actor', 'Policy'),
+                ('Institution', 'Actor'),
+                ('Institution', 'Institution'),
+                ('Institution', 'Policy'),
+                ('Policy', 'Actor'),     # Policies can influence actors
+                ('Policy', 'Institution'),  # Policies can influence institutions
+                ('Policy', 'Resource'),  # Policies can influence resource management/usage
+                ('Resource', 'Actor'),
+                ('Resource', 'Institution'),
+                ('Flow', 'Actor'),
+                ('Flow', 'Institution'),
+                ('TechnologySystem', 'Actor'),
+                ('TechnologySystem', 'Institution'),
+                ('TechnologySystem', 'Policy'),
+                ('Actor', 'InstrumentalBehavior'),  # Actors can influence behaviors
+                ('Actor', 'CeremonialBehavior'),   # Actors can influence behaviors
+                ('Institution', 'InstrumentalBehavior'),  # Institutions can influence behaviors
+                ('Institution', 'CeremonialBehavior'),    # Institutions can influence behaviors
+                ('PolicyInstrument', 'InstrumentalBehavior'),  # Policy instruments can influence behaviors
+                ('PolicyInstrument', 'CeremonialBehavior')     # Policy instruments can influence behaviors
+            ],
+            'description': 'INFLUENCES relationship for impact and effect patterns',
+            'invalid_message': ('INFLUENCES relationship requires influence-capable entities '
+                               'affecting decision-makers or systems')
+        },
+        
+        RelationshipKind.FUNDS: {
+            'valid_combinations': [
+                ('Actor', 'Actor'),
+                ('Institution', 'Actor'),
+                ('Actor', 'Institution'),
+                ('Institution', 'Institution'),
+                ('Policy', 'Actor'),        # Policies can establish funding for actors
+                ('Policy', 'Institution'),  # Policies can establish funding for institutions
+                ('Actor', 'Resource'),
+                ('Institution', 'Resource'),
+                ('Actor', 'Process'),
+                ('Institution', 'Process'),
+                ('Actor', 'TechnologySystem'),
+                ('Institution', 'TechnologySystem')
+            ],
+            'description': 'FUNDS relationship for financial resource provision',
+            'invalid_message': ('FUNDS relationship requires funding entities '
+                               '(Actor/Institution/Policy) providing financial resources')
+        },
+        
+        RelationshipKind.SUPPLIES: {
+            'valid_combinations': [
+                ('Actor', 'Actor'),
+                ('Institution', 'Actor'),
+                ('Actor', 'Institution'),
+                ('Institution', 'Institution'),
+                ('Actor', 'Process'),
+                ('Institution', 'Process'),
+                ('Resource', 'Actor'),
+                ('Resource', 'Institution'),
+                ('Resource', 'Process'),
+                ('TechnologySystem', 'Actor'),
+                ('TechnologySystem', 'Institution'),
+                ('TechnologySystem', 'Process')
+            ],
+            'description': 'SUPPLIES relationship for resource provision',
+            'invalid_message': ('SUPPLIES relationship requires suppliers providing '
+                               'resources to recipients')
+        },
+        
+        RelationshipKind.IMPLEMENTS: {
+            'valid_combinations': [
+                ('Actor', 'Policy'),
+                ('Institution', 'Policy'),
+                ('Actor', 'Institution'),
+                ('Institution', 'Institution'),
+                ('Process', 'Policy'),
+                ('TechnologySystem', 'Policy'),
+                ('PolicyInstrument', 'Policy'),
+                ('Policy', 'PolicyInstrument')  # Policies implement through policy instruments
+            ],
+            'description': 'IMPLEMENTS relationship for policy and institutional execution',
+            'invalid_message': ('IMPLEMENTS relationship requires implementing entities '
+                               'executing policies or institutional arrangements')
+        },
+        
+        RelationshipKind.TRANSFORMS: {
+            'valid_combinations': [
+                ('Process', 'Resource'),
+                ('TechnologySystem', 'Resource'),
+                ('PolicyInstrument', 'Resource'),
+                ('Process', 'Actor'),
+                ('TechnologySystem', 'Actor'),
+                ('PolicyInstrument', 'Actor'),
+                ('Process', 'Flow'),
+                ('TechnologySystem', 'Flow'),
+                ('PolicyInstrument', 'Flow'),
+                ('Process', 'ValueFlow'),
+                ('TechnologySystem', 'ValueFlow'),
+                ('PolicyInstrument', 'ValueFlow')
+            ],
+            'description': 'TRANSFORMS relationship for change and conversion processes',
+            'invalid_message': ('TRANSFORMS relationship requires active change agents '
+                               '(Process/TechnologySystem/PolicyInstrument) transforming targets')
+        },
+        
+        RelationshipKind.COLLABORATES_WITH: {
+            'valid_combinations': [
+                ('Actor', 'Actor'),
+                ('Institution', 'Institution'),
+                ('Actor', 'Institution'),
+                ('Institution', 'Actor'),
+                ('Process', 'Process'),
+                ('Actor', 'Process'),
+                ('Institution', 'Process')
+            ],
+            'description': 'COLLABORATES_WITH relationship for cooperative arrangements',
+            'invalid_message': ('COLLABORATES_WITH relationship requires cooperative entities '
+                               'working together')
+        },
+        
+        RelationshipKind.COORDINATES_WITH: {
+            'valid_combinations': [
+                ('Actor', 'Actor'),
+                ('Institution', 'Institution'),
+                ('Actor', 'Institution'),
+                ('Institution', 'Actor'),
+                ('Process', 'Process'),
+                ('Actor', 'Process'),
+                ('Institution', 'Process'),
+                ('TechnologySystem', 'TechnologySystem'),
+                ('TechnologySystem', 'Process')
+            ],
+            'description': 'COORDINATES_WITH relationship for alignment and synchronization',
+            'invalid_message': ('COORDINATES_WITH relationship requires coordinating entities '
+                               'aligning activities')
         }
     }
 
@@ -2705,7 +2864,17 @@ class EnumValidator:
 
     @staticmethod
     def _generate_suggestions(kind: RelationshipKind, source_type: str, target_type: str) -> str:
-        """Generate helpful suggestions for valid combinations."""
+        """Generate intelligent, context-aware suggestions for valid combinations.
+        
+        Enhanced suggestion algorithm that provides:
+        - Semantic analysis of relationship types
+        - Entity type compatibility assessment
+        - Context-aware alternative recommendations
+        - SFM-specific business logic guidance
+        """
+        suggestions: List[str] = []
+        
+        # Try specific rules first for basic suggestions
         if kind in EnumValidator.RELATIONSHIP_RULES:
             valid_combinations = EnumValidator.RELATIONSHIP_RULES[kind]['valid_combinations']
 
@@ -2713,16 +2882,353 @@ class EnumValidator:
             source_suggestions = [combo[1] for combo in valid_combinations if combo[0] == source_type]
             target_suggestions = [combo[0] for combo in valid_combinations if combo[1] == target_type]
 
-            suggestions: List[str] = []
             if source_suggestions:
                 suggestions.append(f"For {source_type} sources, valid targets are: {', '.join(set(source_suggestions))}")
             if target_suggestions:
                 suggestions.append(f"For {target_type} targets, valid sources are: {', '.join(set(target_suggestions))}")
-
-            if suggestions:
-                return "Suggestions: " + "; ".join(suggestions)
-
+        
+        # Always enhance with intelligent suggestion algorithms
+        semantic_suggestions = EnumValidator._generate_semantic_suggestions(kind, source_type, target_type)
+        if semantic_suggestions:
+            suggestions.extend(semantic_suggestions)
+        
+        # Business logic suggestions based on SFM principles
+        business_suggestions = EnumValidator._generate_business_logic_suggestions(kind, source_type, target_type)
+        if business_suggestions:
+            suggestions.extend(business_suggestions)
+        
+        # Context-aware entity compatibility suggestions
+        entity_suggestions = EnumValidator._generate_entity_compatibility_suggestions(source_type, target_type)
+        if entity_suggestions:
+            suggestions.extend(entity_suggestions)
+        
+        if suggestions:
+            return "Suggestions: " + "; ".join(suggestions)
+        
         return "Check the relationship documentation for valid combinations."
+
+    @staticmethod 
+    def _generate_semantic_suggestions(kind: RelationshipKind, source_type: str, target_type: str) -> List[str]:
+        """Generate suggestions based on semantic analysis of relationship types."""
+        suggestions = []
+        
+        # Categorize relationships by semantic meaning
+        governance_relations = {
+            RelationshipKind.GOVERNS, RelationshipKind.REGULATES, RelationshipKind.MANDATES,
+            RelationshipKind.AUTHORIZES, RelationshipKind.ENFORCES, RelationshipKind.DELEGATES,
+            RelationshipKind.LICENSES, RelationshipKind.CERTIFIES, RelationshipKind.SANCTIONS
+        }
+        
+        resource_flow_relations = {
+            RelationshipKind.FUNDS, RelationshipKind.PAYS, RelationshipKind.ALLOCATES,
+            RelationshipKind.TRANSFERS, RelationshipKind.SUPPLIES, RelationshipKind.PRODUCES,
+            RelationshipKind.DISTRIBUTES, RelationshipKind.CONVERTS, RelationshipKind.EXCHANGES_WITH
+        }
+        
+        knowledge_relations = {
+            RelationshipKind.INFORMS, RelationshipKind.EDUCATES, RelationshipKind.ADVISES,
+            RelationshipKind.RESEARCHES, RelationshipKind.ANALYZES, RelationshipKind.COMMUNICATES_WITH,
+            RelationshipKind.DOCUMENTS, RelationshipKind.MEASURES
+        }
+        
+        collaborative_relations = {
+            RelationshipKind.COLLABORATES_WITH, RelationshipKind.COORDINATES_WITH,
+            RelationshipKind.SUPPORTS, RelationshipKind.ALLIES_WITH, RelationshipKind.FACILITATES,
+            RelationshipKind.PARTICIPATES_IN, RelationshipKind.ORGANIZES
+        }
+        
+        # Provide semantic category guidance
+        if kind in governance_relations:
+            if source_type not in ['Actor', 'Institution', 'Policy']:
+                suggestions.append(f"Governance relationships like {kind.name} typically require Actor, Institution, or Policy as source")
+            if target_type in ['Actor', 'Institution', 'Policy', 'Resource']:
+                suggestions.append(f"Consider {kind.name} with governable entities: Actor, Institution, Policy, or Resource")
+                
+        elif kind in resource_flow_relations:
+            if source_type not in ['Actor', 'Institution', 'Process', 'PolicyInstrument']:
+                suggestions.append(f"Resource flow relationships like {kind.name} typically require entities capable of resource handling")
+            if target_type not in ['Actor', 'Resource', 'Flow', 'ValueFlow']:
+                suggestions.append(f"Consider {kind.name} targeting resource-receiving entities: Actor, Resource, Flow, or ValueFlow")
+                
+        elif kind in knowledge_relations:
+            if source_type not in ['Actor', 'Institution', 'TechnologySystem']:
+                suggestions.append(f"Knowledge relationships like {kind.name} typically require information-capable entities")
+            if target_type not in ['Actor', 'Institution', 'Resource', 'TechnologySystem']:
+                suggestions.append(f"Consider {kind.name} with information-receiving entities")
+                
+        elif kind in collaborative_relations:
+            if source_type not in ['Actor', 'Institution']:
+                suggestions.append(f"Collaborative relationships like {kind.name} typically require social entities like Actor or Institution")
+            if target_type not in ['Actor', 'Institution', 'Process']:
+                suggestions.append(f"Consider {kind.name} with collaborative entities: Actor, Institution, or Process")
+        
+        return suggestions
+
+    @staticmethod
+    def _generate_business_logic_suggestions(kind: RelationshipKind, source_type: str, target_type: str) -> List[str]:
+        """Generate suggestions based on SFM business logic and domain constraints."""
+        suggestions = []
+        
+        # SFM-specific institutional analysis patterns
+        if kind == RelationshipKind.IMPLEMENTS and source_type == 'Actor':
+            if target_type not in ['Policy', 'Institution']:
+                suggestions.append("Actors typically implement Policies or institutional arrangements")
+                
+        elif kind == RelationshipKind.INFLUENCES:
+            if source_type in ['Resource', 'Flow'] and target_type in ['Actor', 'Institution']:
+                suggestions.append("Resources and Flows can influence decision-making entities")
+            elif source_type in ['Actor', 'Institution'] and target_type in ['Actor', 'Institution', 'Policy']:
+                suggestions.append("Social entities can influence other social entities and policies")
+                
+        elif kind == RelationshipKind.TRANSFORMS:
+            if source_type not in ['Process', 'TechnologySystem', 'PolicyInstrument']:
+                suggestions.append("Transformation typically requires active change agents: Process, TechnologySystem, or PolicyInstrument")
+            if target_type not in ['Resource', 'Flow', 'ValueFlow', 'Actor']:
+                suggestions.append("Consider transformation targets: Resource, Flow, ValueFlow, or Actor")
+                
+        # Hayden's institutional layer compatibility
+        elif kind in [RelationshipKind.ENFORCES, RelationshipKind.SANCTIONS]:
+            if source_type != 'Institution':
+                suggestions.append("Enforcement and sanctions typically come from institutional authority")
+                
+        # Economic flow patterns
+        elif kind in [RelationshipKind.BUYS_FROM, RelationshipKind.SELLS_TO, RelationshipKind.PAYS]:
+            if source_type not in ['Actor', 'Institution']:
+                suggestions.append("Economic transactions require economic actors")
+            if target_type not in ['Actor', 'Institution']:
+                suggestions.append("Economic transactions target other economic actors")
+        
+        return suggestions
+
+    @staticmethod 
+    def _generate_entity_compatibility_suggestions(source_type: str, target_type: str) -> List[str]:
+        """Generate suggestions based on entity type compatibility in SFM framework."""
+        suggestions = []
+        
+        # Get entity type categories for analysis
+        source_category = EnumValidator._get_entity_category(source_type)
+        target_category = EnumValidator._get_entity_category(target_type)
+        
+        # Suggest compatible entity combinations
+        if source_category == 'social' and target_category == 'structural':
+            suggestions.append("Social entities (Actor, Institution) work well with structural entities (Resource, TechnologySystem)")
+            
+        elif source_category == 'active' and target_category == 'passive':
+            suggestions.append("Active entities (Actor, Process) can effectively operate on passive entities (Resource, Flow)")
+            
+        elif source_category == 'authority' and target_category in ['social', 'structural']:
+            suggestions.append("Authority entities (Institution, Policy) can govern social and structural entities")
+            
+        elif source_type == target_type:
+            suggestions.append(f"Same-type relationships ({source_type}->{target_type}) may indicate peer interaction patterns")
+        
+        return suggestions
+
+    @staticmethod
+    def _get_entity_category(entity_type: str) -> str:
+        """Categorize entity types for compatibility analysis."""
+        if entity_type in EnumValidator.ACTOR_TYPES:
+            return 'social'
+        elif entity_type in EnumValidator.INSTITUTION_TYPES:
+            return 'authority'
+        elif entity_type in EnumValidator.RESOURCE_TYPES:
+            return 'structural'
+        elif entity_type in EnumValidator.PROCESS_TYPES:
+            return 'active'
+        elif entity_type in EnumValidator.SYSTEM_TYPES:
+            return 'structural'
+        else:
+            return 'other'
+
+    @staticmethod
+    def validate_cross_entity_consistency(
+        entity_1_type: str, 
+        entity_2_type: str, 
+        relationship_kind: RelationshipKind,
+        context: str = "general"
+    ) -> None:
+        """Validate consistency across multiple entities in SFM framework.
+        
+        This method implements advanced cross-entity validation rules that ensure
+        entities work together coherently within the SFM framework, considering
+        business logic and domain constraints.
+        
+        Args:
+            entity_1_type: Type of first entity
+            entity_2_type: Type of second entity  
+            relationship_kind: The relationship connecting them
+            context: Additional context for validation
+            
+        Raises:
+            IncompatibleEnumError: If entities are inconsistent
+            InvalidEnumOperationError: If invalid parameters provided
+        """
+        if not entity_1_type or not entity_2_type:
+            raise InvalidEnumOperationError(
+                "Entity types must be provided and non-empty"
+            )
+        
+        # Basic relationship validation first
+        EnumValidator.validate_relationship_context(relationship_kind, entity_1_type, entity_2_type)
+        
+        # Advanced consistency checks based on SFM principles
+        
+        # Authority consistency: governance relationships require clear authority hierarchy
+        governance_relationships = {
+            RelationshipKind.GOVERNS, RelationshipKind.REGULATES, RelationshipKind.MANDATES,
+            RelationshipKind.AUTHORIZES, RelationshipKind.ENFORCES
+        }
+        
+        if relationship_kind in governance_relationships:
+            if entity_1_type in ['Resource', 'Flow'] and entity_2_type in ['Actor', 'Institution']:
+                raise IncompatibleEnumError(
+                    f"Authority inconsistency: {entity_1_type} cannot exercise governance "
+                    f"over {entity_2_type}. Governance requires authority-capable entities."
+                )
+        
+        # Economic consistency: financial relationships require economic capability
+        economic_relationships = {
+            RelationshipKind.FUNDS, RelationshipKind.PAYS, RelationshipKind.BUYS_FROM,
+            RelationshipKind.SELLS_TO, RelationshipKind.INVESTS_IN
+        }
+        
+        if relationship_kind in economic_relationships:
+            non_economic_entities = ['Flow', 'ValueFlow', 'Process']
+            if entity_1_type in non_economic_entities or entity_2_type in non_economic_entities:
+                raise IncompatibleEnumError(
+                    f"Economic inconsistency: {relationship_kind.name} relationship "
+                    f"between {entity_1_type} and {entity_2_type} requires economic actors. "
+                    f"Consider Actor or Institution entities for economic transactions."
+                )
+        
+        # Temporal consistency: ensure entity lifecycles are compatible
+        if context.lower() in ['temporal', 'time_series']:
+            temporal_sensitive = {
+                RelationshipKind.PRECEDES, RelationshipKind.FOLLOWS, RelationshipKind.TRIGGERS,
+                RelationshipKind.SYNCHRONIZES_WITH, RelationshipKind.SUPERSEDES
+            }
+            
+            if relationship_kind in temporal_sensitive:
+                # Structural entities (Resources, Systems) may have different temporal patterns
+                if entity_1_type in ['Resource', 'TechnologySystem'] and entity_2_type in ['Actor']:
+                    # This is acceptable but requires careful temporal modeling
+                    pass
+        
+        # Spatial consistency: ensure entities can interact spatially
+        if context.lower() in ['spatial', 'geographic']:
+            spatial_relationships = {
+                RelationshipKind.LOCATED_IN, RelationshipKind.CONNECTS, RelationshipKind.TRANSPORTS,
+                RelationshipKind.CONTAINS, RelationshipKind.ENCOMPASSES
+            }
+            
+            if relationship_kind in spatial_relationships:
+                if entity_1_type in ['Flow', 'ValueFlow'] and entity_2_type in ['Flow', 'ValueFlow']:
+                    raise IncompatibleEnumError(
+                        f"Spatial inconsistency: {relationship_kind.name} between flows "
+                        f"may require spatial anchor entities (Actor, Institution, Resource)."
+                    )
+
+    @staticmethod
+    def validate_business_rule_constraints(
+        relationship_kind: RelationshipKind,
+        source_type: str,
+        target_type: str,
+        domain_context: str = "general"
+    ) -> None:
+        """Validate SFM-specific business rules and domain constraints.
+        
+        This method implements domain-specific validation rules based on Hayden's
+        institutional analysis framework and SFM methodology.
+        
+        Args:
+            relationship_kind: The relationship type to validate
+            source_type: Source entity type
+            target_type: Target entity type
+            domain_context: Domain-specific context (e.g., 'environmental', 'economic')
+            
+        Raises:
+            IncompatibleEnumError: If business rules are violated
+            InvalidEnumOperationError: If invalid parameters provided
+        """
+        if not all([relationship_kind, source_type, target_type]):
+            raise InvalidEnumOperationError(
+                "All parameters must be provided and non-empty"
+            )
+        
+        domain_lower = domain_context.lower()
+        
+        # Environmental domain constraints
+        if domain_lower in ['environmental', 'sustainability', 'ecological']:
+            # Environmental policies should primarily regulate actors and resources
+            if relationship_kind == RelationshipKind.REGULATES and source_type == 'Policy':
+                if target_type not in ['Actor', 'Resource', 'TechnologySystem']:
+                    raise IncompatibleEnumError(
+                        f"Environmental regulatory constraint: Policy should regulate "
+                        f"entities with environmental impact (Actor/Resource/TechnologySystem), "
+                        f"not {target_type}."
+                    )
+            
+            # Environmental flows should connect to resource or actor entities
+            if relationship_kind in [RelationshipKind.PRODUCES, RelationshipKind.CONSUMES]:
+                if source_type == 'Flow' and target_type not in ['Resource', 'Actor']:
+                    raise IncompatibleEnumError(
+                        f"Environmental flow constraint: {relationship_kind.name} from Flow "
+                        f"should target Resource or Actor entities in environmental context."
+                    )
+        
+        # Economic domain constraints
+        elif domain_lower in ['economic', 'financial', 'market']:
+            # Market relationships require economic actors
+            market_relationships = {
+                RelationshipKind.COMPETES_WITH, RelationshipKind.BUYS_FROM, 
+                RelationshipKind.SELLS_TO, RelationshipKind.CONTRACTS_WITH
+            }
+            
+            if relationship_kind in market_relationships:
+                if source_type not in ['Actor', 'Institution'] or target_type not in ['Actor', 'Institution']:
+                    raise IncompatibleEnumError(
+                        f"Economic constraint: Market relationship {relationship_kind.name} "
+                        f"requires economic actors (Actor/Institution), got {source_type}->{target_type}."
+                    )
+            
+            # Investment relationships require financial capability
+            if relationship_kind == RelationshipKind.INVESTS_IN:
+                if source_type not in ['Actor', 'Institution']:
+                    raise IncompatibleEnumError(
+                        f"Economic constraint: Investment requires Actor or Institution "
+                        f"as investor, not {source_type}."
+                    )
+        
+        # Social domain constraints  
+        elif domain_lower in ['social', 'community', 'governance']:
+            # Social coordination requires social entities
+            social_relationships = {
+                RelationshipKind.COLLABORATES_WITH, RelationshipKind.COORDINATES_WITH,
+                RelationshipKind.PARTICIPATES_IN, RelationshipKind.ORGANIZES
+            }
+            
+            if relationship_kind in social_relationships:
+                if source_type not in ['Actor', 'Institution']:
+                    raise IncompatibleEnumError(
+                        f"Social constraint: {relationship_kind.name} requires social entities "
+                        f"(Actor/Institution) as participants, not {source_type}."
+                    )
+        
+        # Institutional domain constraints (Hayden's framework)
+        elif domain_lower in ['institutional', 'policy', 'governance']:
+            # Institutional implementation requires clear authority
+            if relationship_kind == RelationshipKind.IMPLEMENTS:
+                if source_type not in ['Actor', 'Institution', 'PolicyInstrument']:
+                    raise IncompatibleEnumError(
+                        f"Institutional constraint: Policy implementation requires "
+                        f"implementing entities (Actor/Institution/PolicyInstrument), not {source_type}."
+                    )
+                
+                if target_type not in ['Policy', 'Institution']:
+                    raise IncompatibleEnumError(
+                        f"Institutional constraint: Implementation should target "
+                        f"institutional arrangements (Policy/Institution), not {target_type}."
+                    )
 
 
 def validate_enum_operation(operation_name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
