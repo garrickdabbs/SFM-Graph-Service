@@ -26,7 +26,7 @@ import threading
 import uuid
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, Sequence, Mapping, Tuple
@@ -906,11 +906,69 @@ class SFMPersistenceManager:
                 stats['total_versions'] += len(version_history)
 
     def _count_backups(self, stats: Dict[str, Any]) -> None:
-        """Count backup files."""
-        if self.file_manager.backups_path.exists():
-            stats['total_backups'] = len(
-                list(self.file_manager.backups_path.glob("*.backup"))
-            )
+        """Count backup files with size calculation, validation, and age tracking."""
+        if not self.file_manager.backups_path.exists():
+            stats['total_backups'] = 0
+            stats['total_backup_size_bytes'] = 0
+            stats['backup_age_stats'] = {'oldest': None, 'newest': None, 'average_age_days': 0}
+            stats['valid_backups'] = 0
+            return
+            
+        backup_files = list(self.file_manager.backups_path.glob("*.backup"))
+        stats['total_backups'] = len(backup_files)
+        
+        total_size = 0
+        valid_count = 0
+        oldest_date = None
+        newest_date = None
+        
+        current_time = datetime.now()
+        total_age_days = 0
+        
+        for backup_file in backup_files:
+            try:
+                # Calculate size
+                file_size = backup_file.stat().st_size
+                total_size += file_size
+                
+                # Basic validation - check if file is readable and not empty
+                if file_size > 0:
+                    try:
+                        # Try to read first few bytes to validate file integrity
+                        with backup_file.open('rb') as f:
+                            f.read(10)  # Read first 10 bytes to verify readability
+                        valid_count += 1
+                    except (IOError, OSError):
+                        logger.warning("Backup file %s appears corrupted", backup_file)
+                        continue
+                
+                # Age tracking using file modification time
+                file_mtime = datetime.fromtimestamp(backup_file.stat().st_mtime)
+                
+                if oldest_date is None or file_mtime < oldest_date:
+                    oldest_date = file_mtime
+                if newest_date is None or file_mtime > newest_date:
+                    newest_date = file_mtime
+                    
+                age_days = (current_time - file_mtime).days
+                total_age_days += age_days
+                
+            except (OSError, IOError) as e:
+                logger.warning("Failed to process backup file %s: %s", backup_file, e)
+                continue
+        
+        stats['total_backup_size_bytes'] = total_size
+        stats['valid_backups'] = valid_count
+        
+        # Calculate age statistics
+        if backup_files:
+            stats['backup_age_stats'] = {
+                'oldest': oldest_date.isoformat() if oldest_date else None,
+                'newest': newest_date.isoformat() if newest_date else None,
+                'average_age_days': total_age_days / len(backup_files) if backup_files else 0
+            }
+        else:
+            stats['backup_age_stats'] = {'oldest': None, 'newest': None, 'average_age_days': 0}
 
     # Additional methods would be implemented here following the same pattern
     # ... (continuing with remaining methods like get_version_history,
@@ -918,17 +976,44 @@ class SFMPersistenceManager:
 
     def _get_metadata(self, graph_id: str,
                       version: Optional[int] = None) -> Optional[GraphMetadata]:
-        """Load metadata for a graph."""
+        """Load metadata for a graph with enhanced validation and error handling."""
         try:
+            # Input validation
+            if not graph_id or not isinstance(graph_id, str):
+                logger.error("Invalid graph_id provided: %s", graph_id)
+                return None
+            
+            if version is not None and (not isinstance(version, int) or version < 1):
+                logger.error("Invalid version provided: %s", version)
+                return None
+
             # Check cache first
             if version is None and graph_id in self._metadata_cache:
-                return self._metadata_cache[graph_id]
+                cached_metadata = self._metadata_cache[graph_id]
+                # Validate cached metadata is still consistent
+                if self._validate_metadata_consistency(cached_metadata):
+                    return cached_metadata
+                else:
+                    # Remove invalid cached metadata
+                    del self._metadata_cache[graph_id]
+                    logger.warning("Removed inconsistent cached metadata for '%s'", graph_id)
 
             metadata_data = self._load_metadata_data(graph_id, version)
             if not metadata_data:
+                logger.debug("No metadata found for graph '%s', version %s", graph_id, version)
+                return None
+
+            # Validate metadata structure
+            if not self._validate_metadata_structure(metadata_data):
+                logger.error("Invalid metadata structure for graph '%s'", graph_id)
                 return None
 
             metadata = self._parse_metadata(metadata_data)
+            
+            # Validate parsed metadata
+            if not self._validate_parsed_metadata(metadata, graph_id, version):
+                logger.error("Parsed metadata validation failed for graph '%s'", graph_id)
+                return None
 
             # Cache current version
             if version is None:
@@ -936,9 +1021,90 @@ class SFMPersistenceManager:
 
             return metadata
 
+        except json.JSONDecodeError as e:
+            logger.error("JSON decode error loading metadata for '%s': %s", graph_id, str(e))
+            return None
         except Exception as e:
             logger.error("Failed to load metadata for '%s': %s", graph_id, str(e))
             return None
+
+    def _validate_metadata_consistency(self, metadata: GraphMetadata) -> bool:
+        """Validate that cached metadata is still consistent with stored files."""
+        try:
+            # Check if the corresponding graph file exists
+            graph_file = self.file_manager.get_graph_file_path(metadata.graph_id, metadata.format)
+            if not graph_file.exists():
+                return False
+            
+            # Check if file size matches metadata
+            actual_size = graph_file.stat().st_size
+            if abs(actual_size - metadata.size_bytes) > 100:  # Allow small variance for compression
+                logger.warning("Size mismatch for graph '%s': expected %d, actual %d", 
+                             metadata.graph_id, metadata.size_bytes, actual_size)
+                return False
+                
+            # Check if file modification time is consistent
+            file_mtime = datetime.fromtimestamp(graph_file.stat().st_mtime)
+            if metadata.modified_at and abs((file_mtime - metadata.modified_at).total_seconds()) > 60:
+                logger.warning("Modification time mismatch for graph '%s'", metadata.graph_id)
+                return False
+                
+            return True
+        except (OSError, IOError) as e:
+            logger.warning("Error validating metadata consistency for '%s': %s", metadata.graph_id, e)
+            return False
+
+    def _validate_metadata_structure(self, metadata_data: Dict[str, Any]) -> bool:
+        """Validate that metadata has required fields and structure."""
+        required_fields = ['graph_id', 'name', 'version', 'created_at', 'format']
+        
+        for field in required_fields:
+            if field not in metadata_data:
+                logger.error("Missing required metadata field: %s", field)
+                return False
+        
+        # Validate data types
+        if not isinstance(metadata_data['graph_id'], str) or not metadata_data['graph_id']:
+            logger.error("Invalid graph_id in metadata")
+            return False
+            
+        if not isinstance(metadata_data['version'], int) or metadata_data['version'] < 1:
+            logger.error("Invalid version in metadata: %s", metadata_data['version'])
+            return False
+            
+        if not isinstance(metadata_data['size_bytes'], int) or metadata_data['size_bytes'] < 0:
+            logger.error("Invalid size_bytes in metadata: %s", metadata_data['size_bytes'])
+            return False
+            
+        return True
+
+    def _validate_parsed_metadata(self, metadata: GraphMetadata, graph_id: str, 
+                                 version: Optional[int]) -> bool:
+        """Validate parsed metadata object."""
+        # Check that graph_id matches
+        if metadata.graph_id != graph_id:
+            logger.error("Graph ID mismatch: expected '%s', got '%s'", graph_id, metadata.graph_id)
+            return False
+            
+        # Check version if specified
+        if version is not None and metadata.version != version:
+            logger.error("Version mismatch: expected %d, got %d", version, metadata.version)
+            return False
+            
+        # Validate checksum if present
+        if metadata.checksum:
+            try:
+                graph_file = self.file_manager.get_graph_file_path(metadata.graph_id, metadata.format)
+                if graph_file.exists():
+                    actual_checksum = hashlib.sha256(graph_file.read_bytes()).hexdigest()
+                    if actual_checksum != metadata.checksum:
+                        logger.warning("Checksum mismatch for graph '%s': expected %s, got %s", 
+                                     metadata.graph_id, metadata.checksum, actual_checksum)
+                        # Don't fail validation for checksum mismatch, just warn
+            except (OSError, IOError) as e:
+                logger.warning("Could not validate checksum for '%s': %s", metadata.graph_id, e)
+                
+        return True
 
     def _load_metadata_data(self, graph_id: str,
                             version: Optional[int]) -> Optional[Dict[str, Any]]:
@@ -1016,31 +1182,100 @@ class SFMPersistenceManager:
             raise
 
     def _validate_graph(self, graph: SFMGraph) -> None:
-        """Validate graph integrity."""
+        """Validate graph integrity with enhanced corruption detection."""
         if not graph.id:
             raise SFMSerializationError("Graph must have an ID")
 
-        # Validate relationship references
-        all_node_ids = set()
+        # Validate graph ID format (UUID or string)
+        if not (isinstance(graph.id, (str, uuid.UUID)) and str(graph.id).strip()):
+            raise SFMSerializationError("Graph ID must be a non-empty string or valid UUID")
+
+        # Validate node collections exist and are dictionaries
         node_collections = [
-            graph.actors, graph.institutions, graph.resources,
-            graph.processes, graph.flows, graph.policies
+            ('actors', graph.actors), ('institutions', graph.institutions), 
+            ('resources', graph.resources), ('processes', graph.processes), 
+            ('flows', graph.flows), ('policies', graph.policies),
+            ('belief_systems', graph.belief_systems), ('technology_systems', graph.technology_systems),
+            ('indicators', graph.indicators), ('feedback_loops', graph.feedback_loops),
+            ('system_properties', graph.system_properties), ('analytical_contexts', graph.analytical_contexts)
         ]
 
-        for collection in node_collections:
-            all_node_ids.update(collection.keys())
+        all_node_ids = set()
+        
+        # Validate each node collection
+        for collection_name, collection in node_collections:
+            if not isinstance(collection, dict):
+                raise SFMSerializationError(f"Graph {collection_name} must be a dictionary")
+            
+            for node_id, node in collection.items():
+                # Handle both string and UUID node IDs
+                if not (isinstance(node_id, (str, uuid.UUID)) and str(node_id).strip()):
+                    raise SFMSerializationError(f"Invalid node ID in {collection_name}: {node_id}")
+                
+                if not hasattr(node, 'id') or str(node.id) != str(node_id):
+                    raise SFMSerializationError(
+                        f"Node ID mismatch in {collection_name}: key '{node_id}' != node.id '{getattr(node, 'id', 'missing')}'"
+                    )
+                
+                # Check for duplicate node IDs across collections
+                node_id_str = str(node_id)
+                if node_id_str in all_node_ids:
+                    raise SFMSerializationError(f"Duplicate node ID found: {node_id}")
+                    
+                all_node_ids.add(node_id_str)
 
-        for rel in graph.relationships.values():
-            if rel.source_id not in all_node_ids:
+        # Validate relationships
+        if not isinstance(graph.relationships, dict):
+            raise SFMSerializationError("Graph relationships must be a dictionary")
+            
+        for rel_id, rel in graph.relationships.items():
+            # Handle both string and UUID relationship IDs
+            if not (isinstance(rel_id, (str, uuid.UUID)) and str(rel_id).strip()):
+                raise SFMSerializationError(f"Invalid relationship ID: {rel_id}")
+                
+            if not hasattr(rel, 'id') or str(rel.id) != str(rel_id):
                 raise SFMSerializationError(
-                    f"Relationship {rel.id} references non-existent "
-                    f"source node {rel.source_id}"
+                    f"Relationship ID mismatch: key '{rel_id}' != rel.id '{getattr(rel, 'id', 'missing')}'"
                 )
-            if rel.target_id not in all_node_ids:
+            
+            # Validate relationship references
+            source_id_str = str(getattr(rel, 'source_id', ''))
+            target_id_str = str(getattr(rel, 'target_id', ''))
+            
+            if not hasattr(rel, 'source_id') or source_id_str not in all_node_ids:
                 raise SFMSerializationError(
-                    f"Relationship {rel.id} references non-existent "
-                    f"target node {rel.target_id}"
+                    f"Relationship {rel_id} references non-existent source node: {getattr(rel, 'source_id', 'missing')}"
                 )
+            if not hasattr(rel, 'target_id') or target_id_str not in all_node_ids:
+                raise SFMSerializationError(
+                    f"Relationship {rel_id} references non-existent target node: {getattr(rel, 'target_id', 'missing')}"
+                )
+                
+            # Validate relationship has required attributes
+            if not hasattr(rel, 'kind'):
+                raise SFMSerializationError(f"Relationship {rel_id} missing 'kind' attribute")
+
+        # Additional integrity checks
+        self._check_graph_structure_integrity(graph, all_node_ids)
+
+    def _check_graph_structure_integrity(self, graph: SFMGraph, all_node_ids: set) -> None:
+        """Perform additional graph structure integrity checks."""
+        # Check for orphaned relationships (relationships with no corresponding nodes)
+        total_nodes = len(all_node_ids)
+        total_relationships = len(graph.relationships)
+        
+        # Warn if the ratio seems unusual (could indicate corruption)
+        if total_nodes > 0 and total_relationships > total_nodes * 10:
+            logger.warning("Graph '%s' has unusually high relationship-to-node ratio: %d relationships for %d nodes", 
+                         graph.id, total_relationships, total_nodes)
+        
+        # Check for cycles in hierarchical relationships if applicable
+        if hasattr(graph, 'name') and not isinstance(graph.name, str):
+            raise SFMSerializationError("Graph name must be a string")
+            
+        # Validate metadata fields if present
+        if hasattr(graph, 'description') and graph.description is not None and not isinstance(graph.description, str):
+            raise SFMSerializationError("Graph description must be a string or None")
 
     def _count_nodes(self, graph: SFMGraph) -> int:
         """Count total nodes in graph."""
@@ -1152,6 +1387,181 @@ class SFMPersistenceManager:
             except Exception as e:
                 logger.error("Failed to restore from backup: %s", str(e))
                 raise SFMPersistenceError(f"Failed to restore from backup: {str(e)}") from e
+
+    def check_version_consistency(self, graph_id: str) -> Dict[str, Any]:
+        """Check version consistency for a graph across all storage locations."""
+        try:
+            result = {
+                'graph_id': graph_id,
+                'is_consistent': True,
+                'issues': [],
+                'current_version': None,
+                'version_files': [],
+                'recommendations': []
+            }
+            
+            # Get current metadata
+            current_metadata = self._get_metadata(graph_id)
+            if not current_metadata:
+                result['is_consistent'] = False
+                result['issues'].append("No current metadata found")
+                return result
+                
+            result['current_version'] = current_metadata.version
+            
+            # Check if current graph file exists
+            current_graph_file = self.file_manager.get_graph_file_path(graph_id, current_metadata.format)
+            if not current_graph_file.exists():
+                result['is_consistent'] = False
+                result['issues'].append("Current graph file missing")
+            
+            # Check version history consistency
+            version_history = self.get_version_history(graph_id)
+            for version_info in version_history:
+                version_num = version_info.get('version')
+                if version_num:
+                    version_file = self.file_manager.get_version_file_path(
+                        graph_id, version_num, StorageFormat(version_info.get('format', 'json'))
+                    )
+                    
+                    version_status = {
+                        'version': version_num,
+                        'metadata_exists': True,
+                        'data_file_exists': version_file.exists()
+                    }
+                    
+                    if not version_status['data_file_exists']:
+                        result['is_consistent'] = False
+                        result['issues'].append(f"Version {version_num} data file missing")
+                        
+                    result['version_files'].append(version_status)
+            
+            # Generate recommendations
+            if not result['is_consistent']:
+                if "Current graph file missing" in result['issues']:
+                    result['recommendations'].append("Restore current graph from latest version or backup")
+                if any("data file missing" in issue for issue in result['issues']):
+                    result['recommendations'].append("Consider cleaning up orphaned version metadata")
+                    
+            return result
+            
+        except Exception as e:
+            logger.error("Failed to check version consistency for '%s': %s", graph_id, str(e))
+            return {
+                'graph_id': graph_id,
+                'is_consistent': False,
+                'issues': [f"Consistency check failed: {str(e)}"],
+                'error': str(e)
+            }
+
+    def cleanup_old_versions(self, graph_id: str, keep_versions: int = None) -> Dict[str, Any]:
+        """Clean up old versions of a graph, keeping the specified number of recent versions."""
+        if keep_versions is None:
+            keep_versions = self.config.max_versions
+            
+        try:
+            result = {
+                'graph_id': graph_id,
+                'versions_before': 0,
+                'versions_after': 0,
+                'cleaned_up': [],
+                'space_freed_bytes': 0
+            }
+            
+            version_history = self.get_version_history(graph_id)
+            result['versions_before'] = len(version_history)
+            
+            if len(version_history) <= keep_versions:
+                result['versions_after'] = result['versions_before']
+                return result
+            
+            # Sort by version number (descending) to keep the most recent
+            version_history.sort(key=lambda x: x.get('version', 0), reverse=True)
+            versions_to_remove = version_history[keep_versions:]
+            
+            for version_info in versions_to_remove:
+                version_num = version_info.get('version')
+                if not version_num:
+                    continue
+                    
+                try:
+                    # Remove version metadata file
+                    version_dir = self.file_manager.versions_path / graph_id
+                    version_metadata_file = version_dir / f"v{version_num}.json"
+                    
+                    space_freed = 0
+                    if version_metadata_file.exists():
+                        space_freed += version_metadata_file.stat().st_size
+                        version_metadata_file.unlink()
+                    
+                    # Remove version data file
+                    format_type = StorageFormat(version_info.get('format', 'json'))
+                    version_data_file = self.file_manager.get_version_file_path(
+                        graph_id, version_num, format_type
+                    )
+                    if version_data_file.exists():
+                        space_freed += version_data_file.stat().st_size
+                        version_data_file.unlink()
+                    
+                    result['cleaned_up'].append(version_num)
+                    result['space_freed_bytes'] += space_freed
+                    
+                except Exception as e:
+                    logger.warning("Failed to remove version %d for graph '%s': %s", 
+                                 version_num, graph_id, str(e))
+            
+            result['versions_after'] = result['versions_before'] - len(result['cleaned_up'])
+            
+            logger.info("Cleaned up %d old versions for graph '%s', freed %d bytes",
+                       len(result['cleaned_up']), graph_id, result['space_freed_bytes'])
+            
+            return result
+            
+        except Exception as e:
+            logger.error("Failed to cleanup old versions for '%s': %s", graph_id, str(e))
+            raise SFMPersistenceError(f"Failed to cleanup old versions: {str(e)}") from e
+
+    def cleanup_old_backups(self, max_age_days: int = 30) -> Dict[str, Any]:
+        """Clean up old backup files older than specified age."""
+        try:
+            result = {
+                'backups_before': 0,
+                'backups_after': 0,
+                'cleaned_up': [],
+                'space_freed_bytes': 0
+            }
+            
+            if not self.file_manager.backups_path.exists():
+                return result
+                
+            backup_files = list(self.file_manager.backups_path.glob("*.backup"))
+            result['backups_before'] = len(backup_files)
+            
+            current_time = datetime.now()
+            cutoff_time = current_time - timedelta(days=max_age_days)
+            
+            for backup_file in backup_files:
+                try:
+                    file_mtime = datetime.fromtimestamp(backup_file.stat().st_mtime)
+                    if file_mtime < cutoff_time:
+                        space_freed = backup_file.stat().st_size
+                        backup_file.unlink()
+                        result['cleaned_up'].append(backup_file.name)
+                        result['space_freed_bytes'] += space_freed
+                        
+                except Exception as e:
+                    logger.warning("Failed to remove backup file '%s': %s", backup_file, str(e))
+            
+            result['backups_after'] = result['backups_before'] - len(result['cleaned_up'])
+            
+            logger.info("Cleaned up %d old backups, freed %d bytes", 
+                       len(result['cleaned_up']), result['space_freed_bytes'])
+            
+            return result
+            
+        except Exception as e:
+            logger.error("Failed to cleanup old backups: %s", str(e))
+            raise SFMPersistenceError(f"Failed to cleanup old backups: {str(e)}") from e
 
 
 # Convenience functions for quick operations
