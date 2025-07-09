@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Iterator
+from typing import Dict, List, Optional, Iterator, Callable, Any
 from datetime import datetime
 
 from core.base_nodes import Node
@@ -146,12 +146,29 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
     _node_registry: NodeTypeRegistry = field(
         default_factory=NodeTypeRegistry, init=False
     )
+    
+    # Performance optimization: Central node index for O(1) lookups
+    _node_index: Dict[uuid.UUID, Node] = field(default_factory=lambda: {}, init=False)
+    
+    # Performance optimization: Simple relationship cache for frequently accessed relationships
+    _relationship_cache: Dict[uuid.UUID, List[Relationship]] = field(
+        default_factory=lambda: {}, init=False
+    )
+    _relationship_cache_max_size: int = field(default=1000, init=False)
+    
+    # Performance optimization: Optional lazy loading support
+    _lazy_loading_enabled: bool = field(default=False, init=False)
+    _node_loader: Optional[Callable[[uuid.UUID], Optional[Node]]] = field(default=None, init=False)
 
     def add_node(self, node: Node) -> Node:
         """Add a node to the appropriate collection based on its type."""
         collection_name = self._node_registry.get_collection_name(node)
         collection = getattr(self, collection_name)
         collection[node.id] = node
+        
+        # Performance optimization: Maintain central index for O(1) lookups
+        self._node_index[node.id] = node
+        
         return node
 
     def add_relationship(self, relationship: Relationship) -> Relationship:
@@ -172,14 +189,17 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
 
         # Store the relationship
         self.relationships[relationship.id] = relationship
+        
+        # Performance optimization: Clear relationship cache when relationships change
+        self._clear_relationship_cache()
+        
         return relationship
 
     def _find_node_by_id(self, node_id: uuid.UUID) -> Optional[Node]:
-        """Find a node by its ID across all node collections."""
-        for node in self:
-            if node.id == node_id:
-                return node
-        return None
+        """Find a node by its ID using central index for O(1) lookup."""
+        if self._lazy_loading_enabled:
+            return self._find_node_by_id_with_lazy_loading(node_id)
+        return self._node_index.get(node_id)
 
     def __iter__(self) -> Iterator[Node]:
         """Iterate over all nodes in the SFMGraph."""
@@ -197,3 +217,60 @@ class SFMGraph:  # pylint: disable=too-many-instance-attributes
         for collection in self._node_registry.iter_collections(self):
             collection.clear()
         self.relationships.clear()
+        
+        # Performance optimization: Clear index and cache
+        self._node_index.clear()
+        self._relationship_cache.clear()
+    
+    def _clear_relationship_cache(self) -> None:
+        """Clear the relationship cache when relationships change."""
+        self._relationship_cache.clear()
+    
+    def get_node_relationships(self, node_id: uuid.UUID) -> List[Relationship]:
+        """Get all relationships for a node with caching for performance."""
+        # Check cache first
+        if node_id in self._relationship_cache:
+            return self._relationship_cache[node_id]
+        
+        # Compute relationships for this node
+        relationships = []
+        for relationship in self.relationships.values():
+            if relationship.source_id == node_id or relationship.target_id == node_id:
+                relationships.append(relationship)
+        
+        # Cache result with simple size management
+        if len(self._relationship_cache) >= self._relationship_cache_max_size:
+            # Simple eviction: remove one random item to make space
+            oldest_key = next(iter(self._relationship_cache))
+            del self._relationship_cache[oldest_key]
+        
+        self._relationship_cache[node_id] = relationships
+        return relationships
+    
+    def enable_lazy_loading(self, node_loader: Callable[[uuid.UUID], Optional[Node]]) -> None:
+        """Enable lazy loading with a custom node loader function.
+        
+        Args:
+            node_loader: Function that takes a UUID and returns a Node or None
+        """
+        self._lazy_loading_enabled = True
+        self._node_loader = node_loader
+    
+    def disable_lazy_loading(self) -> None:
+        """Disable lazy loading."""
+        self._lazy_loading_enabled = False
+        self._node_loader = None
+    
+    def _find_node_by_id_with_lazy_loading(self, node_id: uuid.UUID) -> Optional[Node]:
+        """Find a node by ID with optional lazy loading support."""
+        # First check the index
+        node = self._node_index.get(node_id)
+        
+        # If not found and lazy loading is enabled, try to load it
+        if node is None and self._lazy_loading_enabled and self._node_loader:
+            node = self._node_loader(node_id)
+            if node is not None:
+                # Add the lazy-loaded node to the graph
+                self.add_node(node)
+        
+        return node
