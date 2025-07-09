@@ -578,6 +578,8 @@ class SFMService:
                 f"Failed to create actor: {str(e)}", "CREATE_ACTOR_FAILED"
             ) from e
 
+    @audit_operation(AuditOperationType.CREATE, entity_type="Institution")
+    @timed_operation("create_institution")
     def create_institution(
         self, request: Union[CreateInstitutionRequest, dict], **kwargs
     ) -> NodeResponse:
@@ -625,6 +627,8 @@ class SFMService:
                 f"Failed to create institution: {str(e)}", "CREATE_INSTITUTION_FAILED"
             ) from e
 
+    @audit_operation(AuditOperationType.CREATE, entity_type="Policy")  
+    @timed_operation("create_policy")
     def create_policy(
         self, request: Union[CreatePolicyRequest, dict], **kwargs
     ) -> NodeResponse:
@@ -659,6 +663,16 @@ class SFMService:
             )
 
             result = self._policy_repo.create(policy)
+            
+            # Track operation in transaction if active
+            if self._transaction_manager.is_in_transaction():
+                self._transaction_manager.add_operation(
+                    operation_type="create_policy",
+                    data={"policy_id": str(result.id), "name": result.label},
+                    rollback_data={"policy_id": str(result.id)},
+                    rollback_function=lambda data: self._rollback_create_policy(data["policy_id"])
+                )
+            
             self._mark_dirty("create_policy")
 
             logger.info("Created policy: %s (%s)", result.label, result.id)
@@ -1056,6 +1070,8 @@ class SFMService:
 
         return total_relationships, rel_counts
 
+    @audit_operation(AuditOperationType.READ, "get_statistics", level=AuditLevel.INFO)
+    @timed_operation("get_statistics")
     def get_statistics(self) -> GraphStatistics:
         """Get comprehensive statistics about the current graph."""
         try:
@@ -1269,6 +1285,8 @@ class SFMService:
 
     # ═══ SYSTEM MANAGEMENT ═══
 
+    @audit_operation(AuditOperationType.DELETE, "clear_all_data", level=AuditLevel.WARNING)
+    @timed_operation("clear_all_data")
     def clear_all_data(self) -> Dict[str, Any]:
         """Clear all data from the repository."""
         try:
