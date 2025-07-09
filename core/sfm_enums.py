@@ -2360,6 +2360,9 @@ class EnumValidator:
                 ('Institution', 'Actor'),
                 ('Institution', 'Institution'),
                 ('Institution', 'Policy'),
+                ('Policy', 'Actor'),     # Policies can influence actors
+                ('Policy', 'Institution'),  # Policies can influence institutions
+                ('Policy', 'Resource'),  # Policies can influence resource management/usage
                 ('Resource', 'Actor'),
                 ('Resource', 'Institution'),
                 ('Flow', 'Actor'),
@@ -2385,6 +2388,8 @@ class EnumValidator:
                 ('Institution', 'Actor'),
                 ('Actor', 'Institution'),
                 ('Institution', 'Institution'),
+                ('Policy', 'Actor'),        # Policies can establish funding for actors
+                ('Policy', 'Institution'),  # Policies can establish funding for institutions
                 ('Actor', 'Resource'),
                 ('Institution', 'Resource'),
                 ('Actor', 'Process'),
@@ -2394,7 +2399,7 @@ class EnumValidator:
             ],
             'description': 'FUNDS relationship for financial resource provision',
             'invalid_message': ('FUNDS relationship requires funding entities '
-                               '(Actor/Institution) providing financial resources')
+                               '(Actor/Institution/Policy) providing financial resources')
         },
         
         RelationshipKind.SUPPLIES: {
