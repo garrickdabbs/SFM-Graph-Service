@@ -4,7 +4,7 @@
 Hello! I am excited to share an innovative project that brings a powerful analytical approach from academia into the everyday toolkit of communities and changemakers. I’m developing the **Social Fabric Matrix (SFM) Graph Service**, an open-source web app that makes advanced systems analysis accessible to everyone.
 
 ## What is the Social Fabric Matrix?  
-The **Social Fabric Matrix** is a holistic framework for understanding how different parts of a society or system connect and influence each other. Imagine mapping out all the key elements of a community—like government agencies, organizations, laws, and resources—and visualizing how they interact. That’s what SFM does.
+The **Social Fabric Matrix** is a holistic framework for understanding how different parts of a society or system connect and influence each other. Imagine mapping out all the key elements of a community, such as government agencies, organizations, laws, and resources, and visualizing how they interact. That’s what SFM does.
 
 **Where did SFM come from?** The Social Fabric Matrix was originally developed by economist **F. Gregory Hayden**, who first introduced the concept in the early 1980s. Hayden’s pioneering work gave researchers and policymakers a powerful tool to analyze complex social and economic relationships.
 
