@@ -602,47 +602,34 @@ def create_smart_city_planning_graph(repo: NetworkXSFMRepository, graph: SFMGrap
             meta={"description": "Citizen engagement mechanisms"}
         ),
         
-        # Resource allocation relationships
+        # Resource allocation relationships - city government manages budget and creates funding flows
         Relationship(
-            source_id=municipal_budget.id,
-            target_id=funding_flow.id,
-            kind=RelationshipKind.FUNDS,
+            source_id=city_government.id,
+            target_id=municipal_budget.id,
+            kind=RelationshipKind.USES,
             weight=0.8,
-            meta={"description": "Primary funding source"}
+            meta={"description": "City government manages municipal budget"}
         ),
         
+        Relationship(
+            source_id=city_government.id,
+            target_id=funding_flow.id,
+            kind=RelationshipKind.PRODUCES,
+            weight=0.8,
+            meta={"description": "Government creates funding flows from budget"}
+        ),
+        
+        # Federal grants supply to city government
         Relationship(
             source_id=federal_grants.id,
-            target_id=funding_flow.id,
-            kind=RelationshipKind.FUNDS,
+            target_id=city_government.id,
+            kind=RelationshipKind.SUPPLIES,
             weight=0.6,
-            meta={"description": "Additional funding support"}
+            meta={"description": "Federal grants provide additional funding"}
         ),
         
-        # Cognitive framework influences
-        Relationship(
-            source_id=government_framework.id,
-            target_id=planning_department.id,
-            kind=RelationshipKind.INFLUENCES,
-            weight=0.75,
-            meta={"description": "Administrative decision-making framework"}
-        ),
-        
-        Relationship(
-            source_id=community_framework.id,
-            target_id=community_groups.id,
-            kind=RelationshipKind.INFLUENCES,
-            weight=0.8,
-            meta={"description": "Community perspective and priorities"}
-        ),
-        
-        Relationship(
-            source_id=tech_framework.id,
-            target_id=tech_company.id,
-            kind=RelationshipKind.INFLUENCES,
-            weight=0.85,
-            meta={"description": "Technology development approach"}
-        ),
+        # Note: Cognitive framework relationships temporarily removed due to validation constraints
+        # They can be re-added once CognitiveFramework is integrated into relationship validation rules
         
         # Behavioral pattern relationships
         Relationship(

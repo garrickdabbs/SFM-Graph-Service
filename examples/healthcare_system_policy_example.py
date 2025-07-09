@@ -794,7 +794,7 @@ def create_healthcare_policy_graph(repo: NetworkXSFMRepository, graph: SFMGraph)
         Relationship(
             source_id=insurance_companies.id,
             target_id=healthcare_payments.id,
-            kind=RelationshipKind.FUNDS,
+            kind=RelationshipKind.PRODUCES,
             weight=0.9,
             meta={"description": "Private insurance payments"}
         ),
@@ -802,7 +802,7 @@ def create_healthcare_policy_graph(repo: NetworkXSFMRepository, graph: SFMGraph)
         Relationship(
             source_id=government_payers.id,
             target_id=healthcare_payments.id,
-            kind=RelationshipKind.FUNDS,
+            kind=RelationshipKind.PRODUCES,
             weight=0.8,
             meta={"description": "Public program payments"}
         ),
@@ -810,7 +810,7 @@ def create_healthcare_policy_graph(repo: NetworkXSFMRepository, graph: SFMGraph)
         Relationship(
             source_id=healthcare_payments.id,
             target_id=primary_care_physicians.id,
-            kind=RelationshipKind.FUNDS,
+            kind=RelationshipKind.INFLUENCES,
             weight=0.8,
             meta={"description": "Provider payment flow"}
         ),
@@ -865,38 +865,8 @@ def create_healthcare_policy_graph(repo: NetworkXSFMRepository, graph: SFMGraph)
             meta={"description": "Evidence informing guidelines"}
         ),
         
-        # Cognitive framework influences
-        Relationship(
-            source_id=evidence_based_medicine.id,
-            target_id=primary_care_physicians.id,
-            kind=RelationshipKind.INFLUENCES,
-            weight=0.85,
-            meta={"description": "Evidence-based clinical decision making"}
-        ),
-        
-        Relationship(
-            source_id=cost_effectiveness_framework.id,
-            target_id=insurance_companies.id,
-            kind=RelationshipKind.INFLUENCES,
-            weight=0.8,
-            meta={"description": "Economic evaluation in coverage decisions"}
-        ),
-        
-        Relationship(
-            source_id=patient_centered_framework.id,
-            target_id=community_health_centers.id,
-            kind=RelationshipKind.INFLUENCES,
-            weight=0.9,
-            meta={"description": "Patient-centered care approach"}
-        ),
-        
-        Relationship(
-            source_id=prevention_framework.id,
-            target_id=public_health_agencies.id,
-            kind=RelationshipKind.INFLUENCES,
-            weight=0.95,
-            meta={"description": "Prevention-focused public health approach"}
-        ),
+        # Note: Cognitive framework relationships temporarily removed due to validation constraints
+        # They can be re-added once CognitiveFramework is integrated into relationship validation rules
         
         # Behavioral pattern relationships
         Relationship(
@@ -999,21 +969,29 @@ def create_healthcare_policy_graph(repo: NetworkXSFMRepository, graph: SFMGraph)
             meta={"description": "Patient advocacy improving satisfaction"}
         ),
         
-        # Resource allocation relationships
+        # Resource allocation relationships - government manages funding and infrastructure
         Relationship(
-            source_id=healthcare_funding.id,
-            target_id=healthcare_infrastructure.id,
-            kind=RelationshipKind.FUNDS,
+            source_id=government_payers.id,
+            target_id=healthcare_funding.id,
+            kind=RelationshipKind.USES,
             weight=0.8,
-            meta={"description": "Funding supporting infrastructure"}
+            meta={"description": "Government manages healthcare funding"}
+        ),
+        
+        Relationship(
+            source_id=government_payers.id,
+            target_id=healthcare_infrastructure.id,
+            kind=RelationshipKind.USES,
+            weight=0.8,
+            meta={"description": "Government uses healthcare infrastructure"}
         ),
         
         Relationship(
             source_id=research_funding.id,
-            target_id=research_investment.id,
-            kind=RelationshipKind.FUNDS,
+            target_id=government_payers.id,
+            kind=RelationshipKind.SUPPLIES,
             weight=0.9,
-            meta={"description": "Research funding flow"}
+            meta={"description": "Research funding supports government healthcare programs"}
         ),
         
         # Outcome measurement relationships

@@ -857,13 +857,21 @@ def create_supply_chain_resilience_graph(repo: NetworkXSFMRepository, graph: SFM
             meta={"description": "Real-time asset tracking data"}
         ),
         
-        # Resource allocation and flow relationships
+        # Resource allocation and flow relationships - automotive OEM manages working capital and payment flows
         Relationship(
-            source_id=working_capital.id,
-            target_id=payment_flows.id,
-            kind=RelationshipKind.FUNDS,
+            source_id=automotive_oem.id,
+            target_id=working_capital.id,
+            kind=RelationshipKind.USES,
             weight=0.9,
-            meta={"description": "Working capital enabling payment flows"}
+            meta={"description": "Automotive OEM manages working capital"}
+        ),
+        
+        Relationship(
+            source_id=automotive_oem.id,
+            target_id=payment_flows.id,
+            kind=RelationshipKind.PRODUCES,
+            weight=0.9,
+            meta={"description": "OEM produces payment flows from working capital"}
         ),
         
         Relationship(
@@ -891,22 +899,23 @@ def create_supply_chain_resilience_graph(repo: NetworkXSFMRepository, graph: SFM
             meta={"description": "Integrated risk assessment output"}
         ),
         
-        # Cognitive framework influences
-        Relationship(
-            source_id=enterprise_risk_framework.id,
-            target_id=automotive_oem.id,
-            kind=RelationshipKind.INFLUENCES,
-            weight=0.8,
-            meta={"description": "Risk management decision framework"}
-        ),
+        # NOTE: Cognitive framework influences commented out due to validation restrictions
+        # CognitiveFramework -> Actor INFLUENCES relationships are not currently supported
+        # Relationship(
+        #     source_id=enterprise_risk_framework.id,
+        #     target_id=automotive_oem.id,
+        #     kind=RelationshipKind.INFLUENCES,
+        #     weight=0.8,
+        #     meta={"description": "Risk management decision framework"}
+        # ),
         
-        Relationship(
-            source_id=operational_efficiency_framework.id,
-            target_id=tier1_supplier_asia.id,
-            kind=RelationshipKind.INFLUENCES,
-            weight=0.85,
-            meta={"description": "Efficiency optimization mindset"}
-        ),
+        # Relationship(
+        #     source_id=operational_efficiency_framework.id,
+        #     target_id=tier1_supplier_asia.id,
+        #     kind=RelationshipKind.INFLUENCES,
+        #     weight=0.85,
+        #     meta={"description": "Efficiency optimization mindset"}
+        # ),
         
         # Behavioral pattern relationships
         Relationship(
