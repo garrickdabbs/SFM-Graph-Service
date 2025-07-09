@@ -5,7 +5,7 @@ unit tests for the SFM data model classes defined in core/sfm_models.py
 import unittest
 import uuid
 import time
-from typing import Dict, Any
+from typing import Dict, Any, List, Tuple
 from dataclasses import FrozenInstanceError
 
 from core.sfm_models import (
@@ -207,7 +207,7 @@ class EnumTestCase(unittest.TestCase):
 
     def test_enum_string_representations(self):
         """Test that enums have meaningful string representations."""
-        test_cases: list[tuple[Any, str]] = [
+        test_cases: List[Tuple[Any, str]] = [
             (ValueCategory.ECONOMIC, "ECONOMIC"),
             (InstitutionLayer.FORMAL_RULE, "FORMAL_RULE"),
             (ResourceType.NATURAL, "NATURAL"),
@@ -225,7 +225,7 @@ class EnumTestCase(unittest.TestCase):
     def test_enum_iteration_consistency(self):
         """Test that enum iteration is consistent and complete."""
         from enum import Enum
-        enums_to_test: list[type[Enum]] = [
+        enums_to_test: List[type[Enum]] = [
             ValueCategory, InstitutionLayer, ResourceType, FlowNature, RelationshipKind
         ]
         for enum_class in enums_to_test:

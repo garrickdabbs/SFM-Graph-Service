@@ -29,7 +29,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Sequence, Mapping
+from typing import Any, Dict, List, Optional, Union, Sequence, Mapping, Tuple
 
 # Local imports
 from core.sfm_enums import FlowNature, RelationshipKind, ResourceType, InstitutionLayer
@@ -376,7 +376,7 @@ class SFMGraphSerializer:
             logger.debug("Graph initialized: %s", graph)
 
             # Deserialize node collections
-            node_type_mapping: List[tuple[str, type, Mapping[Any, Node]]] = [
+            node_type_mapping: List[Tuple[str, type, Mapping[Any, Node]]] = [
                 ('actors', Actor, graph.actors),
                 ('institutions', Institution, graph.institutions),
                 ('resources', Resource, graph.resources),
@@ -461,7 +461,7 @@ class SFMGraphSerializer:
     @staticmethod
     def _graph_to_dict(graph: SFMGraph) -> Dict[str, Any]:
         """Convert SFMGraph to dictionary representation."""
-        node_collections: List[tuple[str, Mapping[Any, Node]]] = [
+        node_collections: List[Tuple[str, Mapping[Any, Node]]] = [
             ('actors', graph.actors),
             ('institutions', graph.institutions),
             ('resources', graph.resources),

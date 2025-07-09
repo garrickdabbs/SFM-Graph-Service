@@ -4,7 +4,7 @@ Unit tests for the SFM data model classes defined in core/sfm_models.py
 import unittest
 import uuid
 from datetime import datetime
-from typing import Type
+from typing import Type, List
 from enum import Enum
 from core.sfm_models import (
     TimeSlice,
@@ -234,7 +234,7 @@ class TestEnums(unittest.TestCase):
 
     def test_all_enum_values_unique(self):
         """Test all enums have unique values."""
-        enum_classes: list[Type[Enum]] = [
+        enum_classes: List[Type[Enum]] = [
             ValueCategory,
             RelationshipKind,
             InstitutionLayer,
@@ -409,7 +409,7 @@ class TestEnums(unittest.TestCase):
 
     def test_enum_documentation_completeness(self):
         """Test that enum classes have proper documentation."""
-        enum_classes: list[Type[Enum]] = [
+        enum_classes: List[Type[Enum]] = [
             ValueCategory, RelationshipKind, InstitutionLayer, ResourceType, FlowNature,
             FlowType, PolicyInstrumentType, ChangeType, BehaviorPatternType,
             FeedbackPolarity, FeedbackType, TemporalFunctionType, ValidationRuleType,
@@ -549,7 +549,7 @@ class TestEnums(unittest.TestCase):
 
     def test_all_new_enum_values_unique(self):
         """Test all new enums have unique values."""
-        enum_classes: list[Type[Enum]] = [
+        enum_classes: List[Type[Enum]] = [
             FlowType,
             PolicyInstrumentType,
             ChangeType,

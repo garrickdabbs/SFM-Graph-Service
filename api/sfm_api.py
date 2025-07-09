@@ -20,7 +20,7 @@ Usage:
 from fastapi import FastAPI, HTTPException, Depends, Query, Path, Body, status, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any, Union, DefaultDict, Deque
 import uuid
 from datetime import datetime, timedelta
 import logging
@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
 # Rate limiting configuration
 RATE_LIMIT_REQUESTS = 100  # requests per minute
 RATE_LIMIT_WINDOW = 60     # seconds
-rate_limit_storage: defaultdict[str, deque[float]] = defaultdict(deque)
+rate_limit_storage: DefaultDict[str, Deque[float]] = defaultdict(deque)
 
 def check_rate_limit(request: Request) -> bool:
     """
