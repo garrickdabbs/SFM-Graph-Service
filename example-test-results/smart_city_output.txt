@@ -1,0 +1,106 @@
+Creating Smart City Urban Planning SFM Graph...
+Adding 42 nodes to repository...
+Creating 26 relationships...
+Smart City SFM Graph completed with 42 nodes and 26 relationships.
+
+============================================================
+SMART CITY URBAN PLANNING SFM ANALYSIS
+============================================================
+
+Graph Structure Summary:
+  Total entities: 42 nodes
+  Actors: 7
+  Institutions: 3
+  Resources: 7
+  Policies: 3
+  Flows: 4
+  Indicators: 6
+  Relationships: 26
+
+----------------------------------------
+NETWORK ANALYSIS
+----------------------------------------
+
+🎯 Most Central Actors (Betweenness Centrality):
+  • Smart Infrastructure Corp: 0.011
+  • Neighborhood Associations: 0.001
+  • City Government: 0.000
+  • Urban Planning Department: 0.000
+  • Green Building Consortium: 0.000
+
+📊 Network Topology:
+  • Network density: 0.015
+
+🌉 Structural Bridges (Critical Connectors):
+  • Smart Infrastructure Corp
+
+----------------------------------------
+POLICY IMPACT ANALYSIS
+----------------------------------------
+
+📋 Policy Impact Analysis:
+  • Comprehensive Smart City Master Plan: affects 5 nodes
+  • Mandatory Green Building Standards: affects 5 nodes
+  • Smart City Data Privacy Regulations: affects 5 nodes
+
+🛠️ Policy Instrument Influence:
+  • Green Technology Tax Incentives: 0 direct connections
+  • Smart Infrastructure Zoning Requirements: 0 direct connections
+  • Citizen Engagement Platforms: 2 direct connections
+
+----------------------------------------
+FLOW ANALYSIS
+----------------------------------------
+
+💰 Resource Flow Analysis:
+  • Smart City Investment Flow (11): 2 connections
+  • Sensor Data Collection Flow (14): 2 connections
+  • Research to Practice Knowledge Transfer (3): 1 connections
+  • Enhanced Urban Services Delivery (2): 2 connections
+
+----------------------------------------
+STAKEHOLDER ANALYSIS
+----------------------------------------
+
+⚡ Stakeholder Power Analysis:
+  • City Government: 0.79 average power
+  • Urban Planning Department: 0.85 average power
+  • Smart Infrastructure Corp: 0.88 average power
+  • Green Building Consortium: 0.77 average power
+  • Neighborhood Associations: 0.60 average power
+  • Environmental NGOs: 0.67 average power
+  • Metropolitan University: 0.82 average power
+
+----------------------------------------
+VULNERABILITY ASSESSMENT
+----------------------------------------
+
+🔍 System Vulnerability Assessment:
+  • Vulnerability analysis completed
+
+----------------------------------------
+TEMPORAL DYNAMICS INSIGHTS
+----------------------------------------
+
+⏰ Temporal Change Analysis:
+  • Smart City Investment Flow: 2 dynamics
+  • Research to Practice Knowledge Transfer: 3 dynamics
+  • Real-time Air Quality Index: 1 dynamics
+
+Total nodes with temporal dynamics: 3
+
+----------------------------------------
+TECHNOLOGY READINESS ASSESSMENT
+----------------------------------------
+
+🔬 Technology Maturity Analysis:
+  • IoT Environmental Sensor Network: TRL 8
+    └─ Average compatibility: 0.77
+  • AI Traffic Management System: TRL 7
+    └─ Average compatibility: 0.82
+  • Smart Green Building Technology: TRL 9
+    └─ Average compatibility: 0.82
+
+============================================================
+ANALYSIS COMPLETE - Graph cleared
+============================================================
