@@ -1,0 +1,172 @@
+{
+  "id": "1912fc3c-64b9-4c92-8019-3c3bed5cb3a8",
+  "name": "",
+  "description": null,
+  "relationships": {
+    "04b93d28-9e54-43f2-961a-37bd1f9dbbdc": {
+      "id": "04b93d28-9e54-43f2-961a-37bd1f9dbbdc",
+      "source_id": "87a21f61-f20a-430c-9d4c-fac0ce80ce40",
+      "target_id": "66fbeff3-4ae9-46f5-9ad0-85d1e79656fe",
+      "kind": "IMPLEMENTS",
+      "weight": 9.0,
+      "meta": null,
+      "certainty": 1.0,
+      "created_at": "2025-07-10T22:29:59.667946",
+      "modified_at": null
+    },
+    "e6a8c7d7-1e8c-41fc-aee6-ebaca9b731b9": {
+      "id": "e6a8c7d7-1e8c-41fc-aee6-ebaca9b731b9",
+      "source_id": "66fbeff3-4ae9-46f5-9ad0-85d1e79656fe",
+      "target_id": "0d8c99b0-9255-4836-bc7a-30240fef108c",
+      "kind": "AFFECTS",
+      "weight": 8.5,
+      "meta": null,
+      "certainty": 1.0,
+      "created_at": "2025-07-10T22:29:59.668051",
+      "modified_at": null
+    },
+    "d2a984ef-3092-4d88-903e-d4ff02594fc0": {
+      "id": "d2a984ef-3092-4d88-903e-d4ff02594fc0",
+      "source_id": "383e0ae3-234d-4f9d-8f72-359c258acaa6",
+      "target_id": "59713b3a-c95f-41a8-9dfa-88472d5819a3",
+      "kind": "IMPLEMENTS",
+      "weight": 10.0,
+      "meta": null,
+      "certainty": 1.0,
+      "created_at": "2025-07-10T22:29:59.668148",
+      "modified_at": null
+    },
+    "af9d0b32-8a7f-4225-9abc-ada0fc3a7127": {
+      "id": "af9d0b32-8a7f-4225-9abc-ada0fc3a7127",
+      "source_id": "59713b3a-c95f-41a8-9dfa-88472d5819a3",
+      "target_id": "2b4842d4-5565-4192-a122-129d9b45d817",
+      "kind": "AFFECTS",
+      "weight": 9.5,
+      "meta": null,
+      "certainty": 1.0,
+      "created_at": "2025-07-10T22:29:59.668240",
+      "modified_at": null
+    }
+  },
+  "metadata": {
+    "serialization_timestamp": "2025-07-10T22:29:59.670798",
+    "serialization_version": "1.0"
+  },
+  "actors": {
+    "87a21f61-f20a-430c-9d4c-fac0ce80ce40": {
+      "type": "Actor",
+      "id": "87a21f61-f20a-430c-9d4c-fac0ce80ce40",
+      "label": "Internal Revenue Service",
+      "description": "Primary federal tax collection agency",
+      "meta": {},
+      "version": 1,
+      "created_at": "2025-07-10T22:29:59.660305",
+      "modified_at": null,
+      "certainty": 1.0,
+      "legal_form": "",
+      "sector": "Government",
+      "power_resources": {},
+      "decision_making_capacity": null
+    },
+    "99d0167b-a5ca-4556-be38-05f599835d0b": {
+      "type": "Actor",
+      "id": "99d0167b-a5ca-4556-be38-05f599835d0b",
+      "label": "US Department of Treasury",
+      "description": "Federal executive department responsible for tax policy",
+      "meta": {},
+      "version": 1,
+      "created_at": "2025-07-10T22:29:59.661523",
+      "modified_at": null,
+      "certainty": 1.0,
+      "legal_form": "",
+      "sector": "Government",
+      "power_resources": {},
+      "decision_making_capacity": null
+    },
+    "0d8c99b0-9255-4836-bc7a-30240fef108c": {
+      "type": "Actor",
+      "id": "0d8c99b0-9255-4836-bc7a-30240fef108c",
+      "label": "Middle Class Taxpayers",
+      "description": "Taxpayer households earning $40,000-$120,000",
+      "meta": {},
+      "version": 1,
+      "created_at": "2025-07-10T22:29:59.663367",
+      "modified_at": null,
+      "certainty": 1.0,
+      "legal_form": "",
+      "sector": "Household",
+      "power_resources": {},
+      "decision_making_capacity": null
+    },
+    "383e0ae3-234d-4f9d-8f72-359c258acaa6": {
+      "type": "Actor",
+      "id": "383e0ae3-234d-4f9d-8f72-359c258acaa6",
+      "label": "Centers for Medicare &amp;amp; Medicaid Services",
+      "description": "Federal agency administering healthcare programs",
+      "meta": {},
+      "version": 1,
+      "created_at": "2025-07-10T22:29:59.664888",
+      "modified_at": null,
+      "certainty": 1.0,
+      "legal_form": "",
+      "sector": "Government",
+      "power_resources": {},
+      "decision_making_capacity": null
+    },
+    "2b4842d4-5565-4192-a122-129d9b45d817": {
+      "type": "Actor",
+      "id": "2b4842d4-5565-4192-a122-129d9b45d817",
+      "label": "Previously Uninsured Adults",
+      "description": "Adults without health insurance before ACA",
+      "meta": {},
+      "version": 1,
+      "created_at": "2025-07-10T22:29:59.666868",
+      "modified_at": null,
+      "certainty": 1.0,
+      "legal_form": "",
+      "sector": "Household",
+      "power_resources": {},
+      "decision_making_capacity": null
+    }
+  },
+  "institutions": {},
+  "resources": {},
+  "processes": {},
+  "flows": {},
+  "policies": {
+    "66fbeff3-4ae9-46f5-9ad0-85d1e79656fe": {
+      "type": "Policy",
+      "id": "66fbeff3-4ae9-46f5-9ad0-85d1e79656fe",
+      "label": "Tax Cuts and Jobs Act (TCJA) of 2017",
+      "description": "Comprehensive tax reform legislation",
+      "meta": {},
+      "version": 1,
+      "created_at": "2025-07-10T22:29:59.662678",
+      "modified_at": null,
+      "certainty": 1.0,
+      "authority": "U.S. Congress",
+      "enforcement": 0.0,
+      "target_sectors": null
+    },
+    "59713b3a-c95f-41a8-9dfa-88472d5819a3": {
+      "type": "Policy",
+      "id": "59713b3a-c95f-41a8-9dfa-88472d5819a3",
+      "label": "Affordable Care Act (ACA)",
+      "description": "Comprehensive healthcare reform legislation",
+      "meta": {},
+      "version": 1,
+      "created_at": "2025-07-10T22:29:59.666107",
+      "modified_at": null,
+      "certainty": 1.0,
+      "authority": "U.S. Congress",
+      "enforcement": 0.0,
+      "target_sectors": null
+    }
+  },
+  "belief_systems": {},
+  "technology_systems": {},
+  "indicators": {},
+  "feedback_loops": {},
+  "system_properties": {},
+  "analytical_contexts": {}
+}

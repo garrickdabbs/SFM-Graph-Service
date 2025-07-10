@@ -1,0 +1,16 @@
+{
+  "graph_id": "policy_demo_json.gz",
+  "name": "policy_demo_json.gz",
+  "description": "",
+  "version": 2,
+  "created_at": "2025-07-10T22:30:28.116768",
+  "modified_at": "2025-07-10T22:30:53.009887",
+  "author": "",
+  "tags": [],
+  "size_bytes": 1332,
+  "node_count": 7,
+  "relationship_count": 4,
+  "checksum": "274f8b354d7082e41188142dfa087c0c6eacec01e9ae9c9fafb729e987a5627e",
+  "format": "json.gz",
+  "compression_ratio": null
+}

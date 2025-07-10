@@ -1,0 +1,16 @@
+{
+  "graph_id": "policy_demo_json",
+  "name": "policy_demo_json",
+  "description": "",
+  "version": 2,
+  "created_at": "2025-07-10T22:29:59.671024",
+  "modified_at": "2025-07-10T22:30:28.115473",
+  "author": "",
+  "tags": [],
+  "size_bytes": 5538,
+  "node_count": 7,
+  "relationship_count": 4,
+  "checksum": "673805b60e7209472df29f9ee8cd663aa76afa0f8290c6ebbc3d5ae1f02bec03",
+  "format": "json",
+  "compression_ratio": null
+}

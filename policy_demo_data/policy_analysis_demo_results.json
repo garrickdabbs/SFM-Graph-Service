@@ -1,0 +1,119 @@
+{
+  "demo_summary": {
+    "title": "Complex Policy Analysis Demo",
+    "description": "Demonstration of advanced SFM-Graph-Service features",
+    "execution_time": 0.021390438079833984
+  },
+  "graph_statistics": {
+    "total_nodes": 7,
+    "total_edges": 4,
+    "actors": 5,
+    "policies": 2,
+    "relationships": 4
+  },
+  "entities_created": {
+    "tcja_network": {
+      "irs": "45e644d6-722d-4d7f-8aa9-f5caf3939fb9",
+      "treasury": "61768d5f-5dd4-469e-9127-99dd3924a2ce",
+      "tcja_policy": "7358acc5-6f27-4f4a-aa5c-647105e30258",
+      "middle_class": "c8f70415-70ed-48e3-b52e-86e39f82dc50"
+    },
+    "aca_network": {
+      "cms": "03cdfeff-b9c5-46b1-afea-0b3cda160b10",
+      "aca_policy": "956231df-5379-4bd1-bde2-d4b3d9d78f94",
+      "uninsured": "4c4d2c53-4342-4430-a947-97d834824019"
+    }
+  },
+  "advanced_features_demonstrated": {
+    "graph_persistence": {
+      "formats_supported": 3,
+      "persistence_stats": {
+        "json": {
+          "file_size_bytes": 5538,
+          "save_time": 0.0012178421020507812
+        },
+        "pickle": {
+          "file_size_bytes": 4176,
+          "save_time": 0.0010027885437011719
+        },
+        "json.gz": {
+          "file_size_bytes": 1332,
+          "save_time": 0.0012934207916259766
+        }
+      }
+    },
+    "performance_monitoring": {
+      "operations_tracked": 5,
+      "metrics": {
+        "entity_creation": {
+          "operation_count": 1,
+          "total_duration": 0.016179323196411133,
+          "min_duration": 0.016179323196411133,
+          "max_duration": 0.016179323196411133,
+          "avg_duration": 0.016179323196411133,
+          "success_count": 1,
+          "error_count": 0,
+          "success_rate": 1.0,
+          "last_execution": 1752186653.0050173
+        },
+        "complex_analysis": {
+          "operation_count": 1,
+          "total_duration": 0.0015451908111572266,
+          "min_duration": 0.0015451908111572266,
+          "max_duration": 0.0015451908111572266,
+          "avg_duration": 0.0015451908111572266,
+          "success_count": 1,
+          "error_count": 0,
+          "success_rate": 1.0,
+          "last_execution": 1752186653.0065918
+        },
+        "persistence_json": {
+          "operation_count": 1,
+          "total_duration": 0.0012178421020507812,
+          "min_duration": 0.0012178421020507812,
+          "max_duration": 0.0012178421020507812,
+          "avg_duration": 0.0012178421020507812,
+          "success_count": 1,
+          "error_count": 0,
+          "success_rate": 1.0,
+          "last_execution": 1752186653.0078628
+        },
+        "persistence_pickle": {
+          "operation_count": 1,
+          "total_duration": 0.0010027885437011719,
+          "min_duration": 0.0010027885437011719,
+          "max_duration": 0.0010027885437011719,
+          "avg_duration": 0.0010027885437011719,
+          "success_count": 1,
+          "error_count": 0,
+          "success_rate": 1.0,
+          "last_execution": 1752186653.008877
+        },
+        "persistence_json.gz": {
+          "operation_count": 1,
+          "total_duration": 0.0012934207916259766,
+          "min_duration": 0.0012934207916259766,
+          "max_duration": 0.0012934207916259766,
+          "avg_duration": 0.0012934207916259766,
+          "success_count": 1,
+          "error_count": 0,
+          "success_rate": 1.0,
+          "last_execution": 1752186653.010181
+        }
+      }
+    },
+    "complex_analytics": {
+      "centrality_analysis": "completed",
+      "tcja_policy_impact": "PolicyImpactAnalysis(policy_id='7358acc5-6f27-4f4a-aa5c-647105e30258', total_affected_nodes=1, affected_actors=['c8f70415-70ed-48e3-b52e-86e39f82dc50'], affected_institutions=[], affected_resources=[], network_metrics={'density': 0.5, 'centrality': 0.0}, impact_radius=2)",
+      "aca_policy_impact": "PolicyImpactAnalysis(policy_id='956231df-5379-4bd1-bde2-d4b3d9d78f94', total_affected_nodes=1, affected_actors=['4c4d2c53-4342-4430-a947-97d834824019'], affected_institutions=[], affected_resources=[], network_metrics={'density': 0.5, 'centrality': 0.0}, impact_radius=2)"
+    },
+    "security_validation": "All inputs validated and sanitized",
+    "high_level_service": "Used SFMService facade for all operations",
+    "caching": "Built-in query caching active"
+  },
+  "technical_metrics": {
+    "entity_creation_time": 0.016179323196411133,
+    "analysis_time": 0.0015451908111572266,
+    "total_execution_time": 0.021402597427368164
+  }
+}
