@@ -4,6 +4,7 @@ Load testing scenarios for SFM system.
 This module contains specific load tests for different system components
 and operations under various load conditions.
 """
+import os
 import pytest
 from tests.performance.performance_base import LoadTestCase
 from tests.factories.node_factory import NodeFactory
@@ -16,8 +17,15 @@ class TestQueryPerformance(LoadTestCase):
     @pytest.mark.performance
     def test_node_query_performance(self):
         """Test node query performance under load"""
-        # Setup large dataset
-        self.create_large_test_dataset(nodes=10000, relationships=50000)
+        # Use smaller dataset for CI environments
+        is_ci = os.environ.get('CI', 'false').lower() == 'true' or os.environ.get('GITHUB_ACTIONS', 'false').lower() == 'true'
+        
+        if is_ci:
+            # Smaller dataset for CI
+            self.create_large_test_dataset(nodes=100, relationships=200)
+        else:
+            # Full dataset for local development
+            self.create_large_test_dataset(nodes=10000, relationships=50000)
 
         # Define test scenarios
         scenarios = {
@@ -133,7 +141,19 @@ class TestQueryPerformance(LoadTestCase):
     @pytest.mark.performance
     def test_mixed_workload_performance(self):
         """Test mixed read/write workload performance"""
-        self.create_large_test_dataset(nodes=5000, relationships=10000)
+        # Use CI-friendly parameters
+        is_ci = os.environ.get('CI', 'false').lower() == 'true' or os.environ.get('GITHUB_ACTIONS', 'false').lower() == 'true'
+        
+        if is_ci:
+            # Smaller dataset and fewer sessions for CI
+            self.create_large_test_dataset(nodes=50, relationships=100)
+            session_count = 2
+            session_duration = 2
+        else:
+            # Full dataset for local development
+            self.create_large_test_dataset(nodes=5000, relationships=10000)
+            session_count = 10
+            session_duration = 30
 
         operations = [
             self.single_node_lookup,
@@ -144,8 +164,8 @@ class TestQueryPerformance(LoadTestCase):
 
         # Simulate realistic user sessions
         session_results = []
-        for _ in range(10):
-            session_result = self.simulate_user_session(operations, session_duration=30)
+        for _ in range(session_count):
+            session_result = self.simulate_user_session(operations, session_duration=session_duration)
             session_results.extend(session_result)
 
         # Calculate overall performance

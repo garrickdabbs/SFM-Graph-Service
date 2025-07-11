@@ -11,7 +11,7 @@ import uuid
 import logging
 import sys
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Iterator, Callable, Set
+from typing import Dict, List, Optional, Iterator, Callable, Set, Any
 from datetime import datetime
 
 from core.base_nodes import Node
@@ -329,9 +329,7 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
             all_nodes.update(collection)
         return all_nodes
     
-    def get_all_node_ids(self) -> List[uuid.UUID]:
-        """Get all node IDs in the graph."""
-        return list(self.nodes.keys())
+
     
     def relationship_count(self) -> int:
         """Return the total number of relationships in the graph."""

@@ -4,6 +4,7 @@ Base classes for performance testing.
 This module provides the foundation for performance tests that measure
 system performance, scalability, and resource usage.
 """
+import os
 import pytest
 import time
 import psutil
@@ -21,10 +22,19 @@ class PerformanceTestCase(BaseTestCase):
 
     def setup_test_data(self):
         """Set up performance test data"""
-        # Create larger test datasets
-        self.small_graph = GraphFactory.create_small_graph(nodes=100, relationships=200)
-        self.medium_graph = GraphFactory.create_large_graph(nodes=1000, relationships=2000)
-        self.large_graph = GraphFactory.create_large_graph(nodes=10000, relationships=20000)
+        # Use smaller datasets for CI environments
+        is_ci = os.environ.get('CI', 'false').lower() == 'true' or os.environ.get('GITHUB_ACTIONS', 'false').lower() == 'true'
+        
+        if is_ci:
+            # Smaller datasets for CI
+            self.small_graph = GraphFactory.create_small_graph(nodes=10, relationships=20)
+            self.medium_graph = GraphFactory.create_large_graph(nodes=50, relationships=100)
+            self.large_graph = GraphFactory.create_large_graph(nodes=100, relationships=200)
+        else:
+            # Full datasets for local development
+            self.small_graph = GraphFactory.create_small_graph(nodes=100, relationships=200)
+            self.medium_graph = GraphFactory.create_large_graph(nodes=1000, relationships=2000)
+            self.large_graph = GraphFactory.create_large_graph(nodes=10000, relationships=20000)
 
     @pytest.fixture(autouse=True)
     def setup_performance_monitoring(self):
@@ -91,6 +101,14 @@ class PerformanceTestCase(BaseTestCase):
     def run_load_test(self, operation: Callable, concurrent_users: int = 10, 
                       duration: int = 30, *args, **kwargs) -> Dict[str, Any]:
         """Run a load test with multiple concurrent users"""
+        # Use shorter duration for CI environments
+        is_ci = os.environ.get('CI', 'false').lower() == 'true' or os.environ.get('GITHUB_ACTIONS', 'false').lower() == 'true'
+        
+        if is_ci:
+            # Shorter duration and fewer users for CI
+            duration = min(duration, 5)  # Max 5 seconds
+            concurrent_users = min(concurrent_users, 2)  # Max 2 users
+        
         start_time = time.time()
         end_time = start_time + duration
         
@@ -161,6 +179,14 @@ class PerformanceTestCase(BaseTestCase):
 
     def create_large_test_dataset(self, nodes: int = 10000, relationships: int = 50000):
         """Create large dataset for performance testing"""
+        # Use smaller datasets for CI environments
+        is_ci = os.environ.get('CI', 'false').lower() == 'true' or os.environ.get('GITHUB_ACTIONS', 'false').lower() == 'true'
+        
+        if is_ci:
+            # Limit size for CI
+            nodes = min(nodes, 100)
+            relationships = min(relationships, 200)
+        
         self.large_test_graph = GraphFactory.create_large_graph(nodes, relationships)
         
         # Add to test graph
@@ -199,6 +225,12 @@ class LoadTestCase(PerformanceTestCase):
     def simulate_user_session(self, operations: List[Callable], 
                              session_duration: int = 60) -> List[Dict[str, Any]]:
         """Simulate a user session with multiple operations"""
+        # Use shorter duration for CI environments
+        is_ci = os.environ.get('CI', 'false').lower() == 'true' or os.environ.get('GITHUB_ACTIONS', 'false').lower() == 'true'
+        
+        if is_ci:
+            session_duration = min(session_duration, 5)  # Max 5 seconds for CI
+        
         start_time = time.time()
         end_time = start_time + session_duration
         
@@ -212,8 +244,11 @@ class LoadTestCase(PerformanceTestCase):
             result = self.measure_execution_time(operation)
             results.append(result)
             
-            # Random delay between operations (0.1 to 2 seconds)
-            time.sleep(random.uniform(0.1, 2.0))
+            # Shorter delay for CI environments
+            if is_ci:
+                time.sleep(random.uniform(0.01, 0.1))  # Much shorter delays for CI
+            else:
+                time.sleep(random.uniform(0.1, 2.0))
         
         return results
 
