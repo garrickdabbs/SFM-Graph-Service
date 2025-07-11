@@ -1,0 +1,16 @@
+{
+  "graph_id": "tcja_demo_graph",
+  "name": "tcja_demo_graph",
+  "description": "",
+  "version": 2,
+  "created_at": "2025-07-11T04:33:37.488470",
+  "modified_at": "2025-07-11T04:34:29.199286",
+  "author": "",
+  "tags": [],
+  "size_bytes": 3339,
+  "node_count": 4,
+  "relationship_count": 2,
+  "checksum": "7f6c695182bc9a1e8836667a09f301a258f80d78248ff15ae5f0935af853a655",
+  "format": "json",
+  "compression_ratio": null
+}

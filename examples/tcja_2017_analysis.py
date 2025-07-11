@@ -40,7 +40,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any, Set
 
 # SFM Framework imports
-from core.sfm_service import SFMService
+from core.sfm_service import SFMService, CreateActorRequest, CreatePolicyRequest
 from core.sfm_models import (
     Actor, Institution, Policy, Resource, Process, Flow, ValueFlow,
     Indicator, AnalyticalContext, SFMGraph
@@ -127,12 +127,11 @@ class TCJAAnalysisExample:
             legal_form="Federal Agency"
         )
         self.actors["irs"] = irs
-        self.service.create_actor(
+        self.service.create_actor(CreateActorRequest(
             name=irs.label,
             description=irs.description,
-            sector=irs.sector,
-            legal_form=irs.legal_form or ""
-        )
+            sector=irs.sector
+        ))
         
         # Treasury Department
         treasury = Actor(
@@ -142,7 +141,11 @@ class TCJAAnalysisExample:
             legal_form="Federal Department"
         )
         self.actors["treasury"] = treasury
-        self.service.add_actor(treasury)
+        self.service.create_actor(CreateActorRequest(
+            name=treasury.label,
+            description=treasury.description,
+            sector=treasury.sector
+        ))
         
         # Office of Tax Policy
         otp = Actor(
@@ -536,7 +539,6 @@ class TCJAAnalysisExample:
         
         # Start performance monitoring
         start_time = time.time()
-        self.metrics_collector.start_monitoring()
         
         # Create all components
         self.create_federal_tax_agencies()

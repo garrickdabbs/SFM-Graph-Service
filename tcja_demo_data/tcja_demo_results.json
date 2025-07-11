@@ -1,0 +1,83 @@
+{
+  "analysis_type": "TCJA 2017 Analysis",
+  "graph_statistics": {
+    "nodes": 4,
+    "edges": 2,
+    "node_types": 2,
+    "edge_types": 2
+  },
+  "performance_metrics": {
+    "total_time": 0.015988826751708984,
+    "operation_metrics": {
+      "entity_creation": {
+        "operation_count": 1,
+        "total_duration": 0.012822628021240234,
+        "min_duration": 0.012822628021240234,
+        "max_duration": 0.012822628021240234,
+        "avg_duration": 0.012822628021240234,
+        "success_count": 1,
+        "error_count": 0,
+        "success_rate": 1.0,
+        "last_execution": 1752208711.1282494
+      },
+      "first_centrality_query": {
+        "operation_count": 1,
+        "total_duration": 0.0005617141723632812,
+        "min_duration": 0.0005617141723632812,
+        "max_duration": 0.0005617141723632812,
+        "avg_duration": 0.0005617141723632812,
+        "success_count": 1,
+        "error_count": 0,
+        "success_rate": 1.0,
+        "last_execution": 1752208711.1293137
+      },
+      "cached_centrality_query": {
+        "operation_count": 1,
+        "total_duration": 0.00020885467529296875,
+        "min_duration": 0.00020885467529296875,
+        "max_duration": 0.00020885467529296875,
+        "avg_duration": 0.00020885467529296875,
+        "success_count": 1,
+        "error_count": 0,
+        "success_rate": 1.0,
+        "last_execution": 1752208711.1295297
+      },
+      "graph_save": {
+        "operation_count": 1,
+        "total_duration": 0.0011947154998779297,
+        "min_duration": 0.0011947154998779297,
+        "max_duration": 0.0011947154998779297,
+        "avg_duration": 0.0011947154998779297,
+        "success_count": 1,
+        "error_count": 0,
+        "success_rate": 1.0,
+        "last_execution": 1752208711.1308115
+      },
+      "policy_analysis": {
+        "operation_count": 1,
+        "total_duration": 0.0005099773406982422,
+        "min_duration": 0.0005099773406982422,
+        "max_duration": 0.0005099773406982422,
+        "avg_duration": 0.0005099773406982422,
+        "success_count": 1,
+        "error_count": 0,
+        "success_rate": 1.0,
+        "last_execution": 1752208711.131376
+      }
+    },
+    "first_query_time": 0.0005617141723632812,
+    "cached_query_time": 0.00020885467529296875,
+    "cache_speedup": "2.7x"
+  },
+  "entities_created": {
+    "irs": "823dbbfe-9e9b-4109-8160-ae044ed69a19",
+    "treasury": "b98c8e63-503e-41e6-b9e7-a0388138dd84",
+    "tcja_policy": "8b18ae6a-f609-4233-9e66-7c42382452a7",
+    "middle_class": "4e4dd649-285d-452d-9240-0432ddfe55a2"
+  },
+  "analysis_results": {
+    "centrality_analysis": 4,
+    "policy_impact": "PolicyImpactAnalysis(policy_id='8b18ae6a-f609-4233-9e66-7c42382452a7', total_affected_nodes=1, affected_actors=['4e4dd649-285d-452d-9240-0432ddfe55a2'], affected_institutions=[], affected_resources=[], network_metrics={'density': 0.5, 'centrality': 0.0}, impact_radius=2)",
+    "network_structure": "Analysis completed"
+  }
+}

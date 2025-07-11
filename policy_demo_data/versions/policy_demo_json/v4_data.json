@@ -1,66 +1,66 @@
 {
-  "id": "6b50042e-a2ed-4094-978e-0fff33af5071",
+  "id": "600200e0-ceac-40d4-9fec-d18e54210d05",
   "name": "",
   "description": null,
   "relationships": {
-    "1e0453e1-d0b5-45c8-b4c3-1c1eadb36a01": {
-      "id": "1e0453e1-d0b5-45c8-b4c3-1c1eadb36a01",
-      "source_id": "759d168e-dbb6-4d0a-bca8-3b6897af6714",
-      "target_id": "eb6b6d65-ada8-47d1-89c5-c78deb69855d",
+    "4927ae7a-3fd7-4067-930f-224e483a12bb": {
+      "id": "4927ae7a-3fd7-4067-930f-224e483a12bb",
+      "source_id": "19e1cd00-f160-4810-8a13-b44ab867dbe2",
+      "target_id": "b248861f-0eaa-498f-8e62-b9880f7f7b12",
       "kind": "IMPLEMENTS",
       "weight": 9.0,
       "meta": null,
       "certainty": 1.0,
-      "created_at": "2025-07-11T04:38:41.840836",
+      "created_at": "2025-07-11T04:27:17.903888",
       "modified_at": null
     },
-    "7190fdf9-778c-4288-b604-b078f10231f5": {
-      "id": "7190fdf9-778c-4288-b604-b078f10231f5",
-      "source_id": "eb6b6d65-ada8-47d1-89c5-c78deb69855d",
-      "target_id": "0dbb8667-5699-4fec-b508-40c09240884f",
+    "854e3b9e-13c5-455a-abec-e9ce50cb1da3": {
+      "id": "854e3b9e-13c5-455a-abec-e9ce50cb1da3",
+      "source_id": "b248861f-0eaa-498f-8e62-b9880f7f7b12",
+      "target_id": "1e2c9ac7-f193-4400-a281-558d16093032",
       "kind": "AFFECTS",
       "weight": 8.5,
       "meta": null,
       "certainty": 1.0,
-      "created_at": "2025-07-11T04:38:41.840916",
+      "created_at": "2025-07-11T04:27:17.903984",
       "modified_at": null
     },
-    "c7e6ddef-9dd1-4bdf-9123-296f95912376": {
-      "id": "c7e6ddef-9dd1-4bdf-9123-296f95912376",
-      "source_id": "fab9f6dc-9e9c-47e3-a305-f58265019872",
-      "target_id": "7da542be-dae8-44b2-91f6-034f8d0743db",
+    "6ebd5e64-ee8b-4539-8c76-7a23bf1a6714": {
+      "id": "6ebd5e64-ee8b-4539-8c76-7a23bf1a6714",
+      "source_id": "e215cc72-bdb0-444f-a310-cb2cec58e792",
+      "target_id": "9dcc0485-dba0-48a0-97a4-92e94ab5f6d5",
       "kind": "IMPLEMENTS",
       "weight": 10.0,
       "meta": null,
       "certainty": 1.0,
-      "created_at": "2025-07-11T04:38:41.840983",
+      "created_at": "2025-07-11T04:27:17.904071",
       "modified_at": null
     },
-    "a9fb76f7-bb7c-4cfe-b86e-b58da437c432": {
-      "id": "a9fb76f7-bb7c-4cfe-b86e-b58da437c432",
-      "source_id": "7da542be-dae8-44b2-91f6-034f8d0743db",
-      "target_id": "cbf16cb0-7f74-4afc-908f-ad30b1393c3a",
+    "4e7ac72c-c1a9-4175-b855-aae81d426875": {
+      "id": "4e7ac72c-c1a9-4175-b855-aae81d426875",
+      "source_id": "9dcc0485-dba0-48a0-97a4-92e94ab5f6d5",
+      "target_id": "0f4c914b-0af9-459f-b998-1fa0080aa0c8",
       "kind": "AFFECTS",
       "weight": 9.5,
       "meta": null,
       "certainty": 1.0,
-      "created_at": "2025-07-11T04:38:41.841043",
+      "created_at": "2025-07-11T04:27:17.904159",
       "modified_at": null
     }
   },
   "metadata": {
-    "serialization_timestamp": "2025-07-11T04:38:41.843859",
+    "serialization_timestamp": "2025-07-11T04:27:17.907268",
     "serialization_version": "1.0"
   },
   "actors": {
-    "759d168e-dbb6-4d0a-bca8-3b6897af6714": {
+    "19e1cd00-f160-4810-8a13-b44ab867dbe2": {
       "type": "Actor",
-      "id": "759d168e-dbb6-4d0a-bca8-3b6897af6714",
+      "id": "19e1cd00-f160-4810-8a13-b44ab867dbe2",
       "label": "Internal Revenue Service",
       "description": "Primary federal tax collection agency",
       "meta": {},
       "version": 1,
-      "created_at": "2025-07-11T04:38:41.834362",
+      "created_at": "2025-07-11T04:27:17.896567",
       "modified_at": null,
       "certainty": 1.0,
       "legal_form": "",
@@ -68,14 +68,14 @@
       "power_resources": {},
       "decision_making_capacity": null
     },
-    "f19e48c1-1ba7-48d1-9583-707bc0d93cb5": {
+    "a7f348e7-c14a-4b00-8d3d-17f3c7b48b48": {
       "type": "Actor",
-      "id": "f19e48c1-1ba7-48d1-9583-707bc0d93cb5",
+      "id": "a7f348e7-c14a-4b00-8d3d-17f3c7b48b48",
       "label": "US Department of Treasury",
       "description": "Federal executive department responsible for tax policy",
       "meta": {},
       "version": 1,
-      "created_at": "2025-07-11T04:38:41.835494",
+      "created_at": "2025-07-11T04:27:17.897978",
       "modified_at": null,
       "certainty": 1.0,
       "legal_form": "",
@@ -83,14 +83,14 @@
       "power_resources": {},
       "decision_making_capacity": null
     },
-    "0dbb8667-5699-4fec-b508-40c09240884f": {
+    "1e2c9ac7-f193-4400-a281-558d16093032": {
       "type": "Actor",
-      "id": "0dbb8667-5699-4fec-b508-40c09240884f",
+      "id": "1e2c9ac7-f193-4400-a281-558d16093032",
       "label": "Middle Class Taxpayers",
       "description": "Taxpayer households earning $40,000-$120,000",
       "meta": {},
       "version": 1,
-      "created_at": "2025-07-11T04:38:41.837145",
+      "created_at": "2025-07-11T04:27:17.899898",
       "modified_at": null,
       "certainty": 1.0,
       "legal_form": "",
@@ -98,14 +98,14 @@
       "power_resources": {},
       "decision_making_capacity": null
     },
-    "fab9f6dc-9e9c-47e3-a305-f58265019872": {
+    "e215cc72-bdb0-444f-a310-cb2cec58e792": {
       "type": "Actor",
-      "id": "fab9f6dc-9e9c-47e3-a305-f58265019872",
+      "id": "e215cc72-bdb0-444f-a310-cb2cec58e792",
       "label": "Centers for Medicare &amp;amp; Medicaid Services",
       "description": "Federal agency administering healthcare programs",
       "meta": {},
       "version": 1,
-      "created_at": "2025-07-11T04:38:41.838404",
+      "created_at": "2025-07-11T04:27:17.901188",
       "modified_at": null,
       "certainty": 1.0,
       "legal_form": "",
@@ -113,14 +113,14 @@
       "power_resources": {},
       "decision_making_capacity": null
     },
-    "cbf16cb0-7f74-4afc-908f-ad30b1393c3a": {
+    "0f4c914b-0af9-459f-b998-1fa0080aa0c8": {
       "type": "Actor",
-      "id": "cbf16cb0-7f74-4afc-908f-ad30b1393c3a",
+      "id": "0f4c914b-0af9-459f-b998-1fa0080aa0c8",
       "label": "Previously Uninsured Adults",
       "description": "Adults without health insurance before ACA",
       "meta": {},
       "version": 1,
-      "created_at": "2025-07-11T04:38:41.840082",
+      "created_at": "2025-07-11T04:27:17.903008",
       "modified_at": null,
       "certainty": 1.0,
       "legal_form": "",
@@ -134,28 +134,28 @@
   "processes": {},
   "flows": {},
   "policies": {
-    "eb6b6d65-ada8-47d1-89c5-c78deb69855d": {
+    "b248861f-0eaa-498f-8e62-b9880f7f7b12": {
       "type": "Policy",
-      "id": "eb6b6d65-ada8-47d1-89c5-c78deb69855d",
+      "id": "b248861f-0eaa-498f-8e62-b9880f7f7b12",
       "label": "Tax Cuts and Jobs Act (TCJA) of 2017",
       "description": "Comprehensive tax reform legislation",
       "meta": {},
       "version": 1,
-      "created_at": "2025-07-11T04:38:41.836525",
+      "created_at": "2025-07-11T04:27:17.899220",
       "modified_at": null,
       "certainty": 1.0,
       "authority": "U.S. Congress",
       "enforcement": 0.0,
       "target_sectors": null
     },
-    "7da542be-dae8-44b2-91f6-034f8d0743db": {
+    "9dcc0485-dba0-48a0-97a4-92e94ab5f6d5": {
       "type": "Policy",
-      "id": "7da542be-dae8-44b2-91f6-034f8d0743db",
+      "id": "9dcc0485-dba0-48a0-97a4-92e94ab5f6d5",
       "label": "Affordable Care Act (ACA)",
       "description": "Comprehensive healthcare reform legislation",
       "meta": {},
       "version": 1,
-      "created_at": "2025-07-11T04:38:41.839406",
+      "created_at": "2025-07-11T04:27:17.902293",
       "modified_at": null,
       "certainty": 1.0,
       "authority": "U.S. Congress",

@@ -707,7 +707,6 @@ class ACAAnalysisExample:
         
         # Start performance monitoring
         start_time = time.time()
-        self.metrics_collector.start_monitoring()
         
         # Create all components
         self.create_federal_healthcare_agencies()

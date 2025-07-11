@@ -1,0 +1,106 @@
+{
+  "id": "8176b675-f1f5-49d9-8ff3-70725bf090d7",
+  "name": "",
+  "description": null,
+  "relationships": {
+    "7b62f137-e622-4611-a100-5ea835c693a4": {
+      "id": "7b62f137-e622-4611-a100-5ea835c693a4",
+      "source_id": "823dbbfe-9e9b-4109-8160-ae044ed69a19",
+      "target_id": "8b18ae6a-f609-4233-9e66-7c42382452a7",
+      "kind": "IMPLEMENTS",
+      "weight": 9.0,
+      "meta": null,
+      "certainty": 1.0,
+      "created_at": "2025-07-11T04:38:31.128066",
+      "modified_at": null
+    },
+    "0f8293a6-e962-4a46-be8b-a9aa3ac7c647": {
+      "id": "0f8293a6-e962-4a46-be8b-a9aa3ac7c647",
+      "source_id": "8b18ae6a-f609-4233-9e66-7c42382452a7",
+      "target_id": "4e4dd649-285d-452d-9240-0432ddfe55a2",
+      "kind": "AFFECTS",
+      "weight": 8.5,
+      "meta": null,
+      "certainty": 1.0,
+      "created_at": "2025-07-11T04:38:31.128171",
+      "modified_at": null
+    }
+  },
+  "metadata": {
+    "serialization_timestamp": "2025-07-11T04:38:31.130316",
+    "serialization_version": "1.0"
+  },
+  "actors": {
+    "823dbbfe-9e9b-4109-8160-ae044ed69a19": {
+      "type": "Actor",
+      "id": "823dbbfe-9e9b-4109-8160-ae044ed69a19",
+      "label": "Internal Revenue Service",
+      "description": "Primary federal tax collection agency",
+      "meta": {},
+      "version": 1,
+      "created_at": "2025-07-11T04:38:31.123957",
+      "modified_at": null,
+      "certainty": 1.0,
+      "legal_form": "Federal Agency",
+      "sector": "Government",
+      "power_resources": {},
+      "decision_making_capacity": null
+    },
+    "b98c8e63-503e-41e6-b9e7-a0388138dd84": {
+      "type": "Actor",
+      "id": "b98c8e63-503e-41e6-b9e7-a0388138dd84",
+      "label": "US Department of Treasury",
+      "description": "Federal executive department responsible for tax policy",
+      "meta": {},
+      "version": 1,
+      "created_at": "2025-07-11T04:38:31.125289",
+      "modified_at": null,
+      "certainty": 1.0,
+      "legal_form": "Federal Department",
+      "sector": "Government",
+      "power_resources": {},
+      "decision_making_capacity": null
+    },
+    "4e4dd649-285d-452d-9240-0432ddfe55a2": {
+      "type": "Actor",
+      "id": "4e4dd649-285d-452d-9240-0432ddfe55a2",
+      "label": "Middle Class Taxpayers",
+      "description": "Middle-class taxpayer households ($40,000-$120,000 income)",
+      "meta": {},
+      "version": 1,
+      "created_at": "2025-07-11T04:38:31.127131",
+      "modified_at": null,
+      "certainty": 1.0,
+      "legal_form": "Taxpayer Group",
+      "sector": "Household",
+      "power_resources": {},
+      "decision_making_capacity": null
+    }
+  },
+  "institutions": {},
+  "resources": {},
+  "processes": {},
+  "flows": {},
+  "policies": {
+    "8b18ae6a-f609-4233-9e66-7c42382452a7": {
+      "type": "Policy",
+      "id": "8b18ae6a-f609-4233-9e66-7c42382452a7",
+      "label": "Tax Cuts and Jobs Act (TCJA) of 2017",
+      "description": "Comprehensive tax reform legislation passed in December 2017",
+      "meta": {},
+      "version": 1,
+      "created_at": "2025-07-11T04:38:31.126378",
+      "modified_at": null,
+      "certainty": 1.0,
+      "authority": "U.S. Congress",
+      "enforcement": 0.9,
+      "target_sectors": null
+    }
+  },
+  "belief_systems": {},
+  "technology_systems": {},
+  "indicators": {},
+  "feedback_loops": {},
+  "system_properties": {},
+  "analytical_contexts": {}
+}

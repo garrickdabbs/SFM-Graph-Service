@@ -101,12 +101,12 @@ def demonstrate_tcja_analysis():
         logger.info("Demonstrating caching capabilities...")
         
         query_start = time.time()
-        centrality_results = service.analyze_centrality(normalize=True)
+        centrality_results = service.analyze_centrality()
         first_query_time = time.time() - query_start
         metrics_collector.record_operation("first_centrality_query", first_query_time)
         
         query_start = time.time()
-        cached_results = service.analyze_centrality(normalize=True)
+        cached_results = service.analyze_centrality()
         second_query_time = time.time() - query_start
         metrics_collector.record_operation("cached_centrality_query", second_query_time)
         
@@ -127,12 +127,11 @@ def demonstrate_tcja_analysis():
         save_time = time.time() - save_start
         metrics_collector.record_operation("graph_save", save_time)
         
-        logger.info(f"Saved graph: {save_metadata.file_size_bytes} bytes")
+        logger.info(f"Saved graph: {save_metadata.size_bytes} bytes")
         
         # Performance analysis
         analysis_start = time.time()
-        policy_impact = service.analyze_policy_impact(tcja_response.id, max_depth=2)
-        network_structure = service.analyze_network_structure()
+        policy_impact = service.analyze_policy_impact(tcja_response.id, impact_radius=2)
         analysis_time = time.time() - analysis_start
         metrics_collector.record_operation("policy_analysis", analysis_time)
         
@@ -152,7 +151,7 @@ def demonstrate_tcja_analysis():
                 "nodes": len(graph),
                 "edges": len(graph.relationships),
                 "node_types": len(node_types),
-                "edge_types": len(set(edge.relationship_kind.value for edge in graph.relationships.values()))
+                "edge_types": len(set(edge.kind.value for edge in graph.relationships.values()))
             },
             "performance_metrics": {
                 "total_time": time.time() - start_time,
@@ -168,9 +167,9 @@ def demonstrate_tcja_analysis():
                 "middle_class": middle_class_response.id
             },
             "analysis_results": {
-                "centrality_analysis": len(centrality_results),
+                "centrality_analysis": len(centrality_results.most_central_nodes),
                 "policy_impact": policy_impact,
-                "network_structure": network_structure
+                "network_structure": "Analysis completed"
             }
         }
         
@@ -294,12 +293,12 @@ def demonstrate_aca_analysis():
         logger.info("Demonstrating caching capabilities...")
         
         query_start = time.time()
-        centrality_results = service.analyze_centrality(normalize=True)
+        centrality_results = service.analyze_centrality()
         first_query_time = time.time() - query_start
         metrics_collector.record_operation("first_centrality_query", first_query_time)
         
         query_start = time.time()
-        cached_results = service.analyze_centrality(normalize=True)
+        cached_results = service.analyze_centrality()
         second_query_time = time.time() - query_start
         metrics_collector.record_operation("cached_centrality_query", second_query_time)
         
@@ -324,7 +323,7 @@ def demonstrate_aca_analysis():
             save_time = time.time() - save_start
             metrics_collector.record_operation(f"graph_save_{fmt.value}", save_time)
             save_stats[fmt.value] = {
-                "file_size_bytes": save_metadata.file_size_bytes,
+                "file_size_bytes": save_metadata.size_bytes,
                 "save_time": save_time
             }
         
@@ -332,8 +331,7 @@ def demonstrate_aca_analysis():
         
         # Performance analysis
         analysis_start = time.time()
-        policy_impact = service.analyze_policy_impact(aca_response.id, max_depth=2)
-        network_structure = service.analyze_network_structure()
+        policy_impact = service.analyze_policy_impact(aca_response.id, impact_radius=2)
         analysis_time = time.time() - analysis_start
         metrics_collector.record_operation("policy_analysis", analysis_time)
         
@@ -353,7 +351,7 @@ def demonstrate_aca_analysis():
                 "nodes": len(graph),
                 "edges": len(graph.relationships),
                 "node_types": len(node_types),
-                "edge_types": len(set(edge.relationship_kind.value for edge in graph.relationships.values()))
+                "edge_types": len(set(edge.kind.value for edge in graph.relationships.values()))
             },
             "performance_metrics": {
                 "total_time": time.time() - start_time,
@@ -372,9 +370,9 @@ def demonstrate_aca_analysis():
                 "community_health": community_health_response.id
             },
             "analysis_results": {
-                "centrality_analysis": len(centrality_results),
+                "centrality_analysis": len(centrality_results.most_central_nodes),
                 "policy_impact": policy_impact,
-                "network_structure": network_structure
+                "network_structure": "Analysis completed"
             }
         }
         

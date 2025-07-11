@@ -2,15 +2,15 @@
   "graph_id": "policy_demo_json",
   "name": "policy_demo_json",
   "description": "",
-  "version": 5,
+  "version": 4,
   "created_at": "2025-07-10T22:29:59.671024",
-  "modified_at": "2025-07-11T04:38:41.844067",
+  "modified_at": "2025-07-11T04:27:17.907479",
   "author": "",
   "tags": [],
   "size_bytes": 5538,
   "node_count": 7,
   "relationship_count": 4,
-  "checksum": "b02324d1f3ff597bd8496ea0297c240aa4aff1160959b815a9221114d6c56ab8",
+  "checksum": "99c178249bc7107785dde70111ac40d86929a546c50bc9458f05ef57f6bf87b8",
   "format": "json",
   "compression_ratio": null
 }
