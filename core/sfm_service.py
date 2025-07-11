@@ -83,6 +83,7 @@ from core.audit_logger import (
 from core.performance_metrics import (
     MetricsCollector, get_metrics_collector, timed_operation
 )
+from core.lock_manager import get_lock_manager, LockType
 from db.sfm_dao import (
     SFMRepositoryFactory,
     ActorRepository,
@@ -367,6 +368,7 @@ class SFMService:
         self._transaction_manager = TransactionManager()
         self._audit_logger = get_audit_logger()
         self._metrics_collector = get_metrics_collector()
+        self._lock_manager = get_lock_manager()
 
         logger.info(
             "SFM Service initialized with backend: %s", self.config.storage_backend
@@ -611,6 +613,16 @@ class SFMService:
             )
 
             result = self._institution_repo.create(institution)
+            
+            # Track operation in transaction if active
+            if self._transaction_manager.is_in_transaction():
+                self._transaction_manager.add_operation(
+                    operation_type="create_institution",
+                    data={"institution_id": str(result.id), "name": result.label},
+                    rollback_data={"institution_id": str(result.id)},
+                    rollback_function=lambda data: self._rollback_create_institution(data["institution_id"])
+                )
+            
             self._mark_dirty("create_institution")
 
             logger.info("Created institution: %s (%s)", result.label, result.id)
@@ -724,6 +736,16 @@ class SFMService:
             )
 
             result = self._resource_repo.create(resource)
+            
+            # Track operation in transaction if active
+            if self._transaction_manager.is_in_transaction():
+                self._transaction_manager.add_operation(
+                    operation_type="create_resource",
+                    data={"resource_id": str(result.id), "name": result.label},
+                    rollback_data={"resource_id": str(result.id)},
+                    rollback_function=lambda data: self._rollback_create_resource(data["resource_id"])
+                )
+            
             self._mark_dirty("create_resource")
 
             logger.info("Created resource: %s (%s)", result.label, result.id)
@@ -745,7 +767,7 @@ class SFMService:
     def create_relationship(
         self, request: Union[CreateRelationshipRequest, dict], **kwargs
     ) -> RelationshipResponse:
-        """Create a relationship between two entities."""
+        """Create a relationship between two entities with referential integrity validation."""
         try:
             if isinstance(request, dict):
                 data = request
@@ -771,24 +793,44 @@ class SFMService:
 
             source_id = uuid.UUID(data["source_id"])
             target_id = uuid.UUID(data["target_id"])
-            kind = self._convert_to_relationship_kind(data["kind"])
+            
+            # Acquire read locks on both entities to prevent concurrent modification
+            with self._lock_manager.lock_entity(source_id, LockType.READ) as source_lock:
+                with self._lock_manager.lock_entity(target_id, LockType.READ) as target_lock:
+                    # Referential integrity validation - ensure both endpoints exist
+                    if not self._validate_relationship_integrity(source_id, target_id):
+                        raise ValidationError(
+                            f"Referential integrity violation: source {source_id} or target {target_id} does not exist"
+                        )
+                    
+                    kind = self._convert_to_relationship_kind(data["kind"])
 
-            relationship = Relationship(
-                source_id=source_id,
-                target_id=target_id,
-                kind=kind,
-                weight=data.get("weight", 1.0),
-                meta=data.get("meta", {}),
-            )
+                    relationship = Relationship(
+                        source_id=source_id,
+                        target_id=target_id,
+                        kind=kind,
+                        weight=data.get("weight", 1.0),
+                        meta=data.get("meta", {}),
+                    )
 
-            result = self._relationship_repo.create(relationship)
-            self._mark_dirty("create_relationship")
+                    result = self._relationship_repo.create(relationship)
+                    
+                    # Track operation in transaction if active
+                    if self._transaction_manager.is_in_transaction():
+                        self._transaction_manager.add_operation(
+                            operation_type="create_relationship",
+                            data={"relationship_id": str(result.id), "source_id": str(source_id), "target_id": str(target_id)},
+                            rollback_data={"relationship_id": str(result.id)},
+                            rollback_function=lambda data: self._rollback_create_relationship(data["relationship_id"])
+                        )
+                    
+                    self._mark_dirty("create_relationship")
 
-            logger.info(
-                "Created relationship: %s --%s--> %s",
-                source_id, kind.name, target_id
-            )
-            return self._relationship_to_response(result)
+                    logger.info(
+                        "Created relationship: %s --%s--> %s",
+                        source_id, kind.name, target_id
+                    )
+                    return self._relationship_to_response(result)
 
         except ValueError as e:
             logger.error("Failed to create relationship: %s", e)
@@ -1316,17 +1358,23 @@ class SFMService:
     def bulk_create_actors(
         self, requests: List[CreateActorRequest]
     ) -> List[NodeResponse]:
-        """Create multiple actors in batch."""
-        results = []
-        for request in requests:
+        """Create multiple actors in batch with transaction support."""
+        with self.transaction(metadata={"operation": "bulk_create_actors", "count": len(requests)}) as tx:
+            results = []
             try:
-                result = self.create_actor(request)
-                results.append(result)
+                for request in requests:
+                    result = self.create_actor(request)
+                    results.append(result)
+                
+                logger.info(f"Successfully created {len(results)} actors in bulk operation")
+                return results
+                
             except Exception as e:
-                logger.error("Failed to create actor in bulk operation: %s", e)
-                # Continue with other actors, collect errors separately
-
-        return results
+                logger.error(f"Bulk actor creation failed after {len(results)} successful operations: {e}")
+                # Transaction will automatically rollback all created actors
+                raise SFMServiceError(
+                    f"Bulk actor creation failed: {str(e)}", "BULK_CREATE_ACTORS_FAILED"
+                ) from e
 
     def transaction(self, metadata: Optional[Dict[str, Any]] = None):
         """
@@ -1362,7 +1410,7 @@ class SFMService:
     def _rollback_create_actor(self, actor_id: str):
         """Rollback actor creation by deleting the actor."""
         try:
-            self._actor_repo.delete(actor_id)
+            self._actor_repo.delete(uuid.UUID(actor_id))
             logger.debug(f"Rolled back actor creation: {actor_id}")
         except Exception as e:
             logger.error(f"Failed to rollback actor creation {actor_id}: {e}")
@@ -1370,18 +1418,76 @@ class SFMService:
     def _rollback_create_policy(self, policy_id: str):
         """Rollback policy creation by deleting the policy."""
         try:
-            self._policy_repo.delete(policy_id)
+            self._policy_repo.delete(uuid.UUID(policy_id))
             logger.debug(f"Rolled back policy creation: {policy_id}")
         except Exception as e:
             logger.error(f"Failed to rollback policy creation {policy_id}: {e}")
 
+    def _rollback_create_institution(self, institution_id: str):
+        """Rollback institution creation by deleting the institution."""
+        try:
+            self._institution_repo.delete(uuid.UUID(institution_id))
+            logger.debug(f"Rolled back institution creation: {institution_id}")
+        except Exception as e:
+            logger.error(f"Failed to rollback institution creation {institution_id}: {e}")
+
+    def _rollback_create_resource(self, resource_id: str):
+        """Rollback resource creation by deleting the resource."""
+        try:
+            self._resource_repo.delete(uuid.UUID(resource_id))
+            logger.debug(f"Rolled back resource creation: {resource_id}")
+        except Exception as e:
+            logger.error(f"Failed to rollback resource creation {resource_id}: {e}")
+
     def _rollback_create_relationship(self, relationship_id: str):
         """Rollback relationship creation by deleting the relationship."""
         try:
-            self._relationship_repo.delete(relationship_id)
+            self._relationship_repo.delete(uuid.UUID(relationship_id))
             logger.debug(f"Rolled back relationship creation: {relationship_id}")
         except Exception as e:
             logger.error(f"Failed to rollback relationship creation {relationship_id}: {e}")
+
+    def _validate_relationship_integrity(self, source_id: uuid.UUID, target_id: uuid.UUID) -> bool:
+        """
+        Validate referential integrity for relationship endpoints.
+        
+        Args:
+            source_id: Source entity UUID
+            target_id: Target entity UUID
+            
+        Returns:
+            True if both entities exist, False otherwise
+        """
+        try:
+            # Check if source entity exists
+            source_exists = False
+            for repo in [self._actor_repo, self._institution_repo, self._policy_repo, 
+                        self._resource_repo, self._process_repo, self._flow_repo]:
+                if repo.read(source_id) is not None:
+                    source_exists = True
+                    break
+            
+            if not source_exists:
+                logger.warning(f"Source entity {source_id} does not exist")
+                return False
+            
+            # Check if target entity exists
+            target_exists = False
+            for repo in [self._actor_repo, self._institution_repo, self._policy_repo, 
+                        self._resource_repo, self._process_repo, self._flow_repo]:
+                if repo.read(target_id) is not None:
+                    target_exists = True
+                    break
+            
+            if not target_exists:
+                logger.warning(f"Target entity {target_id} does not exist")
+                return False
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error validating relationship integrity: {e}")
+            return False
 
     # ═══ ENHANCED MONITORING & METRICS ═══
 
@@ -1422,6 +1528,7 @@ class SFMService:
             "performance_metrics": self.get_performance_metrics(),
             "audit_metrics": self.get_audit_metrics(),
             "transaction_metrics": self.get_transaction_metrics(),
+            "lock_metrics": self._lock_manager.get_lock_stats(),
             "system_metrics": self.get_system_resource_metrics(5)
         }
 
@@ -1429,6 +1536,253 @@ class SFMService:
         """Reset all collected metrics (for testing/maintenance)."""
         self._metrics_collector.reset_metrics()
         # Note: Audit history is retained for compliance
+
+    # ═══ DATA INTEGRITY VALIDATION ═══
+    
+    def validate_graph_integrity(self) -> List[Dict[str, Any]]:
+        """
+        Validate the integrity of the entire graph and return violations.
+        
+        Returns:
+            List of integrity violations found
+        """
+        violations = []
+        
+        try:
+            # Check for orphaned relationships
+            orphaned_relationships = self._find_orphaned_relationships()
+            for rel_id, details in orphaned_relationships.items():
+                violations.append({
+                    "type": "orphaned_relationship",
+                    "relationship_id": str(rel_id),
+                    "source_id": str(details["source_id"]),
+                    "target_id": str(details["target_id"]),
+                    "missing_entity": details["missing_entity"],
+                    "severity": "high"
+                })
+            
+            # Check for graph consistency
+            consistency_violations = self._check_graph_consistency()
+            violations.extend(consistency_violations)
+            
+            logger.info(f"Graph integrity validation completed: {len(violations)} violations found")
+            return violations
+            
+        except Exception as e:
+            logger.error(f"Graph integrity validation failed: {e}")
+            return [{
+                "type": "validation_error",
+                "message": f"Integrity validation failed: {str(e)}",
+                "severity": "critical"
+            }]
+    
+    def _find_orphaned_relationships(self) -> Dict[uuid.UUID, Dict[str, Any]]:
+        """
+        Find relationships that reference non-existent entities.
+        
+        Returns:
+            Dictionary of orphaned relationship IDs and their details
+        """
+        orphaned = {}
+        
+        try:
+            # Get all relationships
+            all_relationships = self._relationship_repo.list_all()
+            
+            for relationship in all_relationships:
+                missing_entities = []
+                
+                # Check if source exists
+                if not self._entity_exists(relationship.source_id):
+                    missing_entities.append("source")
+                
+                # Check if target exists
+                if not self._entity_exists(relationship.target_id):
+                    missing_entities.append("target")
+                
+                if missing_entities:
+                    orphaned[relationship.id] = {
+                        "source_id": relationship.source_id,
+                        "target_id": relationship.target_id,
+                        "missing_entity": missing_entities,
+                        "kind": relationship.kind.name
+                    }
+            
+            if orphaned:
+                logger.warning(f"Found {len(orphaned)} orphaned relationships")
+            
+            return orphaned
+            
+        except Exception as e:
+            logger.error(f"Error finding orphaned relationships: {e}")
+            return {}
+    
+    def _entity_exists(self, entity_id: uuid.UUID) -> bool:
+        """Check if an entity exists in any repository."""
+        try:
+            for repo in [self._actor_repo, self._institution_repo, self._policy_repo, 
+                        self._resource_repo, self._process_repo, self._flow_repo]:
+                if repo.read(entity_id) is not None:
+                    return True
+            return False
+        except Exception:
+            return False
+    
+    def _check_graph_consistency(self) -> List[Dict[str, Any]]:
+        """Check for graph consistency issues."""
+        violations = []
+        
+        try:
+            # Check for duplicate entities (same label/type combination)
+            duplicate_violations = self._check_duplicate_entities()
+            violations.extend(duplicate_violations)
+            
+            # Check for circular dependencies in critical paths
+            circular_violations = self._check_circular_dependencies()
+            violations.extend(circular_violations)
+            
+            return violations
+            
+        except Exception as e:
+            logger.error(f"Graph consistency check failed: {e}")
+            return [{
+                "type": "consistency_check_error",
+                "message": f"Consistency check failed: {str(e)}",
+                "severity": "medium"
+            }]
+    
+    def _check_duplicate_entities(self) -> List[Dict[str, Any]]:
+        """Check for potential duplicate entities."""
+        violations = []
+        
+        try:
+            # Group entities by type and label
+            entity_groups = {}
+            
+            for repo_name, repo in [
+                ("Actor", self._actor_repo),
+                ("Institution", self._institution_repo),
+                ("Policy", self._policy_repo),
+                ("Resource", self._resource_repo)
+            ]:
+                entities = repo.list_all()
+                for entity in entities:
+                    key = (repo_name, entity.label.lower().strip())
+                    if key not in entity_groups:
+                        entity_groups[key] = []
+                    entity_groups[key].append(entity)
+            
+            # Find groups with multiple entities
+            for (entity_type, label), entities in entity_groups.items():
+                if len(entities) > 1:
+                    violations.append({
+                        "type": "potential_duplicate",
+                        "entity_type": entity_type,
+                        "label": label,
+                        "entity_ids": [str(e.id) for e in entities],
+                        "count": len(entities),
+                        "severity": "medium"
+                    })
+            
+            return violations
+            
+        except Exception as e:
+            logger.error(f"Duplicate entity check failed: {e}")
+            return []
+    
+    def _check_circular_dependencies(self) -> List[Dict[str, Any]]:
+        """Check for circular dependencies that could cause issues."""
+        violations = []
+        
+        try:
+            # Use NetworkX to detect cycles
+            graph = self.get_graph()
+            
+            # Convert to NetworkX format for cycle detection
+            nx_graph = nx.DiGraph()
+            
+            # Add nodes
+            for node in graph:
+                nx_graph.add_node(str(node.id))
+            
+            # Add edges (relationships)
+            for rel in graph.relationships.values():
+                nx_graph.add_edge(str(rel.source_id), str(rel.target_id))
+            
+            # Find cycles
+            try:
+                cycles = list(nx.simple_cycles(nx_graph))
+                for cycle in cycles:
+                    # Only report cycles longer than 2 nodes as potential issues
+                    if len(cycle) > 2:
+                        violations.append({
+                            "type": "circular_dependency",
+                            "cycle": cycle,
+                            "length": len(cycle),
+                            "severity": "low"
+                        })
+            except nx.NetworkXNoCycle:
+                # No cycles found, which is good
+                pass
+            
+            return violations
+            
+        except Exception as e:
+            logger.error(f"Circular dependency check failed: {e}")
+            return []
+    
+    def repair_orphaned_relationships(self, auto_repair: bool = False) -> Dict[str, Any]:
+        """
+        Repair orphaned relationships by removing them.
+        
+        Args:
+            auto_repair: If True, automatically remove orphaned relationships
+            
+        Returns:
+            Dictionary with repair results
+        """
+        try:
+            orphaned = self._find_orphaned_relationships()
+            
+            if not orphaned:
+                return {
+                    "status": "success",
+                    "message": "No orphaned relationships found",
+                    "removed_count": 0
+                }
+            
+            if not auto_repair:
+                return {
+                    "status": "found_issues",
+                    "message": f"Found {len(orphaned)} orphaned relationships",
+                    "orphaned_relationships": [str(rel_id) for rel_id in orphaned.keys()],
+                    "action_required": "Set auto_repair=True to remove them"
+                }
+            
+            # Remove orphaned relationships
+            removed_count = 0
+            with self.transaction(metadata={"operation": "repair_orphaned_relationships"}) as tx:
+                for rel_id in orphaned.keys():
+                    try:
+                        self._relationship_repo.delete(rel_id)
+                        removed_count += 1
+                    except Exception as e:
+                        logger.error(f"Failed to remove orphaned relationship {rel_id}: {e}")
+            
+            logger.info(f"Removed {removed_count} orphaned relationships")
+            return {
+                "status": "success",
+                "message": f"Removed {removed_count} orphaned relationships",
+                "removed_count": removed_count
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to repair orphaned relationships: {e}")
+            return {
+                "status": "error",
+                "message": f"Repair failed: {str(e)}",
+                "removed_count": 0
+            }
 
 
 # ═══ SERVICE FACTORY & DEPENDENCY INJECTION ═══
