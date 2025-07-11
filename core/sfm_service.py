@@ -1615,7 +1615,7 @@ class SFMService:
             
         except Exception as e:
             logger.error(f"Error finding orphaned relationships: {e}")
-            return {}
+            raise
     
     def _entity_exists(self, entity_id: uuid.UUID) -> bool:
         """Check if an entity exists in any repository."""

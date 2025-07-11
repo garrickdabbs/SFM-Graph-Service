@@ -12,6 +12,11 @@ from core.sfm_service import SFMService, CreateActorRequest, CreatePolicyRequest
 from core.transaction_manager import TransactionStatus
 from core.lock_manager import LockType
 from core.sfm_service import ValidationError, SFMServiceError
+from core.security_validators import disable_validation_rate_limiting
+
+
+# Disable rate limiting for all tests in this module
+disable_validation_rate_limiting()
 
 
 class TestTransactionManagement:
@@ -171,18 +176,29 @@ class TestDataIntegrity:
     
     def test_repair_orphaned_relationships(self):
         """Test automatic repair of orphaned relationships."""
-        # Create actors and relationship
-        actor1 = self.service.create_actor(CreateActorRequest(name="Actor1", sector="test"))
-        actor2 = self.service.create_actor(CreateActorRequest(name="Actor2", sector="test"))
+        # Create a mock orphaned relationship by directly adding to the graph
+        # This simulates a scenario where relationships exist but their entities don't
+        from core.sfm_models import Relationship
+        from core.sfm_enums import RelationshipKind
         
-        relationship = self.service.create_relationship(CreateRelationshipRequest(
-            source_id=actor1.id,
-            target_id=actor2.id,
-            kind="AFFECTS"
-        ))
+        # Create fake entity IDs that don't exist in the graph
+        fake_id1 = uuid.uuid4()
+        fake_id2 = uuid.uuid4()
         
-        # Delete one actor to create orphaned relationship
-        self.service._actor_repo.delete(uuid.UUID(actor1.id))
+        # Create a relationship with non-existent entities
+        fake_relationship = Relationship(
+            id=uuid.uuid4(),
+            source_id=fake_id1,
+            target_id=fake_id2,
+            kind=RelationshipKind.AFFECTS
+        )
+        
+        # Add the orphaned relationship directly to the graph
+        self.service._relationship_repo.base_repo.graph.add_edge(
+            fake_id1, fake_id2, 
+            key=fake_relationship.id, 
+            data=fake_relationship
+        )
         
         # Repair orphaned relationships
         result = self.service.repair_orphaned_relationships(auto_repair=True)
