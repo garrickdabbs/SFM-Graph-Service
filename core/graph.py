@@ -320,6 +320,22 @@ class SFMGraph(EvictableGraph):  # pylint: disable=too-many-instance-attributes
         return sum(
             len(collection) for collection in self._node_registry.iter_collections(self)
         )
+    
+    @property
+    def nodes(self) -> Dict[uuid.UUID, Node]:
+        """Return a dictionary of all nodes in the graph."""
+        all_nodes = {}
+        for collection in self._node_registry.iter_collections(self):
+            all_nodes.update(collection)
+        return all_nodes
+    
+    def get_all_node_ids(self) -> List[uuid.UUID]:
+        """Get all node IDs in the graph."""
+        return list(self.nodes.keys())
+    
+    def relationship_count(self) -> int:
+        """Return the total number of relationships in the graph."""
+        return len(self.relationships)
 
     def clear(self) -> None:
         """Clear all nodes and relationships from the graph."""

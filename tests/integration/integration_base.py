@@ -64,8 +64,10 @@ class IntegrationTestCase(BaseTestCase):
     def create_api_client(self):
         """Create a test API client"""
         from api.sfm_api import create_app
+        from fastapi.testclient import TestClient
+        
         app = create_app(testing=True)
-        return app.test_client()
+        return TestClient(app)
 
     def assert_workflow_completion(self, workflow_id: str, expected_status: str = 'completed'):
         """Assert that a workflow completed successfully"""
@@ -105,7 +107,7 @@ class APIIntegrationTestCase(IntegrationTestCase):
         )
         return {
             'status_code': response.status_code,
-            'data': response.get_json() if response.content_type == 'application/json' else None
+            'data': response.json() if response.headers.get('content-type', '').startswith('application/json') else None
         }
 
     def get_json(self, endpoint: str) -> Dict[str, Any]:
@@ -113,7 +115,7 @@ class APIIntegrationTestCase(IntegrationTestCase):
         response = self.api_client.get(endpoint)
         return {
             'status_code': response.status_code,
-            'data': response.get_json() if response.content_type == 'application/json' else None
+            'data': response.json() if response.headers.get('content-type', '').startswith('application/json') else None
         }
 
     def assert_api_response(self, response: Dict[str, Any], expected_status: int = 200):

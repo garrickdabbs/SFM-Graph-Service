@@ -650,6 +650,17 @@ async def shutdown_event() -> None:
     logger.info("SFM API shutting down...")
     # Add any cleanup logic here
 
+
+def create_app(testing: bool = False) -> FastAPI:
+    """Create and configure the FastAPI application."""
+    if testing:
+        # For testing, we can return a modified app or the same app
+        # In a real scenario, you might want to use a test database
+        logger.info("Creating app in testing mode")
+    
+    return app
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

@@ -1,0 +1,4 @@
+# file: /home/runner/work/alpha/alpha/core/graph.py
+# hypothesis_version: 6.135.26
+
+[0.8, 0.95, 1000.0, 128, 1000, 1800, 'SFMGraph', '_memory_limit_mb', '_memory_monitor', '_query_cache', 'actors', 'add_node', 'add_relationship', 'analytical_contexts', 'analyze_network:*', 'behavioral_patterns', 'belief_systems', 'ceremonial_behaviors', 'change_processes', 'cognitive_frameworks', 'count_nodes:*', 'description', 'feedback_loops', 'find_paths:*', 'flows', 'get_node_by_id', 'get_nodes_by_type:*', 'indicators', 'institutions', 'label', 'memory_limit_mb', 'network_metrics', 'node_added', 'node_removed', 'policies', 'policy_instruments', 'processes', 'query_cache', 'query_cache_stats', 'relationship_added', 'relationship_removed', 'resources', 'system_properties', 'technology_systems', 'total_nodes', 'total_relationships', 'value_flows', 'value_systems']

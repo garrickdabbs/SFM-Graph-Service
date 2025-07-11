@@ -87,7 +87,7 @@ relationship_types = st.sampled_from(['influences', 'depends_on', 'partners_with
 
 small_graphs = st.builds(
     lambda nodes, relationships: (nodes, relationships),
-    nodes=st.lists(node_names, min_size=1, max_size=20),
+    nodes=st.lists(node_names, min_size=1, max_size=20, unique=True),
     relationships=st.lists(
         st.tuples(st.integers(min_value=0, max_value=19), st.integers(min_value=0, max_value=19)),
         max_size=50
@@ -96,7 +96,7 @@ small_graphs = st.builds(
 
 medium_graphs = st.builds(
     lambda nodes, relationships: (nodes, relationships),
-    nodes=st.lists(node_names, min_size=10, max_size=100),
+    nodes=st.lists(node_names, min_size=10, max_size=100, unique=True),
     relationships=st.lists(
         st.tuples(st.integers(min_value=0, max_value=99), st.integers(min_value=0, max_value=99)),
         max_size=200

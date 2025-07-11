@@ -6,7 +6,8 @@ and operations under various load conditions.
 """
 import pytest
 from tests.performance.performance_base import LoadTestCase
-from tests.factories.node_factory import NodeFactory, RelationshipFactory
+from tests.factories.node_factory import NodeFactory
+from tests.factories.relationship_factory import RelationshipFactory
 
 
 class TestQueryPerformance(LoadTestCase):

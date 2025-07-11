@@ -6,11 +6,13 @@ with realistic test data using the factory-boy library.
 """
 import factory
 import uuid
+import random
 from factory import Faker, SubFactory, LazyFunction
 from typing import Dict, Any
 
 from core.base_nodes import Node
-from core.core_nodes import Actor
+from core.core_nodes import Actor, Institution, Resource, Process, Policy
+from core.sfm_enums import RelationshipKind
 
 
 class NodeFactory(factory.Factory):
@@ -62,13 +64,16 @@ class PersonNodeFactory(NodeFactory):
 class InstitutionNodeFactory(NodeFactory):
     """Factory for creating institution nodes"""
     
-    node_type = 'institution'
-    name = Faker('company')
-    properties = LazyFunction(lambda: {
+    class Meta:
+        model = Institution
+    
+    label = Faker('company')
+    description = "Test institution"
+    meta = LazyFunction(lambda: {
+        'node_type': 'institution',
         'type': 'government',
         'established': 1950,
         'location': 'Washington DC',
-        'description': 'Test institution',
         'test_data': True
     })
 
@@ -76,9 +81,13 @@ class InstitutionNodeFactory(NodeFactory):
 class ResourceNodeFactory(NodeFactory):
     """Factory for creating resource nodes"""
     
-    node_type = 'resource'
-    name = Faker('word')
-    properties = LazyFunction(lambda: {
+    class Meta:
+        model = Resource
+    
+    label = Faker('word')
+    description = "Test resource"
+    meta = LazyFunction(lambda: {
+        'node_type': 'resource',
         'resource_type': 'natural',
         'availability': 'abundant',
         'unit': 'kg',
@@ -90,9 +99,13 @@ class ResourceNodeFactory(NodeFactory):
 class ProcessNodeFactory(NodeFactory):
     """Factory for creating process nodes"""
     
-    node_type = 'process'
-    name = Faker('bs')
-    properties = LazyFunction(lambda: {
+    class Meta:
+        model = Process
+    
+    label = Faker('bs')
+    description = "Test process"
+    meta = LazyFunction(lambda: {
+        'node_type': 'process',
         'process_type': 'manufacturing',
         'duration': 30,
         'complexity': 'medium',
@@ -104,9 +117,13 @@ class ProcessNodeFactory(NodeFactory):
 class PolicyNodeFactory(NodeFactory):
     """Factory for creating policy nodes"""
     
-    node_type = 'policy'
-    name = Faker('catch_phrase')
-    properties = LazyFunction(lambda: {
+    class Meta:
+        model = Policy
+    
+    label = Faker('catch_phrase')
+    description = "Test policy"
+    meta = LazyFunction(lambda: {
+        'node_type': 'policy',
         'policy_type': 'regulatory',
         'effective_date': '2023-01-01',
         'jurisdiction': 'federal',
@@ -148,7 +165,8 @@ class GraphFactory:
             target_node = created_nodes[(i + 1) % len(created_nodes)]
             rel = RelationshipFactory.create(
                 source_id=source_node.id,
-                target_id=target_node.id
+                target_id=target_node.id,
+                kind=RelationshipKind.AFFECTS  # Use a safe relationship kind
             )
             graph.add_relationship(rel)
         
@@ -187,7 +205,8 @@ class GraphFactory:
             if source_node.id != target_node.id:  # Avoid self-loops
                 rel = RelationshipFactory.create(
                     source_id=source_node.id,
-                    target_id=target_node.id
+                    target_id=target_node.id,
+                    kind=RelationshipKind.AFFECTS  # Use a safe relationship kind
                 )
                 graph.add_relationship(rel)
         
