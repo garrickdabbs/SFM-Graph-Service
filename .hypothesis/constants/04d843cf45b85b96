@@ -1,0 +1,4 @@
+# file: /home/runner/work/alpha/alpha/core/performance_metrics.py
+# hypothesis_version: 6.135.26
+
+[0.0, 1.0, 1000, 1024, '__class__', 'arg_count', 'avg_duration', 'counter', 'cpu_percent', 'disk_io_read_mb', 'disk_io_write_mb', 'error_count', 'error_rate', 'error_type', 'gauge', 'histogram', 'inf', 'instance_type', 'kwarg_count', 'last_execution', 'max_duration', 'memory_percent', 'memory_usage_mb', 'metadata', 'min_duration', 'operation_count', 'success_count', 'success_rate', 'system_metrics', 'timer', 'timestamp', 'total_duration', 'total_errors', 'total_operations', 'unique_operations', 'uptime_seconds', 'value']

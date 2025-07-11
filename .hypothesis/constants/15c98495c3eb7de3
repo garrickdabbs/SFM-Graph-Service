@@ -1,0 +1,4 @@
+# file: /home/runner/work/alpha/alpha/core/audit_logger.py
+# hypothesis_version: 6.135.26
+
+[-500, 1000, 3600, '_transaction_manager', 'analysis', 'audit_data', 'create', 'data', 'delete', 'duration_seconds', 'entity_id', 'entity_type', 'error', 'error_details', 'event_id', 'events_by_level', 'events_by_type', 'id', 'info', 'level', 'message', 'operation_name', 'operation_type', 'performance', 'performance_metrics', 'query', 'read', 'recent_events', 'security', 'security_context', 'security_validation', 'session_id', 'sfm.audit', 'success', 'system', 'timestamp', 'total_events', 'transaction_id', 'update', 'user_context', 'warning']

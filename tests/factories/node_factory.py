@@ -10,19 +10,20 @@ from factory import Faker, SubFactory, LazyFunction
 from typing import Dict, Any
 
 from core.base_nodes import Node
+from core.core_nodes import Actor
 
 
 class NodeFactory(factory.Factory):
     """Base factory for creating Node objects"""
     
     class Meta:
-        model = Node
+        model = Actor
 
     label = Faker('company')
     description = Faker('text', max_nb_chars=100)
     id = factory.LazyFunction(lambda: uuid.uuid4())
     meta = LazyFunction(lambda: {
-        'node_type': 'test_node',
+        'node_type': 'actor',
         'created_by': 'test_factory',
         'test_data': True
     })
@@ -137,7 +138,7 @@ class GraphFactory:
         created_nodes = []
         for i in range(nodes):
             factory_class = node_factories[i % len(node_factories)]
-            node = factory_class.create(id=f'graph_node_{i}')
+            node = factory_class.create()
             graph.add_node(node)
             created_nodes.append(node)
         
@@ -175,7 +176,7 @@ class GraphFactory:
         created_nodes = []
         for i in range(nodes):
             factory_class = random.choice(node_factories)
-            node = factory_class.create(id=f'large_graph_node_{i}')
+            node = factory_class.create()
             graph.add_node(node)
             created_nodes.append(node)
         

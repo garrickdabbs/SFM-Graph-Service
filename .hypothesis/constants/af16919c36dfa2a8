@@ -1,0 +1,4 @@
+# file: /home/runner/work/alpha/alpha/core/transaction_manager.py
+# hypothesis_version: 6.135.26
+
+[0.0, -500, 1000, 'active', 'active_transactions', 'average_duration', 'committed', 'failed', 'pending', 'rolled_back', 'total_transactions']

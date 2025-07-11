@@ -1,0 +1,4 @@
+# file: /home/runner/work/alpha/alpha/core/security_validators.py
+# hypothesis_version: 6.135.26
+
+[100, 500, 1000, 2000, '...', 'Invalid URL format', 'MAX_STRING_LENGTH', 'actual_keys', 'actual_length', 'b', 'br', 'caller_id', 'content', 'current_requests', 'dangerous_scheme', 'data:', 'data_keys', 'depth', 'description', 'direct_call', 'em', 'empty_label', 'eval\\s*\\(', 'exception', 'expression\\s*\\(', 'format', 'http', 'https', 'i', 'javascript:', 'keys', 'label', 'length', 'limit', 'mailto', 'max_depth', 'max_keys', 'max_length', 'meta', 'metadata', 'name', 'netloc', 'node_data', 'on\\w+\\s*=', 'p', 'parsing', 'patterns_detected', 'rate_limit', 'remaining_requests', 'sanitization', 'sanitize_description', 'sanitize_string', 'scheme', 'strong', 'type', 'u', 'url_empty', 'validate_metadata', 'validate_node_label', 'validate_url', 'vbscript:', 'window_reset_time', 'window_seconds', '|']

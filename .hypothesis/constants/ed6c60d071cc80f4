@@ -1,0 +1,4 @@
+# file: /home/runner/work/alpha/alpha/core/specialized_nodes.py
+# hypothesis_version: 6.135.26
+
+['index', 'level', 'qualitative', 'quantitative', 'rating', 'scale', 'score']

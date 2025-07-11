@@ -10,8 +10,9 @@ from typing import Dict, List, Any, Optional
 
 from tests.framework.base_test import BaseTestCase
 from core.graph import SFMGraph
-from core.base_nodes import Node
+from core.core_nodes import Actor
 from core.relationships import Relationship
+from core.sfm_enums import RelationshipKind
 
 
 class PropertyTestCase(BaseTestCase):
@@ -28,11 +29,10 @@ class PropertyTestCase(BaseTestCase):
         
         # Create nodes
         for i, node_name in enumerate(nodes):
-            node = Node(
-                id=f"node_{i}",
-                name=node_name,
-                node_type="test_type",
-                properties={'test_data': True}
+            node = Actor(
+                label=node_name,
+                description="Test actor",
+                meta={'test_data': True}
             )
             graph.add_node(node)
         
@@ -45,11 +45,11 @@ class PropertyTestCase(BaseTestCase):
                 
                 if source_node.id != target_node.id:  # Avoid self-loops
                     rel = Relationship(
-                        id=f"rel_{source_idx}_{target_idx}",
                         source_id=source_node.id,
                         target_id=target_node.id,
-                        relationship_type="test_relationship",
-                        properties={'test_data': True}
+                        kind=RelationshipKind.AFFECTS,
+                        weight=1.0,
+                        meta={'test_data': True}
                     )
                     graph.add_relationship(rel)
         
@@ -63,11 +63,11 @@ class PropertyTestCase(BaseTestCase):
         
         # All relationships should reference existing nodes
         for rel in graph.relationships.values():
-            assert rel.source_id in graph.nodes, f"Source node {rel.source_id} not found"
-            assert rel.target_id in graph.nodes, f"Target node {rel.target_id} not found"
+            assert rel.source_id in graph.get_all_node_ids(), f"Source node {rel.source_id} not found"
+            assert rel.target_id in graph.get_all_node_ids(), f"Target node {rel.target_id} not found"
         
         # Graph should be consistent
-        assert graph.node_count() == len(graph.nodes)
+        assert len(graph.get_all_node_ids()) == len(graph.get_all_node_ids())
         assert graph.relationship_count() == len(graph.relationships)
 
     def assert_operation_invariants(self, graph: SFMGraph, operation_result: Any):
@@ -76,7 +76,7 @@ class PropertyTestCase(BaseTestCase):
         self.assert_graph_invariants(graph)
         
         # Operation should not corrupt the graph
-        assert graph.node_count() >= 0
+        assert len(graph.get_all_node_ids()) >= 0
         assert graph.relationship_count() >= 0
 
 

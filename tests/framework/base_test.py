@@ -14,6 +14,8 @@ from core.sfm_service import SFMService
 from core.sfm_models import Node, Relationship
 from core.sfm_enums import RelationshipKind
 from core.core_nodes import Actor
+from tests.factories.node_factory import NodeFactory
+from tests.factories.relationship_factory import RelationshipFactory
 
 
 class BaseTestCase:
@@ -93,13 +95,13 @@ class GraphTestCase(BaseTestCase):
 
     def setup_test_data(self):
         """Set up test graph with nodes and relationships"""
-        from tests.factories.node_factory import NodeFactory
-        from tests.factories.relationship_factory import RelationshipFactory
+        # First call parent setup
+        super().setup_test_data()
         
-        # Create test nodes
+        # Create test nodes using factories
         self.test_nodes = []
         for i in range(10):
-            node = NodeFactory.create(id=f'test_node_{i}')
+            node = NodeFactory.create()
             self.test_nodes.append(node)
             self.test_graph.add_node(node)
 
@@ -116,20 +118,23 @@ class GraphTestCase(BaseTestCase):
     def assert_graph_invariants(self):
         """Assert that the graph maintains its invariants"""
         # All nodes should have valid IDs
-        for node in self.test_graph.nodes.values():
+        for node_id in self.test_graph.get_all_node_ids():
+            node = self.test_graph.get_node_by_id(node_id)
             assert node.id is not None
-            assert len(node.id) > 0
+            assert node.id == node_id
 
         # All relationships should reference existing nodes
         for rel in self.test_graph.relationships.values():
-            assert self.test_graph.has_node(rel.source_id), f"Source node {rel.source_id} not found"
-            assert self.test_graph.has_node(rel.target_id), f"Target node {rel.target_id} not found"
+            assert rel.source_id in self.test_graph.get_all_node_ids(), f"Source node {rel.source_id} not found"
+            assert rel.target_id in self.test_graph.get_all_node_ids(), f"Target node {rel.target_id} not found"
 
     def get_test_subgraph(self, node_count: int = 3) -> SFMGraph:
         """Get a subgraph for testing"""
         subgraph = SFMGraph()
-        for i in range(min(node_count, len(self.test_nodes))):
-            subgraph.add_node(self.test_nodes[i])
+        node_ids = list(self.test_graph.get_all_node_ids())
+        for i in range(min(node_count, len(node_ids))):
+            node = self.test_graph.get_node_by_id(node_ids[i])
+            subgraph.add_node(node)
         return subgraph
 
 

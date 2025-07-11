@@ -1,0 +1,4 @@
+# file: /home/runner/work/alpha/alpha/core/memory_management.py
+# hypothesis_version: 6.135.26
+
+[0.0, 0.8, 0.95, 1000.0, 100, 1024, 10000, 'MemoryUsageStats', 'critical_threshold', 'current_strategy', 'eviction_batch_size', 'eviction_count', 'largest_first', 'last_eviction_time', 'lfu', 'lru', 'memory_limit_mb', 'oldest_first', 'total_nodes_evicted', 'warning_threshold']

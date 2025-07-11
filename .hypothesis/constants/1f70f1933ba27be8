@@ -1,0 +1,4 @@
+# file: /home/runner/work/alpha/alpha/core/sfm_models.py
+# hypothesis_version: 6.135.26
+
+['Actor', 'AnalyticalContext', 'BehavioralPattern', 'BeliefSystem', 'CeremonialBehavior', 'ChangeProcess', 'CognitiveFramework', 'FeedbackLoop', 'Flow', 'GovernanceStructure', 'Indicator', 'Institution', 'InstrumentalBehavior', 'ModelMetadata', 'NetworkMetrics', 'Node', 'Policy', 'PolicyInstrument', 'Process', 'Relationship', 'Resource', 'SFMGraph', 'Scenario', 'SpatialUnit', 'SystemProperty', 'TechnologySystem', 'TemporalDynamics', 'TimeSlice', 'ValidationRule', 'ValueFlow', 'ValueSystem']
