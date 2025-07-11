@@ -7,77 +7,77 @@
     "edge_types": 2
   },
   "performance_metrics": {
-    "total_time": 0.015988826751708984,
+    "total_time": 0.015653133392333984,
     "operation_metrics": {
       "entity_creation": {
         "operation_count": 1,
-        "total_duration": 0.012822628021240234,
-        "min_duration": 0.012822628021240234,
-        "max_duration": 0.012822628021240234,
-        "avg_duration": 0.012822628021240234,
+        "total_duration": 0.01265096664428711,
+        "min_duration": 0.01265096664428711,
+        "max_duration": 0.01265096664428711,
+        "avg_duration": 0.01265096664428711,
         "success_count": 1,
         "error_count": 0,
         "success_rate": 1.0,
-        "last_execution": 1752208711.1282494
+        "last_execution": 1752209969.4910154
       },
       "first_centrality_query": {
         "operation_count": 1,
-        "total_duration": 0.0005617141723632812,
-        "min_duration": 0.0005617141723632812,
-        "max_duration": 0.0005617141723632812,
-        "avg_duration": 0.0005617141723632812,
+        "total_duration": 0.0005898475646972656,
+        "min_duration": 0.0005898475646972656,
+        "max_duration": 0.0005898475646972656,
+        "avg_duration": 0.0005898475646972656,
         "success_count": 1,
         "error_count": 0,
         "success_rate": 1.0,
-        "last_execution": 1752208711.1293137
+        "last_execution": 1752209969.4919286
       },
       "cached_centrality_query": {
         "operation_count": 1,
-        "total_duration": 0.00020885467529296875,
-        "min_duration": 0.00020885467529296875,
-        "max_duration": 0.00020885467529296875,
-        "avg_duration": 0.00020885467529296875,
+        "total_duration": 0.00021219253540039062,
+        "min_duration": 0.00021219253540039062,
+        "max_duration": 0.00021219253540039062,
+        "avg_duration": 0.00021219253540039062,
         "success_count": 1,
         "error_count": 0,
         "success_rate": 1.0,
-        "last_execution": 1752208711.1295297
+        "last_execution": 1752209969.4921482
       },
       "graph_save": {
         "operation_count": 1,
-        "total_duration": 0.0011947154998779297,
-        "min_duration": 0.0011947154998779297,
-        "max_duration": 0.0011947154998779297,
-        "avg_duration": 0.0011947154998779297,
+        "total_duration": 0.0011904239654541016,
+        "min_duration": 0.0011904239654541016,
+        "max_duration": 0.0011904239654541016,
+        "avg_duration": 0.0011904239654541016,
         "success_count": 1,
         "error_count": 0,
         "success_rate": 1.0,
-        "last_execution": 1752208711.1308115
+        "last_execution": 1752209969.493408
       },
       "policy_analysis": {
         "operation_count": 1,
-        "total_duration": 0.0005099773406982422,
-        "min_duration": 0.0005099773406982422,
-        "max_duration": 0.0005099773406982422,
-        "avg_duration": 0.0005099773406982422,
+        "total_duration": 0.0005357265472412109,
+        "min_duration": 0.0005357265472412109,
+        "max_duration": 0.0005357265472412109,
+        "avg_duration": 0.0005357265472412109,
         "success_count": 1,
         "error_count": 0,
         "success_rate": 1.0,
-        "last_execution": 1752208711.131376
+        "last_execution": 1752209969.4939792
       }
     },
-    "first_query_time": 0.0005617141723632812,
-    "cached_query_time": 0.00020885467529296875,
-    "cache_speedup": "2.7x"
+    "first_query_time": 0.0005898475646972656,
+    "cached_query_time": 0.00021219253540039062,
+    "cache_speedup": "2.8x"
   },
   "entities_created": {
-    "irs": "823dbbfe-9e9b-4109-8160-ae044ed69a19",
-    "treasury": "b98c8e63-503e-41e6-b9e7-a0388138dd84",
-    "tcja_policy": "8b18ae6a-f609-4233-9e66-7c42382452a7",
-    "middle_class": "4e4dd649-285d-452d-9240-0432ddfe55a2"
+    "irs": "dd706057-fec7-49a1-b2fe-106b01aed91b",
+    "treasury": "42ce9146-5998-49f5-af52-568fa48775c0",
+    "tcja_policy": "520b757f-99d1-45f3-be9f-ba1befecdc4a",
+    "middle_class": "3dd2949c-49c5-4708-a1c0-b80275181361"
   },
   "analysis_results": {
     "centrality_analysis": 4,
-    "policy_impact": "PolicyImpactAnalysis(policy_id='8b18ae6a-f609-4233-9e66-7c42382452a7', total_affected_nodes=1, affected_actors=['4e4dd649-285d-452d-9240-0432ddfe55a2'], affected_institutions=[], affected_resources=[], network_metrics={'density': 0.5, 'centrality': 0.0}, impact_radius=2)",
+    "policy_impact": "PolicyImpactAnalysis(policy_id='520b757f-99d1-45f3-be9f-ba1befecdc4a', total_affected_nodes=1, affected_actors=['3dd2949c-49c5-4708-a1c0-b80275181361'], affected_institutions=[], affected_resources=[], network_metrics={'density': 0.5, 'centrality': 0.0}, impact_radius=2)",
     "network_structure": "Analysis completed"
   }
 }

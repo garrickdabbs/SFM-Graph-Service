@@ -2,15 +2,15 @@
   "graph_id": "tcja_demo_graph",
   "name": "tcja_demo_graph",
   "description": "",
-  "version": 7,
+  "version": 6,
   "created_at": "2025-07-11T04:33:37.488470",
-  "modified_at": "2025-07-11T04:59:29.493081",
+  "modified_at": "2025-07-11T04:38:31.130470",
   "author": "",
   "tags": [],
   "size_bytes": 3339,
   "node_count": 4,
   "relationship_count": 2,
-  "checksum": "d335f511b0862a8861d8e9c9a419646a8d4db82a882b27add3e59d33d3b3da37",
+  "checksum": "276a63356a2721c3cab61297bb37f924562a88511ebe0d8bf2ce38f8c68fc8ae",
   "format": "json",
   "compression_ratio": null
 }
