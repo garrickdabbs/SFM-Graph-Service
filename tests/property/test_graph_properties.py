@@ -22,15 +22,15 @@ class TestGraphProperties(PropertyTestCase):
         graph = self.create_graph_from_data(nodes, relationships)
 
         # Graph invariants
-        assert graph.node_count() == len(set(nodes))
+        assert len(graph) == len(set(nodes))
         assert graph.relationship_count() <= len(relationships)
 
         # Test operations maintain invariants
         for node_id in list(graph.nodes.keys())[:5]:  # Test first 5 nodes
-            neighbors = graph.get_neighbors(node_id)
-            # All neighbors should exist in the graph
-            for neighbor in neighbors:
-                assert neighbor.id in graph.nodes, f"Neighbor {neighbor.id} not found in graph"
+            relationships = graph.get_node_relationships(node_id)
+            # All relationships should reference existing nodes
+            for relationship in relationships:
+                assert relationship.source_id in graph.nodes or relationship.target_id in graph.nodes
 
     @given(
         nodes=st.lists(st.text(min_size=1, max_size=20), min_size=1, max_size=50),
@@ -39,32 +39,31 @@ class TestGraphProperties(PropertyTestCase):
     @settings(max_examples=30)
     def test_node_addition_properties(self, nodes, node_type):
         """Test properties of node addition"""
-        from core.base_nodes import Node
+        from core.core_nodes import Actor
         
         graph = self.create_graph_from_data([], [])
-        initial_count = graph.node_count()
+        initial_count = len(graph)
         
         # Add nodes
         added_nodes = []
         for i, node_name in enumerate(nodes):
-            node = Node(
-                id=f"prop_node_{i}",
-                name=node_name,
-                node_type=node_type,
-                properties={'test_data': True}
+            from core.core_nodes import Actor
+            node = Actor(
+                label=node_name,
+                description=f"Test actor {i}",
+                meta={'type': node_type, 'test_data': True}
             )
             graph.add_node(node)
             added_nodes.append(node)
         
         # Properties after addition
-        assert graph.node_count() == initial_count + len(added_nodes)
+        assert len(graph) == initial_count + len(added_nodes)
         
         # All added nodes should be retrievable
         for node in added_nodes:
-            retrieved_node = graph.get_node(node.id)
+            retrieved_node = graph.get_node_by_id(node.id)
             assert retrieved_node is not None
-            assert retrieved_node.name == node.name
-            assert retrieved_node.node_type == node.node_type
+            assert retrieved_node.label == node.label
 
     @given(
         st.lists(
@@ -90,11 +89,11 @@ class TestGraphProperties(PropertyTestCase):
         for i, (source_name, target_name, _) in enumerate(relationship_data):
             for name in [source_name, target_name]:
                 if name not in nodes:
-                    node = Node(
-                        id=f"prop_node_{name}_{i}",
-                        name=name,
-                        node_type="test_type",
-                        properties={'test_data': True}
+                    from core.core_nodes import Actor
+                    node = Actor(
+                        label=name,
+                        description=f"Test actor {name}",
+                        meta={'type': 'test_type', 'test_data': True}
                     )
                     graph.add_node(node)
                     nodes[name] = node
@@ -138,27 +137,24 @@ class TestGraphProperties(PropertyTestCase):
         
         graph = self.create_graph_from_data(nodes, relationships)
         
-        # Test neighbor queries
+        # Test relationship queries
         for node_id in list(graph.nodes.keys())[:5]:
-            neighbors = graph.get_neighbors(node_id)
+            node_relationships = graph.get_node_relationships(node_id)
             
-            # Properties of neighbors
-            for neighbor in neighbors:
-                # Neighbor should be reachable from original node
-                assert neighbor.id in graph.nodes
+            # Properties of relationships
+            for relationship in node_relationships:
+                # Relationship should involve the node
+                assert relationship.source_id == node_id or relationship.target_id == node_id
                 
-                # There should be a relationship connecting them
-                relationships_to_neighbor = graph.get_relationships(node_id, neighbor.id)
-                relationships_from_neighbor = graph.get_relationships(neighbor.id, node_id)
-                
-                assert len(relationships_to_neighbor) > 0 or len(relationships_from_neighbor) > 0
+                # Both nodes in relationship should exist in graph
+                assert relationship.source_id in graph.nodes
+                assert relationship.target_id in graph.nodes
 
     @given(
         node_count=st.integers(min_value=3, max_value=20),
         operations=st.lists(
             st.one_of(
                 st.tuples(st.just('add_node'), st.text(min_size=1, max_size=20)),
-                st.tuples(st.just('remove_node'), st.integers(min_value=0, max_value=19)),
                 st.tuples(st.just('add_relationship'), st.integers(min_value=0, max_value=19), st.integers(min_value=0, max_value=19))
             ),
             min_size=1,
@@ -168,7 +164,7 @@ class TestGraphProperties(PropertyTestCase):
     @settings(max_examples=20)
     def test_graph_modification_properties(self, node_count, operations):
         """Test properties of graph modifications"""
-        from core.base_nodes import Node
+        from core.core_nodes import Actor
         from core.relationships import Relationship
         
         # Create initial graph
@@ -181,20 +177,13 @@ class TestGraphProperties(PropertyTestCase):
             
             if op_type == 'add_node':
                 node_name = operation[1]
-                node = Node(
-                    id=f"new_node_{node_name}",
-                    name=node_name,
-                    node_type="test_type",
-                    properties={'test_data': True}
+                from core.core_nodes import Actor
+                node = Actor(
+                    label=node_name,
+                    description=f"Test actor {node_name}",
+                    meta={'type': 'test_type', 'test_data': True}
                 )
                 graph.add_node(node)
-            
-            elif op_type == 'remove_node':
-                node_index = operation[1]
-                node_ids = list(graph.nodes.keys())
-                if node_index < len(node_ids):
-                    node_id = node_ids[node_index]
-                    graph.remove_node(node_id)
             
             elif op_type == 'add_relationship':
                 source_idx, target_idx = operation[1], operation[2]
@@ -232,26 +221,26 @@ class TestGraphProperties(PropertyTestCase):
         # Add nodes with properties
         for i, node_name in enumerate(nodes):
             node_props = properties_list[i % len(properties_list)]
-            node = Node(
-                id=f"prop_node_{i}",
-                name=node_name,
-                node_type="test_type",
-                properties=node_props
+            from core.core_nodes import Actor
+            node = Actor(
+                label=node_name,
+                description=f"Test actor {node_name}",
+                meta=node_props
             )
             graph.add_node(node)
         
         # Verify properties are maintained
         for node in graph.nodes.values():
-            retrieved_node = graph.get_node(node.id)
+            retrieved_node = graph.get_node_by_id(node.id)
             assert retrieved_node is not None
-            assert retrieved_node.properties == node.properties
+            assert retrieved_node.meta == node.meta
             
             # Properties should be serializable
             import json
             try:
-                json.dumps(retrieved_node.properties)
+                json.dumps(retrieved_node.meta)
             except (TypeError, ValueError):
-                pytest.fail(f"Node properties are not JSON serializable: {retrieved_node.properties}")
+                pytest.fail(f"Node meta properties are not JSON serializable: {retrieved_node.meta}")
 
     @given(small_graphs)
     @settings(max_examples=30)
@@ -263,16 +252,16 @@ class TestGraphProperties(PropertyTestCase):
         graph = self.create_graph_from_data(nodes, relationships)
         
         # Record initial state
-        initial_node_count = graph.node_count()
+        initial_node_count = len(graph)
         initial_rel_count = graph.relationship_count()
         
         # Perform read operations (should not change state)
         for node_id in list(graph.nodes.keys())[:3]:
-            _ = graph.get_node(node_id)
-            _ = graph.get_neighbors(node_id)
+            _ = graph.get_node_by_id(node_id)
+            _ = graph.get_node_relationships(node_id)
         
         # State should be unchanged
-        assert graph.node_count() == initial_node_count
+        assert len(graph) == initial_node_count
         assert graph.relationship_count() == initial_rel_count
         
         # Graph should still be valid

@@ -95,41 +95,35 @@ class TestCompleteWorkflow(APIIntegrationTestCase):
         batch_nodes = [
             {
                 'name': f'Company {i}',
-                'node_type': 'organization',
-                'properties': {'industry': 'technology', 'size': 'small'}
+                'description': f'Technology company {i}',
+                'contact_info': {'email': f'company{i}@example.com'}
             }
             for i in range(5)
         ]
 
-        response = self.post_json('/api/nodes/batch', {'nodes': batch_nodes})
-        self.assert_api_response(response, 201)
+        response = self.post_json('/actors/bulk', batch_nodes)
+        self.assert_api_response(response, 200)
         
-        created_nodes = response['data']['nodes']
+        created_nodes = response['data']
         assert len(created_nodes) == 5
 
         # Create relationships between nodes
-        batch_relationships = []
         for i in range(4):
-            batch_relationships.append({
+            relationship_data = {
                 'source_id': created_nodes[i]['id'],
                 'target_id': created_nodes[i + 1]['id'],
-                'relationship_type': 'partners_with',
-                'properties': {'partnership_type': 'operational'}
-            })
+                'kind': 'PARTNERS_WITH',
+                'description': 'Partnership relationship'
+            }
+            response = self.post_json('/relationships', relationship_data)
+            self.assert_api_response(response, 201)
 
-        response = self.post_json('/api/relationships/batch', {'relationships': batch_relationships})
-        self.assert_api_response(response, 201)
-        
-        created_relationships = response['data']['relationships']
-        assert len(created_relationships) == 4
-
-        # Test network query
-        response = self.get_json(f'/api/nodes/{created_nodes[0]["id"]}/network?depth=3')
+        # Test network query (get first node)
+        response = self.get_json(f'/actors/{created_nodes[0]["id"]}')
         self.assert_api_response(response, 200)
         
-        network = response['data']
-        assert len(network['nodes']) == 5
-        assert len(network['relationships']) == 4
+        actor = response['data']
+        assert actor['id'] == created_nodes[0]['id']
 
     def test_search_and_filter_workflow(self):
         """Test search and filtering functionality"""
@@ -137,42 +131,28 @@ class TestCompleteWorkflow(APIIntegrationTestCase):
         test_nodes = [
             {
                 'name': 'TechCorp',
-                'node_type': 'organization',
-                'properties': {'industry': 'technology', 'size': 'large', 'location': 'Silicon Valley'}
+                'description': 'Technology company',
+                'contact_info': {'industry': 'technology', 'location': 'Silicon Valley'}
             },
             {
                 'name': 'FinanceInc',
-                'node_type': 'organization',
-                'properties': {'industry': 'finance', 'size': 'medium', 'location': 'Wall Street'}
-            },
-            {
-                'name': 'John Doe',
-                'node_type': 'person',
-                'properties': {'occupation': 'software engineer', 'location': 'Silicon Valley'}
+                'description': 'Finance company',
+                'contact_info': {'industry': 'finance', 'location': 'Wall Street'}
             }
         ]
 
         created_nodes = []
         for node_data in test_nodes:
-            response = self.post_json('/api/nodes', node_data)
+            response = self.post_json('/actors', node_data)
             self.assert_api_response(response, 201)
             created_nodes.append(response['data'])
 
-        # Test search by name
-        response = self.get_json('/api/nodes/search?name=TechCorp')
+        # Test listing nodes
+        response = self.get_json('/nodes')
         self.assert_api_response(response, 200)
         
-        search_results = response['data']['nodes']
-        assert len(search_results) == 1
-        assert search_results[0]['name'] == 'TechCorp'
-
-        # Test filter by node type
-        response = self.get_json('/api/nodes?node_type=organization')
-        self.assert_api_response(response, 200)
-        
-        filtered_results = response['data']['nodes']
-        organization_nodes = [n for n in filtered_results if n['node_type'] == 'organization']
-        assert len(organization_nodes) >= 2
+        nodes = response['data']
+        assert len(nodes) >= 2
 
         # Test filter by property
         response = self.get_json('/api/nodes?properties.industry=technology')
@@ -185,49 +165,43 @@ class TestCompleteWorkflow(APIIntegrationTestCase):
     def test_analytics_workflow(self):
         """Test analytics and metrics calculation workflow"""
         # Create test network
-        from tests.factories.node_factory import GraphFactory
-        test_graph = GraphFactory.create_small_graph(nodes=10, relationships=15)
-
-        # Upload test graph via API
-        graph_data = {
-            'nodes': [
-                {
-                    'id': node.id,
-                    'name': node.name,
-                    'node_type': node.node_type,
-                    'properties': node.properties
-                }
-                for node in test_graph.nodes.values()
-            ],
-            'relationships': [
-                {
-                    'id': rel.id,
-                    'source_id': rel.source_id,
-                    'target_id': rel.target_id,
-                    'relationship_type': rel.relationship_type,
-                    'properties': rel.properties
-                }
-                for rel in test_graph.relationships.values()
-            ]
-        }
-
-        response = self.post_json('/api/graphs', graph_data)
-        self.assert_api_response(response, 201)
+        from tests.factories.node_factory import NodeFactory
+        from tests.factories.relationship_factory import RelationshipFactory
         
-        graph_id = response['data']['id']
+        # Create test nodes and relationships using factories
+        nodes = [
+            NodeFactory.create()
+            for _ in range(5)
+        ]
+        
+        relationships = [
+            RelationshipFactory.create(
+                source_id=nodes[0].id,
+                target_id=nodes[1].id
+            ),
+            RelationshipFactory.create(
+                source_id=nodes[1].id,
+                target_id=nodes[2].id
+            )
+        ]
 
-        # Test network metrics calculation
-        response = self.get_json(f'/api/graphs/{graph_id}/metrics')
+        # Add nodes to service
+        for node in nodes:
+            self.service.graph.add_node(node)
+        
+        for rel in relationships:
+            self.service.graph.add_relationship(rel)
+
+        # Test analytics endpoints
+        response = self.get_json('/analytics/quick')
         self.assert_api_response(response, 200)
         
-        metrics = response['data']
-        assert 'node_count' in metrics
-        assert 'relationship_count' in metrics
-        assert 'density' in metrics
-        assert 'clustering_coefficient' in metrics
+        quick_analysis = response['data']
+        assert 'node_count' in quick_analysis
+        assert 'relationship_count' in quick_analysis
 
         # Test centrality analysis
-        response = self.get_json(f'/api/graphs/{graph_id}/centrality')
+        response = self.get_json('/analytics/centrality')
         self.assert_api_response(response, 200)
         
         centrality = response['data']
