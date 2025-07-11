@@ -7,6 +7,8 @@ to generate test data and verify system behavior.
 import pytest
 from hypothesis import given, strategies as st, assume, settings
 from tests.property.property_base import PropertyTestCase, small_graphs, medium_graphs, properties_dict
+from core.relationships import Relationship
+from core.sfm_enums import RelationshipKind
 
 
 class TestGraphProperties(PropertyTestCase):
@@ -109,11 +111,11 @@ class TestGraphProperties(PropertyTestCase):
             # Skip self-loops
             if source_node.id != target_node.id:
                 rel = Relationship(
-                    id=f"prop_rel_{i}",
                     source_id=source_node.id,
                     target_id=target_node.id,
-                    relationship_type=rel_type,
-                    properties={'test_data': True}
+                    kind=RelationshipKind.AFFECTS,
+                    weight=1.0,
+                    meta={'test_data': True, 'relationship_type': rel_type}
                 )
                 graph.add_relationship(rel)
                 added_relationships.append(rel)
@@ -123,7 +125,7 @@ class TestGraphProperties(PropertyTestCase):
         
         # All added relationships should be retrievable
         for rel in added_relationships:
-            retrieved_rel = graph.get_relationship(rel.id)
+            retrieved_rel = graph.relationships.get(rel.id)
             assert retrieved_rel is not None
             assert retrieved_rel.source_id == rel.source_id
             assert retrieved_rel.target_id == rel.target_id
@@ -193,11 +195,11 @@ class TestGraphProperties(PropertyTestCase):
                     source_id = node_ids[source_idx]
                     target_id = node_ids[target_idx]
                     rel = Relationship(
-                        id=f"new_rel_{source_idx}_{target_idx}",
                         source_id=source_id,
                         target_id=target_id,
-                        relationship_type="test_relationship",
-                        properties={'test_data': True}
+                        kind=RelationshipKind.AFFECTS,
+                        weight=1.0,
+                        meta={'test_data': True, 'relationship_type': "test_relationship"}
                     )
                     graph.add_relationship(rel)
             
