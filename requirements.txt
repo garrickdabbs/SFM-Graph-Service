@@ -8,6 +8,7 @@ setuptools
 pydantic
 pytest
 pytest-asyncio
+pytest-cov
 httpx
 requests
 pylint
